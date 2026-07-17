@@ -193,7 +193,7 @@
   const ipt = document.querySelector('#search-input')
   const btn = document.querySelector('#search-btn')
   const layer = document.querySelector('#search-layer')
-  const posts = JSON.parse(`[{"title":"Linux提权","path":"2026/07/17/Linux提权/"},{"title":"SQL注入相关","path":"2026/07/17/SQL注入相关/"},{"title":"XXE漏洞","path":"2026/07/17/XXE漏洞/"},{"title":"python原型链污染","path":"2026/07/17/python原型链污染/"},{"title":"pickle反序列化","path":"2026/07/17/pickle反序列化/"},{"title":"SSRF","path":"2026/07/17/SSRF/"},{"title":"RCE","path":"2025/03/21/RCE/"},{"title":"twig与smarty模板的ssti","path":"2026/07/17/twig与smarty模板的ssti/"},{"title":"nodejs原型链污染","path":"2026/07/17/nodejs原型链污染/"},{"title":"其他类型的数据库的注入","path":"2026/07/17/其他类型的数据库的注入/"},{"title":"sql提权","path":"2026/07/17/sql提权/"}]`)
+  const posts = JSON.parse(`[{"title":"Linux提权","path":"2026/07/17/Linux提权/"},{"title":"nodejs原型链污染","path":"2026/07/17/nodejs原型链污染/"},{"title":"python原型链污染","path":"2026/07/17/python原型链污染/"},{"title":"SQL注入相关","path":"2026/07/17/SQL注入相关/"},{"title":"twig与smarty模板的ssti","path":"2026/07/17/twig与smarty模板的ssti/"},{"title":"RCE","path":"2025/03/21/RCE/"},{"title":"SSRF","path":"2026/07/17/SSRF/"},{"title":"pickle反序列化","path":"2026/07/17/pickle反序列化/"},{"title":"其他类型的数据库的注入","path":"2026/07/17/其他类型的数据库的注入/"},{"title":"sql提权","path":"2026/07/17/sql提权/"},{"title":"XXE漏洞","path":"2026/07/17/XXE漏洞/"}]`)
   ipt.addEventListener('keyup', e => {
     if (e.key === 'Enter') {
       handleSearch()
@@ -393,7 +393,7 @@
 <h3 id="HTTP头注入"><a href="#HTTP头注入" class="headerlink" title="HTTP头注入"></a>HTTP头注入</h3><h4 id="uagent注入"><a href="#uagent注入" class="headerlink" title="uagent注入"></a>uagent注入</h4><p>当页面看不到明显变化，找不到注入点，可以尝试报头注入</p>
 <p>例题：less-18</p>
 <p>查看源码发现注入出现点：</p>
-<p>![屏幕截图 2026-02-24 094211](C:\Users\eason\Pictures\Screenshots\屏幕截图 2026-02-24 094211.png)</p>
+<p><img src="/img/SQL%E6%B3%A8%E5%85%A5%E7%9B%B8%E5%85%B3/41.png"></p>
 <p>根据源码可以修改 ‘$uagent’，’$IP’(没有安全性输入检测)进行注入</p>
 <p>利用报错注入(前提是用户名和密码需登陆正确):</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">查库名：</span><br><span class="line">&#x27; or updatexml(1,concat(&#x27;~&#x27;,(select database())),3),2,3) #</span><br><span class="line">(&#x27;闭合前面的&#x27;,#注释掉后面的语句)</span><br></pre></td></tr></table></figure>
